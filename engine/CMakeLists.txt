@@ -413,9 +413,20 @@ if(MSVC)
     set(SFML_STATIC_LIBRARIES TRUE)
 endif(MSVC)
 
-find_package(SFML 2 COMPONENTS graphics window audio system REQUIRED)
-
-if(SFML_FOUND)
+if(TARGET sfml-graphics)
+    target_link_libraries(hikari PRIVATE sfml-graphics sfml-window sfml-audio sfml-system)
+    if(WIN32 AND HIKARI_OPENAL_RUNTIME)
+        add_custom_target(
+            runtime-dependencies
+            ALL
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                "${HIKARI_OPENAL_RUNTIME}"
+                "$<TARGET_FILE_DIR:hikari>/openal32.dll"
+        )
+        add_dependencies(runtime-dependencies content hikari)
+    endif()
+else()
+    find_package(SFML 2 COMPONENTS graphics window audio system REQUIRED)
     if(APPLE)
         set(OTHER_SFML_LDFLAGS ${OTHER_SFML_LDFLAGS} "-stdlib=libc++")
     endif(APPLE)
@@ -433,15 +444,16 @@ if(SFML_FOUND)
         #  COMMAND ${CMAKE_COMMAND} -E copy "${SFML_INCLUDE_DIR}/../bin/libsndfile-1.dll" $<TARGET_FILE_DIR:hikari>/libsndfile-1.dll
         #)
     endif(MSVC)
-endif(SFML_FOUND)
+endif()
 
-find_package(PhysFS REQUIRED)
-
-if(PHYSFS_FOUND)
+if(TARGET PhysFS::PhysFS-static)
+    target_link_libraries(hikari PRIVATE PhysFS::PhysFS-static)
+else()
+    find_package(PhysFS REQUIRED)
     #ADD_DEFINITIONS(-fno-common)
     if(APPLE)
         set(OTHER_LDFLAGS ${OTHER_LDFLAGS} "-framework Carbon -framework IOKit")
     endif(APPLE)
     include_directories( ${PHYSFS_INCLUDE_DIR} )
     target_link_libraries( hikari ${PHYSFS_LIBRARY} ${OTHER_LDFLAGS} )
-endif(PHYSFS_FOUND)
+endif()

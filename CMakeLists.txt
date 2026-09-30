@@ -1,6 +1,6 @@
-cmake_minimum_required(VERSION 3.21)
+cmake_minimum_required(VERSION 4.4.3)
 
-project(hikari)
+project(hikari LANGUAGES C CXX)
 
 # setup version numbers
 set(HIKARI_VERSION_MAJOR 0)
@@ -14,6 +14,62 @@ set(HIKARI_DUMB_COMPILER_FLAGS "-W3")
 if(WIN32)
     # always link statically on Windows
     set(SFML_STATIC_LIBRARIES TRUE)
+endif()
+
+option(HIKARI_FETCH_DEPENDENCIES
+    "Download pinned dependencies instead of using system packages"
+    ON
+)
+
+if(HIKARI_FETCH_DEPENDENCIES)
+    include(FetchContent)
+
+    if(WIN32)
+        set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build shared libraries" FORCE)
+    endif()
+
+    set(SFML_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+    set(SFML_BUILD_DOC OFF CACHE BOOL "" FORCE)
+    set(SFML_BUILD_NETWORK OFF CACHE BOOL "" FORCE)
+    set(SFML_BUILD_TEST_SUITE OFF CACHE BOOL "" FORCE)
+    FetchContent_Declare(
+        SFML
+        URL https://github.com/SFML/SFML/archive/refs/tags/2.6.2.tar.gz
+        URL_HASH SHA256=15ff4d608a018f287c6a885db0a2da86ea389e516d2323629e4d4407a7ce047f
+        DOWNLOAD_EXTRACT_TIMESTAMP TRUE
+    )
+    FetchContent_MakeAvailable(SFML)
+
+    if(WIN32)
+        if(CMAKE_GENERATOR_PLATFORM STREQUAL "ARM64")
+            set(HIKARI_OPENAL_ARCH ARM64)
+        elseif(CMAKE_SIZEOF_VOID_P EQUAL 8)
+            set(HIKARI_OPENAL_ARCH x64)
+        else()
+            set(HIKARI_OPENAL_ARCH x86)
+        endif()
+        set(HIKARI_OPENAL_RUNTIME
+            "${sfml_SOURCE_DIR}/extlibs/bin/${HIKARI_OPENAL_ARCH}/openal32.dll"
+        )
+    endif()
+
+    set(PHYSFS_BUILD_SHARED OFF CACHE BOOL "" FORCE)
+    set(PHYSFS_BUILD_STATIC ON CACHE BOOL "" FORCE)
+    set(PHYSFS_BUILD_TEST OFF CACHE BOOL "" FORCE)
+    set(PHYSFS_BUILD_DOCS OFF CACHE BOOL "" FORCE)
+    set(PHYSFS_DISABLE_INSTALL ON CACHE BOOL "" FORCE)
+
+    # PhysicsFS 3.2.0 predates CMake 4's removal of policy compatibility
+    # below 3.5, so provide the supported policy floor for this dependency.
+    set(CMAKE_POLICY_VERSION_MINIMUM 3.5)
+    FetchContent_Declare(
+        PhysFS
+        URL https://github.com/icculus/physfs/archive/refs/tags/release-3.2.0.tar.gz
+        URL_HASH SHA256=1991500eaeb8d5325e3a8361847ff3bf8e03ec89252b7915e1f25b3f8ab5d560
+        DOWNLOAD_EXTRACT_TIMESTAMP TRUE
+    )
+    FetchContent_MakeAvailable(PhysFS)
+    unset(CMAKE_POLICY_VERSION_MINIMUM)
 endif()
 
 #

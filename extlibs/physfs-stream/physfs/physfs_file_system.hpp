@@ -17,8 +17,10 @@
 #ifndef HEADER_SUPERTUX_PHYSFS_FILE_SYSTEM_HPP
 #define HEADER_SUPERTUX_PHYSFS_FILE_SYSTEM_HPP
 
-#include <vector>
+#include <iosfwd>
 #include <memory>
+#include <string>
+#include <vector>
 
 class PhysFSFileSystem
 {
@@ -32,4 +34,3 @@ public:
 #endif
 
 /* EOF */
-
