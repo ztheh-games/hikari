@@ -1,4 +1,6 @@
 #include "hikari/client/game/objects/EnemySpawner.hpp"
+
+#include <algorithm>
 #include "hikari/client/game/objects/Enemy.hpp"
 #include "hikari/client/game/objects/EnemyBrain.hpp"
 #include "hikari/client/game/GameWorld.hpp"

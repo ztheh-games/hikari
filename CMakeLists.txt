@@ -2,13 +2,17 @@ cmake_minimum_required(VERSION 4.4.3)
 
 project(hikari LANGUAGES C CXX)
 
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
 # setup version numbers
 set(HIKARI_VERSION_MAJOR 0)
 set(HIKARI_VERSION_MINOR 2)
 set(HIKARI_VERSION_PATCH 0)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/modules/")
-set(HIKARI_GOOD_COMPILER_FLAGS "-std=c++11 -Wall -Wpedantic -O -g")
+set(HIKARI_GOOD_COMPILER_FLAGS "-Wall -Wpedantic -O -g")
 set(HIKARI_DUMB_COMPILER_FLAGS "-W3")
 
 if(WIN32)
@@ -34,24 +38,11 @@ if(HIKARI_FETCH_DEPENDENCIES)
     set(SFML_BUILD_TEST_SUITE OFF CACHE BOOL "" FORCE)
     FetchContent_Declare(
         SFML
-        URL https://github.com/SFML/SFML/archive/refs/tags/2.6.2.tar.gz
-        URL_HASH SHA256=15ff4d608a018f287c6a885db0a2da86ea389e516d2323629e4d4407a7ce047f
+        URL https://github.com/SFML/SFML/archive/refs/tags/3.1.0.tar.gz
+        URL_HASH SHA256=91209a112c2bd0bc6f4ce0d5f3e413cfb48b57c0de59f5507dc81f71b1ad7a5c
         DOWNLOAD_EXTRACT_TIMESTAMP TRUE
     )
     FetchContent_MakeAvailable(SFML)
-
-    if(WIN32)
-        if(CMAKE_GENERATOR_PLATFORM STREQUAL "ARM64")
-            set(HIKARI_OPENAL_ARCH ARM64)
-        elseif(CMAKE_SIZEOF_VOID_P EQUAL 8)
-            set(HIKARI_OPENAL_ARCH x64)
-        else()
-            set(HIKARI_OPENAL_ARCH x86)
-        endif()
-        set(HIKARI_OPENAL_RUNTIME
-            "${sfml_SOURCE_DIR}/extlibs/bin/${HIKARI_OPENAL_ARCH}/openal32.dll"
-        )
-    endif()
 
     set(PHYSFS_BUILD_SHARED OFF CACHE BOOL "" FORCE)
     set(PHYSFS_BUILD_STATIC ON CACHE BOOL "" FORCE)
@@ -96,7 +87,7 @@ else()
     #
     if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
       MESSAGE(STATUS "==== Clang detected - Adding Clang-specific compiler flags")
-      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -stdlib=libc++")
+      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
       set( CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -stdlib=libc++" )
       set( CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -stdlib=libc++" )
       set( CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -stdlib=libc++" )

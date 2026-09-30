@@ -3,6 +3,7 @@
 
 #include "hikari/core/Platform.hpp"
 #include "hikari/core/geom/Rectangle2D.hpp"
+#include "hikari/core/util/SfmlResources.hpp"
 #include <memory>
 #include <SFML/Graphics/RectangleShape.hpp>
 #include <SFML/Graphics/Sprite.hpp>
@@ -33,7 +34,7 @@ namespace hikari {
         static const int TILE_OVERDRAW;
         RoomPtr room;
         TileDataPtr tileData;
-        sf::Sprite tileSprite;
+        SfmlResources::DefaultSprite tileSprite;
         sf::RectangleShape backgroundShape;
         sf::RectangleShape debugLadderShape;
         sf::RectangleShape debugForceShape;

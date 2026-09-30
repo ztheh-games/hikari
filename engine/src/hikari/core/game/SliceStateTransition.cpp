@@ -11,9 +11,9 @@ namespace hikari {
 
     void SliceStateTransition::createSharedTextures() {
         exitingStateTexture.reset(new sf::RenderTexture());
-        exitingStateTexture->create(256, 240);
+        exitingStateTexture->resize({256, 240});
         enteringStateTexture.reset(new sf::RenderTexture());
-        enteringStateTexture->create(256, 240);
+        enteringStateTexture->resize({256, 240});
     }
 
     void SliceStateTransition::destroySharedTextures() {
@@ -34,11 +34,11 @@ namespace hikari {
         setComplete(false);
 
         exitingStateSpriteLayerTop.setTexture(exitingStateTexture->getTexture());
-        exitingStateSpriteLayerTop.setTextureRect(sf::IntRect(0, 0, 256, 240 / 3));
+        exitingStateSpriteLayerTop.setTextureRect(sf::IntRect({0, 0}, {256, 240 / 3}));
         exitingStateSpriteLayerMiddle.setTexture(exitingStateTexture->getTexture());
-        exitingStateSpriteLayerMiddle.setTextureRect(sf::IntRect(0, 240 / 3, 256, 240 / 3));
+        exitingStateSpriteLayerMiddle.setTextureRect(sf::IntRect({0, 240 / 3}, {256, 240 / 3}));
         exitingStateSpriteLayerBottom.setTexture(exitingStateTexture->getTexture());
-        exitingStateSpriteLayerBottom.setTextureRect(sf::IntRect(0, 240 / 3 * 2, 256, 240 / 3));
+        exitingStateSpriteLayerBottom.setTextureRect(sf::IntRect({0, 240 / 3 * 2}, {256, 240 / 3}));
         enteringStateSpriteLayer.setTexture(enteringStateTexture->getTexture());
     }
 

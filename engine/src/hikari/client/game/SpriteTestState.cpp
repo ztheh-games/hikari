@@ -29,40 +29,40 @@ namespace hikari {
             
             spriteTexture->setSmooth(false);
             sprite.setTexture(*spriteTexture);
-            sprite.setPosition(100.0f, 100.0f);
-            sprite.setScale(1.0f, 1.0f);
+            sprite.setPosition({100.0f, 100.0f});
+            sprite.setScale({1.0f, 1.0f});
 
             flippedSprite.setTexture(*spriteTexture);
-            flippedSprite.setPosition(100.0f, 100.0f);
+            flippedSprite.setPosition({100.0f, 100.0f});
             // flippedSprite.FlipX(true);
-            flippedSprite.setScale(-1.0f, flippedSprite.getScale().y);
+            flippedSprite.setScale({-1.0f, flippedSprite.getScale().y});
 
             animationPlayer.setAnimation(animation);
     }
 
     void SpriteTestState::handleEvent(sf::Event &event) {
-        if(event.type == sf::Event::KeyPressed) {
-            if(event.key.code == sf::Keyboard::Num1) {
-                sprite.setOrigin(0.0f, 0.0f);
-                flippedSprite.setOrigin(0.0f, 0.0f);
+        if(const auto* keyPressed = event.getIf<sf::Event::KeyPressed>()) {
+            if(keyPressed->code == sf::Keyboard::Key::Num1) {
+                sprite.setOrigin({0.0f, 0.0f});
+                flippedSprite.setOrigin({0.0f, 0.0f});
             }
 
-            if(event.key.code == sf::Keyboard::Num2) {
-                sprite.setOrigin(15.0f, 22.0f);
-                flippedSprite.setOrigin(15.0f, 22.0f);
+            if(keyPressed->code == sf::Keyboard::Key::Num2) {
+                sprite.setOrigin({15.0f, 22.0f});
+                flippedSprite.setOrigin({15.0f, 22.0f});
             }
 
-            if(event.key.code == sf::Keyboard::Return) {
+            if(keyPressed->code == sf::Keyboard::Key::Enter) {
                 animationPlayer.rewind();
                 animationPlayer.unpause();
             }
 
-            if(event.key.code == sf::Keyboard::Left) {
+            if(keyPressed->code == sf::Keyboard::Key::Left) {
                 //sprite.FlipX(true);
                 //flippedSprite.FlipX(false);
             }
 
-            if(event.key.code == sf::Keyboard::Up) {
+            if(keyPressed->code == sf::Keyboard::Key::Up) {
                 //sprite.Rotate(15.0f);
                 //flippedSprite.Rotate(15.0f);
             }

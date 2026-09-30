@@ -13,17 +13,17 @@
 namespace gcn
 {
     SFMLFont::SFMLFont(const std::string& filename, unsigned int size)
+        : mText(mFont)
     {
-        if (!mFont.loadFromFile(filename))
+        if (!mFont.openFromFile(filename))
         {
             throw GCN_EXCEPTION("Unable to load font from file \"" + filename + "\"");
         }
 
         mColor = sf::Color::White;
 
-        mText.setFont(mFont);
         mText.setCharacterSize(size);
-        mText.setStyle(sf::Text::Regular);
+        mText.setStyle(sf::Text::Style::Regular);
     }
 
     const sf::Color& SFMLFont::getColor() const
@@ -34,7 +34,7 @@ namespace gcn
     void SFMLFont::setColor(const sf::Color& color)
     {
         mColor = color;
-        mText.setColor(mColor);
+        mText.setFillColor(mColor);
     }
 
     const sf::Font& SFMLFont::getFont() const
@@ -49,7 +49,7 @@ namespace gcn
 
     int SFMLFont::getWidth(const std::string& text) const
     {
-        sf::Text measureText(text, mFont, mText.getCharacterSize());
+        sf::Text measureText(mFont, text, mText.getCharacterSize());
         sf::Vector2f renderedDimensions = measureText.findCharacterPos(text.size());
 
         return static_cast<int>(renderedDimensions.x);
@@ -70,7 +70,7 @@ namespace gcn
         y += clip.yOffset;
 
         mText.setString(text);
-        mText.setPosition(static_cast<float>(x), static_cast<float>(y));
+        mText.setPosition({static_cast<float>(x), static_cast<float>(y)});
 
         sf::RenderTarget& target = sfmlGraphics->getRenderTarget();
 

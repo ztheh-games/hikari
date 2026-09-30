@@ -28,7 +28,7 @@ namespace hikari {
             rawImage.createMaskFromColor(sf::Color(255, 0, 255));
 
             // Then copy the color-keyed pixels to the texture
-            success &= texture.create(rawImage.getSize().x, rawImage.getSize().y);
+            success &= texture.resize(rawImage.getSize());
             texture.update(rawImage);
             texture.setSmooth(false);
             texture.setRepeated(false);

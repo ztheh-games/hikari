@@ -64,7 +64,7 @@ namespace gcn
             throw GCN_EXCEPTION("Trying to get a pixel from a location outside image bounds.");
         }
 
-        sf::Color sfmlColor = mImage.getPixel(static_cast<unsigned int>(x), static_cast<unsigned int>(y));
+        sf::Color sfmlColor = mImage.getPixel({static_cast<unsigned int>(x), static_cast<unsigned int>(y)});
 
         return SFMLGraphics::convertSFMLColorToGuichanColor(sfmlColor);
     }
@@ -83,7 +83,7 @@ namespace gcn
 
         sf::Color sfmlColor = SFMLGraphics::convertGuichanColorToSFMLColor(color);
 
-        mImage.setPixel(static_cast<unsigned int>(x), static_cast<unsigned int>(y), sfmlColor);
+        mImage.setPixel({static_cast<unsigned int>(x), static_cast<unsigned int>(y)}, sfmlColor);
         
         mTexture->update(mImage);
     }

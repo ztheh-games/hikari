@@ -154,65 +154,65 @@ namespace hikari {
     }
 
     void KeyboardInput::processEvent(const sf::Event &keyboardEvent) {
-        if(keyboardEvent.type == sf::Event::KeyPressed) {
+        if(const auto* keyPressed = keyboardEvent.getIf<sf::Event::KeyPressed>()) {
                     HIKARI_LOG(debug3) << "Pressed a key!";
 
-            switch(keyboardEvent.key.code) {
-                case sf::Keyboard::Up:
+            switch(keyPressed->code) {
+                case sf::Keyboard::Key::Up:
                     currentState.buttonUp = BUTTON_PUSHED;
                     break;
-                case sf::Keyboard::Right:
+                case sf::Keyboard::Key::Right:
                     currentState.buttonRight = BUTTON_PUSHED;
                     break;
-                case sf::Keyboard::Down:
+                case sf::Keyboard::Key::Down:
                     currentState.buttonDown = BUTTON_PUSHED;
                     break;
-                case sf::Keyboard::Left:
+                case sf::Keyboard::Key::Left:
                     currentState.buttonLeft = BUTTON_PUSHED;
                     break;
-                case sf::Keyboard::A:
+                case sf::Keyboard::Key::A:
                     currentState.buttonShoot = BUTTON_PUSHED;
                     currentState.buttonStart = BUTTON_PUSHED;
                     break;
-                case sf::Keyboard::S:
+                case sf::Keyboard::Key::S:
                     currentState.buttonJump = BUTTON_PUSHED;
                     break;
-                case sf::Keyboard::Return:
+                case sf::Keyboard::Key::Enter:
                     currentState.buttonStart = BUTTON_PUSHED;
                     break;
-                case sf::Keyboard::Escape:
+                case sf::Keyboard::Key::Escape:
                     currentState.buttonCancel = BUTTON_PUSHED;
                     break;
                 default:
                     break;
             }
-        } else if(keyboardEvent.type == sf::Event::KeyReleased) {
+        } else if(const auto* keyReleased = keyboardEvent.getIf<sf::Event::KeyReleased>()) {
                     HIKARI_LOG(debug3) << "Released a key!";
 
-            switch(keyboardEvent.key.code) {
-                case sf::Keyboard::Up:
+            switch(keyReleased->code) {
+                case sf::Keyboard::Key::Up:
                     currentState.buttonUp = !BUTTON_PUSHED;
                     break;
-                case sf::Keyboard::Right:
+                case sf::Keyboard::Key::Right:
                     currentState.buttonRight = !BUTTON_PUSHED;
                     break;
-                case sf::Keyboard::Down:
+                case sf::Keyboard::Key::Down:
                     currentState.buttonDown = !BUTTON_PUSHED;
                     break;
-                case sf::Keyboard::Left:
+                case sf::Keyboard::Key::Left:
                     currentState.buttonLeft = !BUTTON_PUSHED;
                     break;
-                case sf::Keyboard::A:
+                case sf::Keyboard::Key::A:
                     currentState.buttonStart = !BUTTON_PUSHED;
                     currentState.buttonShoot = !BUTTON_PUSHED;
                     break;
-                case sf::Keyboard::S:
+                case sf::Keyboard::Key::S:
                     currentState.buttonJump = !BUTTON_PUSHED;
                     break;
-                case sf::Keyboard::Return:
+                case sf::Keyboard::Key::Enter:
                     currentState.buttonStart = !BUTTON_PUSHED;
                     break;
-                case sf::Keyboard::Escape:
+                case sf::Keyboard::Key::Escape:
                     currentState.buttonCancel = !BUTTON_PUSHED;
                     break;
                 default:

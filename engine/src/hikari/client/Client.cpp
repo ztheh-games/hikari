@@ -76,7 +76,7 @@ namespace hikari {
         , services()
         , globalInput(new KeyboardInput())
         , globalEventBus(new EventBusImpl("GlobalEvents", true))
-        , videoMode(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_BITS_PER_PIXEL)
+        , videoMode({SCREEN_WIDTH, SCREEN_HEIGHT}, SCREEN_BITS_PER_PIXEL)
         , window()
         , screenBuffer()
         , quitGame(false)
@@ -266,12 +266,14 @@ namespace hikari {
             }
         }
 
-        videoMode.width  = SCREEN_WIDTH  * screenScaler;
-        videoMode.height = SCREEN_HEIGHT * screenScaler;
+        videoMode.size = {SCREEN_WIDTH * screenScaler, SCREEN_HEIGHT * screenScaler};
 
         // Due to some weirdness between OSX, Windows, and Linux, the window
         // needs to be created before anything serious can be done.
-        window.create(videoMode, APP_TITLE, (enabledFullScreen ? sf::Style::Fullscreen : sf::Style::Default));
+        window.create(
+            videoMode,
+            APP_TITLE,
+            enabledFullScreen ? sf::State::Fullscreen : sf::State::Windowed);
         window.setActive(true);
         window.setVerticalSyncEnabled(clientConfig.isVsyncEnabled());
         window.setKeyRepeatEnabled(false);
@@ -280,15 +282,15 @@ namespace hikari {
         // other words, it doesn't scale with the window size. When it is
         // rendered it will be stretched to fit the window. This makes it retain
         // its (desired) pixelated quality.
-        screenBuffer.create(SCREEN_WIDTH, SCREEN_HEIGHT);
+        screenBuffer.resize({SCREEN_WIDTH, SCREEN_HEIGHT});
 
-        screenBufferView.setSize(
+        screenBufferView.setSize({
             static_cast<float>(SCREEN_WIDTH),
-            static_cast<float>(SCREEN_HEIGHT));
+            static_cast<float>(SCREEN_HEIGHT)});
 
-        screenBufferView.setCenter(
+        screenBufferView.setCenter({
             static_cast<float>(SCREEN_WIDTH / 2),
-            static_cast<float>(SCREEN_HEIGHT / 2));
+            static_cast<float>(SCREEN_HEIGHT / 2)});
 
         SliceStateTransition::createSharedTextures();
         ScreenEffectsService::preloadShaders();
@@ -392,8 +394,6 @@ namespace hikari {
 
     void Client::loop() {
         sf::Clock clock;
-        sf::Event event;
-
         quitGame = false;
 
         const float dt = 1.0f/60.0f;
@@ -422,32 +422,36 @@ namespace hikari {
             // float fps = 1.0f / frameTime;
 
             while(accumulator >= dt) {
-                while(window.pollEvent(event)) {
-                    if(event.type == sf::Event::Closed) {
+                while(auto event = window.pollEvent()) {
+                    if(event->is<sf::Event::Closed>()) {
                         quitGame = true;
                     }
 
-                    if(event.type == sf::Event::KeyPressed || event.type == sf::Event::KeyReleased) {
+                    const sf::Event::KeyPressed* keyPressed = event->getIf<sf::Event::KeyPressed>();
+                    const sf::Event::KeyReleased* keyReleased = event->getIf<sf::Event::KeyReleased>();
+                    if(keyPressed || keyReleased) {
+                        const sf::Keyboard::Key keyCode = keyPressed ? keyPressed->code : keyReleased->code;
+
                         // Audio tweaking code
-                        if(event.key.code == sf::Keyboard::Y) {
+                        if(keyCode == sf::Keyboard::Key::Y) {
                             audioService->setMusicVolume(audioService->getMusicVolume() + 10.0f);
                         }
-                        if(event.key.code == sf::Keyboard::U) {
+                        if(keyCode == sf::Keyboard::Key::U) {
                             audioService->setMusicVolume(audioService->getMusicVolume() - 10.0f);
                         }
-                        if(event.key.code == sf::Keyboard::H) {
+                        if(keyCode == sf::Keyboard::Key::H) {
                             audioService->mute();
                         }
-                        if(event.key.code == sf::Keyboard::J) {
+                        if(keyCode == sf::Keyboard::Key::J) {
                             audioService->unmute();
                         }
 
-                        globalInput->processEvent(event);
-                        controller.handleEvent(event);
+                        globalInput->processEvent(*event);
+                        controller.handleEvent(*event);
                     }
 
                     if(guiService) {
-                        guiService->processEvent(event);
+                        guiService->processEvent(*event);
                     }
 
                     if(gui.getTop()) {

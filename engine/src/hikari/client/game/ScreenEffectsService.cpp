@@ -13,11 +13,10 @@ namespace hikari {
     ScreenEffectsService::ScreenEffectsService(const std::weak_ptr<EventBusService> & eventBus, int bufferWidth, int bufferHeight)
         : Service()
         , eventBus(eventBus)
-        , backBuffer()
-        , inputSprite()
+        , backBuffer({static_cast<unsigned int>(bufferWidth), static_cast<unsigned int>(bufferHeight)})
+        , inputSprite(backBuffer.getTexture())
         , effects()
     {
-        backBuffer.create(bufferWidth, bufferHeight);
         FADE_OUT_SHADER.reset(new sf::Shader());
         FADE_IN_SHADER.reset(new sf::Shader());
         //preloadShaders();
@@ -29,8 +28,8 @@ namespace hikari {
 
     void ScreenEffectsService::preloadShaders() {
         const std::string shaderCode = FileSystem::readFileAsString("assets/shaders/fade.frag");
-        FADE_OUT_SHADER->loadFromMemory(shaderCode, sf::Shader::Fragment);
-        FADE_IN_SHADER->loadFromMemory(shaderCode, sf::Shader::Fragment);
+        FADE_OUT_SHADER->loadFromMemory(shaderCode, sf::Shader::Type::Fragment);
+        FADE_IN_SHADER->loadFromMemory(shaderCode, sf::Shader::Type::Fragment);
     }
 
     void ScreenEffectsService::destroyShaders() {

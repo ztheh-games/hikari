@@ -4,6 +4,7 @@
 #include "hikari/core/game/GameState.hpp"
 #include "hikari/client/game/StageSelectStateConfig.hpp"
 #include "hikari/core/geom/Point2D.hpp"
+#include "hikari/core/util/SfmlResources.hpp"
 
 #include <SFML/Graphics/RenderTarget.hpp>
 #include <SFML/Graphics/Sprite.hpp>
@@ -71,10 +72,10 @@ namespace hikari {
         std::shared_ptr<AnimationSet> portraitAnimations;
         std::shared_ptr<AnimationSet> eyeAnimations;
 
-        sf::Sprite background;
-        sf::Sprite foreground;
-        sf::Sprite leftEye;
-        sf::Sprite rightEye;
+        SfmlResources::DefaultSprite background;
+        SfmlResources::DefaultSprite foreground;
+        SfmlResources::DefaultSprite leftEye;
+        SfmlResources::DefaultSprite rightEye;
 
         int cursorRow;
         int cursorColumn;

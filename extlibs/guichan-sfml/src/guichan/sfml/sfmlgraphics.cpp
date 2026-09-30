@@ -111,11 +111,11 @@ namespace gcn
         dstX += top.xOffset;
         dstY += top.yOffset;
 
-        const sf::IntRect srcRect(srcX, srcY, width, height);
+        const sf::IntRect srcRect({srcX, srcY}, {width, height});
 
         mSprite.setTexture(*srcImage->getTexture(), false);
         mSprite.setTextureRect(srcRect);
-        mSprite.setPosition(static_cast<float>(dstX), static_cast<float>(dstY));
+        mSprite.setPosition({static_cast<float>(dstX), static_cast<float>(dstY)});
         
         mTarget->draw(mSprite);
     }
@@ -189,13 +189,13 @@ namespace gcn
 
         sf::Vertex rect[4] = 
         {
-            sf::Vertex(sf::Vector2f(x, y), mSfmlColor),
-            sf::Vertex(sf::Vector2f(x + w, y), mSfmlColor),
-            sf::Vertex(sf::Vector2f(x + w, y + h), mSfmlColor),
-            sf::Vertex(sf::Vector2f(x, y + h), mSfmlColor)
+            sf::Vertex{{x, y}, mSfmlColor},
+            sf::Vertex{{x + w, y}, mSfmlColor},
+            sf::Vertex{{x + w, y + h}, mSfmlColor},
+            sf::Vertex{{x, y + h}, mSfmlColor}
         };
 
-        mTarget->draw(rect, 4, sf::Quads);
+        mTarget->draw(rect, 4, sf::PrimitiveType::TriangleFan);
     }
 
     void SFMLGraphics::drawText(const std::string& text,
@@ -244,19 +244,23 @@ namespace gcn
     {
         const sf::Vector2f& currentViewSize = mContextView.getSize();
 
-        sf::FloatRect clipRectangle;
-        clipRectangle.top    = static_cast<float>(rectangle.y);
-        clipRectangle.left   = static_cast<float>(rectangle.x);
-        clipRectangle.width  = static_cast<float>(rectangle.width);
-        clipRectangle.height = static_cast<float>(rectangle.height);
+        const sf::FloatRect clipRectangle(
+            {static_cast<float>(rectangle.x), static_cast<float>(rectangle.y)},
+            {static_cast<float>(rectangle.width), static_cast<float>(rectangle.height)}
+        );
 
         // Use normalized viewport coordinates to emulate clipping.
         // Special case: if the viewport size is 0, then the width/height is 0.
-        sf::FloatRect clipViewport;
-        clipViewport.top    = currentViewSize.y == 0 ? 0 : (rectangle.y / (currentViewSize.y - PIXEL_ALIGNMENT_OFFSET));
-        clipViewport.left   = currentViewSize.x == 0 ? 0 : (rectangle.x / (currentViewSize.x - PIXEL_ALIGNMENT_OFFSET));
-        clipViewport.width  = currentViewSize.x == 0 ? 0 : (rectangle.width / (currentViewSize.x - PIXEL_ALIGNMENT_OFFSET));
-        clipViewport.height = currentViewSize.y == 0 ? 0 : (rectangle.height / (currentViewSize.y - PIXEL_ALIGNMENT_OFFSET));
+        const sf::FloatRect clipViewport(
+            {
+                currentViewSize.x == 0 ? 0 : (rectangle.x / (currentViewSize.x - PIXEL_ALIGNMENT_OFFSET)),
+                currentViewSize.y == 0 ? 0 : (rectangle.y / (currentViewSize.y - PIXEL_ALIGNMENT_OFFSET))
+            },
+            {
+                currentViewSize.x == 0 ? 0 : (rectangle.width / (currentViewSize.x - PIXEL_ALIGNMENT_OFFSET)),
+                currentViewSize.y == 0 ? 0 : (rectangle.height / (currentViewSize.y - PIXEL_ALIGNMENT_OFFSET))
+            }
+        );
 
         sf::View clippingView(clipRectangle);
         clippingView.setViewport(clipViewport);
@@ -270,13 +274,13 @@ namespace gcn
 
         sf::Vertex rect[4] = 
         {
-            sf::Vertex(sf::Vector2f(px, py), mSfmlColor),
-            sf::Vertex(sf::Vector2f(px + 1, py), mSfmlColor),
-            sf::Vertex(sf::Vector2f(px + 1, py + 1), mSfmlColor),
-            sf::Vertex(sf::Vector2f(px, py + 1), mSfmlColor)
+            sf::Vertex{{px, py}, mSfmlColor},
+            sf::Vertex{{px + 1, py}, mSfmlColor},
+            sf::Vertex{{px + 1, py + 1}, mSfmlColor},
+            sf::Vertex{{px, py + 1}, mSfmlColor}
         };
 
-        mTarget->draw(rect, 4, sf::Quads);
+        mTarget->draw(rect, 4, sf::PrimitiveType::TriangleFan);
     }
 
     void SFMLGraphics::drawHorizontalLine(int x1, int y, int x2) {
@@ -329,13 +333,13 @@ namespace gcn
 
         sf::Vertex rect[4] = 
         {
-            sf::Vertex(sf::Vector2f(lineX1, lineY), mSfmlColor),
-            sf::Vertex(sf::Vector2f(lineX2, lineY), mSfmlColor),
-            sf::Vertex(sf::Vector2f(lineX2, lineY + 1), mSfmlColor),
-            sf::Vertex(sf::Vector2f(lineX1, lineY + 1), mSfmlColor)
+            sf::Vertex{{lineX1, lineY}, mSfmlColor},
+            sf::Vertex{{lineX2, lineY}, mSfmlColor},
+            sf::Vertex{{lineX2, lineY + 1}, mSfmlColor},
+            sf::Vertex{{lineX1, lineY + 1}, mSfmlColor}
         };
 
-        mTarget->draw(rect, 4, sf::Quads);
+        mTarget->draw(rect, 4, sf::PrimitiveType::TriangleFan);
     }
 
     void SFMLGraphics::drawVerticalLine(int x, int y1, int y2) {
@@ -388,13 +392,13 @@ namespace gcn
 
         sf::Vertex rect[4] = 
         {
-            sf::Vertex(sf::Vector2f(lineX, lineY1), mSfmlColor),
-            sf::Vertex(sf::Vector2f(lineX, lineY2), mSfmlColor),
-            sf::Vertex(sf::Vector2f(lineX + 1, lineY2), mSfmlColor),
-            sf::Vertex(sf::Vector2f(lineX + 1, lineY1), mSfmlColor)
+            sf::Vertex{{lineX, lineY1}, mSfmlColor},
+            sf::Vertex{{lineX, lineY2}, mSfmlColor},
+            sf::Vertex{{lineX + 1, lineY2}, mSfmlColor},
+            sf::Vertex{{lineX + 1, lineY1}, mSfmlColor}
         };
 
-        mTarget->draw(rect, 4, sf::Quads);
+        mTarget->draw(rect, 4, sf::PrimitiveType::TriangleFan);
     }
 
     void SFMLGraphics::drawBresenham(int x1, int y1, int x2, int y2) {

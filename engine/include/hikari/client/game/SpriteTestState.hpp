@@ -5,6 +5,7 @@
 #include "hikari/core/game/AnimationLoader.hpp"
 #include "hikari/core/game/Animation.hpp"
 #include "hikari/core/game/SpriteAnimator.hpp"
+#include "hikari/core/util/SfmlResources.hpp"
 #include <SFML/Graphics.hpp>
 #include <SFML/Graphics/Texture.hpp>
 #include <SFML/Graphics/Sprite.hpp>
@@ -22,8 +23,8 @@ namespace hikari {
         std::weak_ptr<AnimationSetCache> animationSetCache;
         std::weak_ptr<ImageCache> imageCache;
         std::shared_ptr<sf::Texture> spriteTexture;
-        sf::Sprite sprite;
-        sf::Sprite flippedSprite;
+        SfmlResources::DefaultSprite sprite;
+        SfmlResources::DefaultSprite flippedSprite;
         sf::RectangleShape positionPixel;
         std::shared_ptr<Animation> animation;
         SpriteAnimator animationPlayer;

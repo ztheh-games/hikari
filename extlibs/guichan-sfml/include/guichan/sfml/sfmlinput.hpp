@@ -9,7 +9,9 @@
 #include "guichan/platform.hpp"
 
 #include <SFML/Window/Event.hpp>
+#include <SFML/Window/Keyboard.hpp>
 #include <SFML/System/Clock.hpp>
+#include <SFML/System/Time.hpp>
 
 namespace sf
 {
@@ -68,13 +70,13 @@ namespace gcn
         int convertMouseButton(sf::Mouse::Button button);
                 
         /**
-         * Converts an SFML event to a Guichan key value.
+         * Converts an SFML key to a Guichan key value.
          *
-         * @param event The SFML event to convert.
+         * @param key The SFML key to convert.
          * @return A Guichan key value. -1 if no conversion took place.
          * @see Key
          */
-        int convertSFMLEventToGuichanKeyValue(sf::Event event);
+        int convertSFMLKeyToGuichanKeyValue(sf::Keyboard::Key key);
 
         std::queue<KeyInput> mKeyInputQueue;
         std::queue<MouseInput> mMouseInputQueue;

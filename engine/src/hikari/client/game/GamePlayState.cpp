@@ -464,7 +464,12 @@ namespace hikari {
     }
 
     void GamePlayState::handleEvent(sf::Event &event) {
-        if((event.type == sf::Event::KeyPressed) && event.key.code == sf::Keyboard::Return) {
+        const auto* keyPressed = event.getIf<sf::Event::KeyPressed>();
+        if(!keyPressed) {
+            return;
+        }
+
+        if(keyPressed->code == sf::Keyboard::Key::Enter) {
             // Menu handlng code use to be here. <--
 
             // if(auto gp = gameProgress.lock()) {
@@ -487,31 +492,31 @@ namespace hikari {
             // }
         }
 
-        if((event.type == sf::Event::KeyPressed) && event.key.code == sf::Keyboard::BackSpace) {
-            if(event.key.shift) {
+        if(keyPressed->code == sf::Keyboard::Key::Backspace) {
+            if(keyPressed->shift) {
                 startStage();
             } else {
                 startRound();
             }
         }
 
-        if((event.type == sf::Event::KeyPressed) && event.key.code == sf::Keyboard::R) {
+        if(keyPressed->code == sf::Keyboard::Key::R) {
             hero->performStun();
         }
 
-        if((event.type == sf::Event::KeyPressed) && event.key.code == sf::Keyboard::T) {
+        if(keyPressed->code == sf::Keyboard::Key::T) {
             if(auto gp = gameProgress.lock()) {
                 gp->setPlayerEnergy(0);
             }
         }
 
-        if((event.type == sf::Event::KeyPressed) && event.key.code == sf::Keyboard::Y) {
+        if(keyPressed->code == sf::Keyboard::Key::Y) {
             if(auto gp = gameProgress.lock()) {
                 gp->setPlayerEnergy(1.0f);
             }
         }
 
-        if((event.type == sf::Event::KeyPressed) && event.key.code == sf::Keyboard::B) {
+        if(keyPressed->code == sf::Keyboard::Key::B) {
             if(hero->getZIndex() == 0) {
                 hero->setZIndex(-1);
             } else {

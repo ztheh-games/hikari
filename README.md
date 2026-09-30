@@ -31,12 +31,12 @@ Project Hikari uses CMake 4.4.3 to generate platform and compiler-specific build
 
 By default, CMake downloads pinned, compatible versions of these dependencies:
 
-* [SFML 2.6.2][4]
+* [SFML 3.1.0][4]
 * [PhysicsFS 3.2.0][5]
 
 Configure with `-DHIKARI_FETCH_DEPENDENCIES=OFF` to use installed copies instead.
 
-Also note that this project uses `C++11` features such as `auto`, `decltype`, and lambdas, and therefore requires a C++11 compliant compiler in order to build successfully.
+SFML 3 requires a C++17-compliant compiler.
 
 ### Building on Windows (VS2010+) ###
 
@@ -55,7 +55,7 @@ Also note that this project uses `C++11` features such as `auto`, `decltype`, an
 
 ### Building on Linux (Makefile) ###
 
-1. Install CMake 4.4.3 and a C++11 compiler.
+1. Install CMake 4.4.3 and a C++17 compiler.
 2. Clone the repository.
 
         git clone https://github.com/zackthehuman/hikari.git hikari
@@ -70,7 +70,7 @@ Also note that this project uses `C++11` features such as `auto`, `decltype`, an
 
 ### Building on Mac (Makefile) ###
 
-1. Install CMake 4.4.3 and a C++11 compiler. When using system dependencies, SFML must be built with the same version of `libc++` as Hikari.
+1. Install CMake 4.4.3 and a C++17 compiler. When using system dependencies, SFML must be built with the same version of `libc++` as Hikari.
 2. Clone the repository.
 
         git clone https://github.com/zackthehuman/hikari.git hikari

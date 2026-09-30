@@ -34,10 +34,14 @@ namespace hikari {
         const AnimationFrame &currentFrame = getAnimation()->getFrameAt(getCurrentFrameIndex());
         const Rectangle2D<int> &currentFrameRectangle = currentFrame.getSourceRectangle();
 
-        tileRect.top = currentFrameRectangle.getTop();
-        tileRect.width = currentFrameRectangle.getWidth();
-        tileRect.height = currentFrameRectangle.getHeight();
-        tileRect.left = currentFrameRectangle.getLeft();
+        tileRect.position = {
+            currentFrameRectangle.getLeft(),
+            currentFrameRectangle.getTop()
+        };
+        tileRect.size = {
+            currentFrameRectangle.getWidth(),
+            currentFrameRectangle.getHeight()
+        };
     }
 
 } // hikari

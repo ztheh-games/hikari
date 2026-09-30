@@ -79,7 +79,7 @@ namespace gui {
     void CommandConsole::update(const float &delta) {
         if(state == StateClosing) {
             if(background.getPosition().y > - 102.0f) {
-                background.move(0.0f, -10.0f);
+                background.move({0.0f, -10.0f});
             } else {
                 state = StateClosed;
             }
@@ -87,7 +87,7 @@ namespace gui {
 
         if(state == StateOpening) {
             if(background.getPosition().y < 0.0f) {
-                background.move(0.0f, 10.0f);
+                background.move({0.0f, 10.0f});
             } else {
                 state = StateOpen;
             }

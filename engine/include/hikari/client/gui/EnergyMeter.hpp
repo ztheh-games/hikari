@@ -2,6 +2,7 @@
 #define HIKARI_CORE_GUI_ENERGYMETER
 
 #include "hikari/client/gui/Widget.hpp"
+#include "hikari/core/util/SfmlResources.hpp"
 #include <SFML/Graphics/Color.hpp>
 #include <SFML/Graphics/Image.hpp>
 #include <SFML/Graphics/RectangleShape.hpp>
@@ -20,7 +21,7 @@ namespace gui {
         float maximumValue;
         int orientation;
 
-        sf::Sprite overlay;
+        SfmlResources::DefaultSprite overlay;
         sf::RectangleShape primaryBackground;
         sf::RectangleShape secondaryBackground;
         sf::RectangleShape foreground;
