@@ -27,15 +27,19 @@ namespace hikari {
         return world;
     }
 
-    void WorldCollisionResolver::checkHorizontalEdge(const int& x, const int& yMin, const int& yMax, const Direction& directionX, CollisionInfo& collisionInfo) {
-        sweepHorizontalEdge(x, yMin, yMax, directionX, collisionInfo);
+    void WorldCollisionResolver::checkHorizontalEdge(const int& x, const int& yMin, const int& yMax, const Direction& directionX, CollisionInfo& collisionInfo, int ignoredObstacleId) {
+        sweepHorizontalEdge(x, yMin, yMax, directionX, collisionInfo, ignoredObstacleId);
     }
 
-    void WorldCollisionResolver::checkVerticalEdge(const int& y, const int& xMin, const int& xMax, const Direction& directionY, CollisionInfo& collisionInfo) {
-        sweepVerticalEdge(y, xMin, xMax, directionY, collisionInfo);
+    void WorldCollisionResolver::checkVerticalEdge(const int& y, const int& xMin, const int& xMax, const Direction& directionY, CollisionInfo& collisionInfo, int ignoredObstacleId) {
+        sweepVerticalEdge(y, xMin, xMax, directionY, collisionInfo, ignoredObstacleId);
     }
 
-    void WorldCollisionResolver::sweepHorizontalEdge(const int& x, const int& yMin, const int& yMax, const Direction& directionX, CollisionInfo& collisionInfo) {
+    bool WorldCollisionResolver::getObstacleState(int obstacleId, BoundingBoxF& bounds, Vector2<float>& displacement) const {
+        return world && world->getObstacleState(obstacleId, bounds, displacement);
+    }
+
+    void WorldCollisionResolver::sweepHorizontalEdge(const int& x, const int& yMin, const int& yMax, const Direction& directionX, CollisionInfo& collisionInfo, int ignoredObstacleId) {
         if(world) {
             const auto currentRoom = world->getCurrentRoom();
             if(currentRoom) {
@@ -56,6 +60,10 @@ namespace hikari {
                 );
 
                 for(std::size_t i = 0; i < obstacleCount; ++i) {
+                    if(obstacles[i]->getId() == ignoredObstacleId) {
+                        continue;
+                    }
+
                     const auto & obstacleBounds = obstacles[i]->getBoundingBox();
 
                     if(sweepBox.intersects(obstacleBounds)) {
@@ -64,9 +72,7 @@ namespace hikari {
                         collisionInfo.tileY = 0;
                         collisionInfo.tileType = 0;
                         collisionInfo.directionX = directionX;
-
-                        collisionInfo.inheritedVelocityX = obstacles[i]->getVelocityX();
-                        collisionInfo.inheritedVelocityY = obstacles[i]->getVelocityY();
+                        collisionInfo.obstacleId = obstacles[i]->getId();
 
                         if(directionX == Directions::Left) {
                             collisionInfo.correctedX = static_cast<int>(obstacleBounds.getRight() + 1);
@@ -85,7 +91,7 @@ namespace hikari {
                         collisionInfo.tileY = tileY;
                         collisionInfo.tileType = currentTile;
                         collisionInfo.directionX = directionX;
-                        collisionInfo.inheritedVelocityX = 0.0f;
+                        collisionInfo.obstacleId = -1;
 
                         determineTileCorrection(directionX, collisionInfo);
 
@@ -97,7 +103,7 @@ namespace hikari {
         return;
     }
 
-    void WorldCollisionResolver::sweepVerticalEdge(const int& y, const int& xMin, const int& xMax, const Direction& directionY, CollisionInfo& collisionInfo) {
+    void WorldCollisionResolver::sweepVerticalEdge(const int& y, const int& xMin, const int& xMax, const Direction& directionY, CollisionInfo& collisionInfo, int ignoredObstacleId) {
         if(world) {
             const auto currentRoom = world->getCurrentRoom();
             if(currentRoom) {
@@ -118,6 +124,10 @@ namespace hikari {
                 );
 
                 for(std::size_t i = 0; i < obstacleCount; ++i) {
+                    if(obstacles[i]->getId() == ignoredObstacleId) {
+                        continue;
+                    }
+
                     const auto & obstacleBounds = obstacles[i]->getBoundingBox();
 
                     if(sweepBox.intersects(obstacleBounds)) {
@@ -126,10 +136,7 @@ namespace hikari {
                         collisionInfo.tileY = 0;
                         collisionInfo.tileType = 0;
                         collisionInfo.directionY = directionY;
-
-                        // Inherit both the X and Y velocities from the obstacle/platform
-                        collisionInfo.inheritedVelocityX = obstacles[i]->getVelocityX();
-                        collisionInfo.inheritedVelocityY = obstacles[i]->getVelocityY();
+                        collisionInfo.obstacleId = obstacles[i]->getId();
 
                         if(directionY == Directions::Up) {
                             collisionInfo.correctedY = static_cast<int>(obstacleBounds.getBottom() + 1);
@@ -150,7 +157,7 @@ namespace hikari {
                         collisionInfo.tileY = tileY;
                         collisionInfo.tileType = currentTile;
                         collisionInfo.directionY = directionY;
-                        collisionInfo.inheritedVelocityY = 0.0f;
+                        collisionInfo.obstacleId = -1;
 
                         determineTileCorrection(directionY, collisionInfo);
 

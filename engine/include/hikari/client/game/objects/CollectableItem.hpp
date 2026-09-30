@@ -33,6 +33,7 @@ namespace hikari {
 
         virtual void update(float dt);
         virtual void render(sf::RenderTarget &target);
+        virtual void handleCrush(Movable& body, CollisionInfo& info);
         virtual void reset();
     };
 

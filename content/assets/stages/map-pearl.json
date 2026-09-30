@@ -3234,31 +3234,31 @@
           "type": "Moving Platform 1 (2x1)",
           "x": 752,
           "y": 136,
-          "direction": "Left"
+          "direction": "Up"
         },
         {
           "type": "Moving Platform 1 (2x1)",
           "x": 800,
           "y": 120,
-          "direction": "Left"
+          "direction": "Up"
         },
         {
           "type": "Moving Platform 1 (2x1)",
           "x": 864,
           "y": 104,
-          "direction": "Left"
+          "direction": "Up"
         },
         {
           "type": "Moving Platform 1 (2x1)",
           "x": 928,
           "y": 120,
-          "direction": "Left"
+          "direction": "Up"
         },
         {
           "type": "Moving Platform 1 (2x1)",
           "x": 976,
           "y": 88,
-          "direction": "Left"
+          "direction": "Up"
         }
       ],
       "items": [],

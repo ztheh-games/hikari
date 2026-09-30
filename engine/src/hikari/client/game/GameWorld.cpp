@@ -89,6 +89,16 @@ namespace hikari {
     void GameWorld::update(float dt) {
         processRemovals();
         processAdditions();
+
+        std::for_each(
+            std::begin(activeEnemies),
+            std::end(activeEnemies),
+            [&dt](const std::shared_ptr<Enemy> & enemy) {
+                if(enemy->isObstacle()) {
+                    enemy->update(dt);
+                }
+            }
+        );
     }
 
     void GameWorld::queueObjectAddition(const std::shared_ptr<GameObject> &obj) {
@@ -463,6 +473,19 @@ namespace hikari {
         }
 
         return std::weak_ptr<GameObject>();
+    }
+
+    bool GameWorld::getObstacleState(int obstacleId, BoundingBoxF& bounds, Vector2<float>& displacement) const {
+        auto object = getObjectById(obstacleId).lock();
+        auto obstacle = std::dynamic_pointer_cast<Entity>(object);
+
+        if(!obstacle || !obstacle->isActive() || !obstacle->isObstacle()) {
+            return false;
+        }
+
+        bounds = obstacle->getBoundingBox();
+        displacement = obstacle->getFrameDisplacement();
+        return true;
     }
 
     const std::vector<std::shared_ptr<CollectableItem>> & GameWorld::getActiveItems() const {

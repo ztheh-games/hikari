@@ -14,6 +14,9 @@ set( REQUIRED_HIKARI_SOURCE_FILES
     ${ENGINE_BASE_DIR}/src/hikari/client/game/events/EventListenerDelegate.cpp
     ${ENGINE_BASE_DIR}/src/hikari/client/game/events/EventData.cpp
     ${ENGINE_BASE_DIR}/src/hikari/client/game/events/BaseEventData.cpp
+    ${ENGINE_BASE_DIR}/src/hikari/core/game/CollisionInfo.cpp
+    ${ENGINE_BASE_DIR}/src/hikari/core/game/Direction.cpp
+    ${ENGINE_BASE_DIR}/src/hikari/core/game/Movable.cpp
     ${ENGINE_BASE_DIR}/src/hikari/core/util/Log.cpp
 )
 
@@ -26,6 +29,7 @@ set( TEST_SOURCE_FILES
     src/test/TestBoundingBox.cpp
     src/test/TestGeometryUtils.cpp
     src/test/TestEventBusImpl.cpp
+    src/test/TestMovable.cpp
 )
 
 include_directories( ${INCLUDE_DIRS} )

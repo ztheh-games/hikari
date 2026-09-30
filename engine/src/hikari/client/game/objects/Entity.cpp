@@ -48,6 +48,8 @@ namespace hikari {
 
         body.setCollisionCallback(
             std::bind(&Entity::handleCollision, this, std::placeholders::_1, std::placeholders::_2));
+        body.setCrushCallback(
+            std::bind(&Entity::handleCrush, this, std::placeholders::_1, std::placeholders::_2));
 
         #ifdef HIKARI_DEBUG_ENTITIES
         boxOutline.setFillColor(sf::Color(128, 64, 0, 128));
@@ -91,6 +93,8 @@ namespace hikari {
 
         body.setCollisionCallback(
             std::bind(&Entity::handleCollision, this, std::placeholders::_1, std::placeholders::_2));
+        body.setCrushCallback(
+            std::bind(&Entity::handleCrush, this, std::placeholders::_1, std::placeholders::_2));
 
         // Clone the animation information if present
         animatedSprite.reset(proto.animatedSprite ? new PalettedAnimatedSprite(*proto.animatedSprite.get()) : new PalettedAnimatedSprite());
@@ -167,12 +171,15 @@ namespace hikari {
     }
 
     void Entity::setPosition(const Vector2<float>& newPosition) {
+        body.clearSupport();
         body.setPosition(newPosition);
         syncHitBoxes();
     }
 
     void Entity::setPosition(const float x, const float y) {
+        body.clearSupport();
         body.setPosition(x, y);
+        syncHitBoxes();
     }
 
     const Vector2<float>& Entity::getActionSpot() const {
@@ -340,6 +347,10 @@ namespace hikari {
         return body.getVelocity().getY();
     }
 
+    const Vector2<float>& Entity::getFrameDisplacement() const {
+        return body.getFrameDisplacement();
+    }
+
     float Entity::getAge() const {
         return age;
     }
@@ -432,6 +443,10 @@ namespace hikari {
 
     void Entity::handleCollision(Movable& body, CollisionInfo& info) {
 
+    }
+
+    void Entity::handleCrush(Movable& body, CollisionInfo& info) {
+        onDeath();
     }
 
     void Entity::update(float dt) {
@@ -553,6 +568,7 @@ namespace hikari {
             animatedSprite->rewind();
         }
 
+        body.clearSupport();
         setActive(false);
         setAge(DEFAULT_AGE_IN_M_SECONDS);
     }

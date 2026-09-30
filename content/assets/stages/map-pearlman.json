@@ -3231,7 +3231,7 @@
         "type": "Moving Platform 1 (2x1)",
         "x": 288,
         "y": 162,
-        "direction": "Left"
+        "direction": "Up"
       },
       {
         "type": "Destructable Block (1x2)",

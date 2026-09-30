@@ -4,6 +4,7 @@
 #include "hikari/core/game/Updatable.hpp"
 #include "hikari/core/math/Vector2.hpp"
 #include "hikari/core/game/Direction.hpp"
+#include "hikari/core/geom/BoundingBox.hpp"
 
 #include <SFML/Graphics/RenderTarget.hpp>
 
@@ -104,6 +105,7 @@ namespace hikari {
         std::unique_ptr<Projectile> spawnProjectile(const std::string & name) const;
 
         const std::weak_ptr<GameObject> getObjectById(int id) const;
+        bool getObstacleState(int obstacleId, BoundingBoxF& bounds, Vector2<float>& displacement) const;
 
         const std::vector<std::shared_ptr<CollectableItem>> & getActiveItems() const;
         const std::vector<std::shared_ptr<Enemy>> & getActiveEnemies() const;

@@ -42,6 +42,7 @@ namespace hikari {
         virtual void render(sf::RenderTarget &target);
 
         virtual void handleCollision(Movable& body, CollisionInfo& info);
+        virtual void handleCrush(Movable& body, CollisionInfo& info);
 
         /**
          * Handles the case when another object touches this object. Allows the

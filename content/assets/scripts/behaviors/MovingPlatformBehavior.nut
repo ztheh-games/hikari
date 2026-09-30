@@ -1,28 +1,46 @@
 class MovingPlatformBehavior extends DoodadBehavior {
     isInitialized = false;
     counter = 0.0;
-    shouldCount = false;
     switchDirectionDelay = 3.0;
+    speed = 0.60;
 
     constructor(_classConfig = {}) {
         base.constructor(_classConfig);
+
+        if("switchDirectionDelay" in _classConfig) {
+            switchDirectionDelay = _classConfig.switchDirectionDelay;
+        }
+
+        if("speed" in _classConfig) {
+            speed = _classConfig.speed;
+        }
+    }
+
+    function applyConfig(config = {}) {
+        if("switchDirectionDelay" in config) {
+            switchDirectionDelay = config.switchDirectionDelay;
+        }
+
+        if("speed" in config) {
+            speed = config.speed;
+        }
     }
 
     function update(dt) {
         if(host != null) {
-            // if(shouldCount) {
-                counter += dt;
+            counter += dt;
 
-                if(counter >= switchDirectionDelay) {
-                    counter = 0.0;
-                    host.direction = Utils.getOppositeDirection(host.direction);
-                }
-            // }
+            if(counter >= switchDirectionDelay) {
+                counter -= switchDirectionDelay;
+                host.direction = Utils.getOppositeDirection(host.direction);
+            }
 
-            if(host.direction == Directions.Left) {
-                host.velocityY = 0.60;
+            host.velocityX = 0.0;
+            if(host.direction == Directions.Down) {
+                host.velocityY = speed;
             } else {
-                host.velocityY = -0.60;
+                host.direction = Directions.Up;
+                host.velocityY = -speed;
             }
         }
 
@@ -42,11 +60,13 @@ class MovingPlatformBehavior extends DoodadBehavior {
             host.isShielded = false;
             host.isPhasing = true;
             host.faction = Factions.World;
-            host.direction = Directions.Right;
+            if(host.direction != Directions.Up && host.direction != Directions.Down) {
+                host.direction = Directions.Up;
+            }
             host.isGravitated = false;
             isInitialized = true;
         }
     }
 }
 
-::log("FallingPlatformBehavior.nut executed!");
+::log("MovingPlatformBehavior.nut executed!");

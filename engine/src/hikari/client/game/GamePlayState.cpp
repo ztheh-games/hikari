@@ -2110,7 +2110,7 @@ namespace hikari {
                 //
                 const auto & hero = gamePlayState.hero;
 
-                if(hero->getBoundingBox().intersects(item->getBoundingBox())) {
+                if(item->isActive() && hero->getBoundingBox().intersects(item->getBoundingBox())) {
                     if(item->isObstacle()) {
                         HIKARI_LOG(debug4) << "Rockman touching an obstacle! id: " << item->getId();
                         if(hero->getVelocityX() > 0) {
@@ -2146,7 +2146,9 @@ namespace hikari {
             std::begin(activeEnemies),
             std::end(activeEnemies),
             [this, &camera, &dt](const std::shared_ptr<Enemy> & enemy) {
-                enemy->update(dt);
+                if(!enemy->isObstacle()) {
+                    enemy->update(dt);
+                }
 
                 const auto & cameraView = camera.getView();
 
