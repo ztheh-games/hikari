@@ -1,0 +1,5 @@
+scripts:
+  - name: Build Hikari
+    command: cmake -P .github/scripts/build-hikari.cmake
+  - name: Run Hikari
+    command: cmake -P .github/scripts/run-hikari.cmake
