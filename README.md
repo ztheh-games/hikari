@@ -25,65 +25,63 @@ Most things are customizable. Not _everything_, but most things.
 
 ## Building ##
 
-Project Hikari uses [CMake][3] to generate platform and compiler-specific build files.
+Project Hikari uses CMake 4.4.3 to generate platform and compiler-specific build files.
 
 ### Dependencies ###
 
-Before building Hikari, make sure that the following libraries are compiled and installed:
+By default, CMake downloads pinned, compatible versions of these dependencies:
 
-* [SFML 2.0+][4] (also tested with 2.1)
-* [PhysicsFS][5]
+* [SFML 2.6.2][4]
+* [PhysicsFS 3.2.0][5]
+
+Configure with `-DHIKARI_FETCH_DEPENDENCIES=OFF` to use installed copies instead.
 
 Also note that this project uses `C++11` features such as `auto`, `decltype`, and lambdas, and therefore requires a C++11 compliant compiler in order to build successfully.
 
 ### Building on Windows (VS2010+) ###
 
-1. Ensure SFML and PhysicsFS are installed.
+1. Install CMake 4.4.3 and Visual Studio with C++ support.
 2. Clone the repository.
 
         git clone https://github.com/zackthehuman/hikari.git hikari
 
 3. Generate the build files.
 
-        mkdir hikari-build
-        cd hikari-build
-        cmake -G "Visual Studio 10" ../hikari
+        cmake -S hikari -B hikari-build
 
-4. Open the `.sln` in Visual Studio and build the `ALL_BUILD` target.
+4. Build the application.
+
+        cmake --build hikari-build --config Release
 
 ### Building on Linux (Makefile) ###
 
-1. Ensure SFML and PhysicsFS are installed.
+1. Install CMake 4.4.3 and a C++11 compiler.
 2. Clone the repository.
 
         git clone https://github.com/zackthehuman/hikari.git hikari
 
 3. Generate the build files.
 
-        mkdir hikari-build
-        cd hikari-build
-        cmake -G "Unix Makefiles" ../hikari
+        cmake -S hikari -B hikari-build -G "Unix Makefiles" -D CMAKE_BUILD_TYPE=Release
 
 4. Build the application.
 
-        make
+        cmake --build hikari-build
 
 ### Building on Mac (Makefile) ###
 
-1. Ensure SFML and PhysicsFS are installed. Note that SFML must be built with the same version of `libc++` as Hikari, otherwise you'll run into linker errors. The generated build files will try to define `-stdlib=libc++` when compiling and linking on a Mac.
+1. Install CMake 4.4.3 and a C++11 compiler. When using system dependencies, SFML must be built with the same version of `libc++` as Hikari.
 2. Clone the repository.
 
         git clone https://github.com/zackthehuman/hikari.git hikari
 
 3. Generate the build files.
 
-        mkdir hikari-build
-        cd hikari-build
-        cmake -G "Unix Makefiles" ../hikari
+        cmake -S hikari -B hikari-build -G "Unix Makefiles" -D CMAKE_BUILD_TYPE=Release
 
 4. Build the application.
 
-        make
+        cmake --build hikari-build
 
 ## Why is it called "Hikari"? ##
 

@@ -4,6 +4,7 @@
 #include "hikari/core/util/Service.hpp"
 
 #include <memory>
+#include <string>
 #include <vector>
 
 namespace hikari {
