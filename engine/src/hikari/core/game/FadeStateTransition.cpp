@@ -35,7 +35,7 @@ namespace hikari {
 
         const sf::View & oldView = target.getView();
 
-        sf::View overlayView(sf::FloatRect(0.0f, 0.0f, 256.0f, 240.0f));
+        sf::View overlayView(sf::FloatRect({0.0f, 0.0f}, {256.0f, 240.0f}));
 
         target.setView(overlayView);
         target.draw(overlay);

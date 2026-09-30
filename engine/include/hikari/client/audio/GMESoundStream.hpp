@@ -2,6 +2,7 @@
 #define HIKARI_CLIENT_AUDIO_GMESOUNDSTREAM_HPP
 
 #include <memory>
+#include <mutex>
 #include <SFML/Audio.hpp>
 #include <SFML/System.hpp>
 #include <SFML/System/Time.hpp>
@@ -160,7 +161,7 @@ namespace hikari {
         std::unique_ptr<short[]> myBuffer;       ///< Audio buffer to read/write to
         std::unique_ptr<Music_Emu> emu;          ///< Pointer to NES APU emulator
         std::unique_ptr<track_info_t> trackInfo; ///< Pointer to current track information
-        sf::Mutex mutex;                           ///< A mutex for keeping this thread-safe
+        std::mutex mutex;                          ///< A mutex for keeping this thread-safe
         static const long SAMPLE_RATE = 44100;     ///< The sample rate of the NES APU
     };
 } // hikari

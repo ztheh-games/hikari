@@ -2,6 +2,7 @@
 #define HIKARI_CORE_GUI_IMAGEFONT
 
 #include "hikari/core/Platform.hpp"
+#include "hikari/core/util/SfmlResources.hpp"
 #include "hikari/core/util/Service.hpp"
 #include <SFML/Graphics/Color.hpp>
 #include <SFML/Graphics/Sprite.hpp>
@@ -22,7 +23,7 @@ namespace hikari {
         int glyphWidth;
         int glyphHeight;
         std::shared_ptr<sf::Texture> glyphTexture;
-        sf::Sprite glyphSprite;
+        SfmlResources::DefaultSprite glyphSprite;
         std::string glyphs;
         std::map< char, sf::IntRect > glyphMap;
     public:

@@ -86,10 +86,10 @@ namespace hikari {
     void Particle::render(sf::RenderTarget &target) {
         auto position = getPosition();
 
-        sprite.setPosition(
+        sprite.setPosition({
             std::floor(position.getX()),
             std::floor(position.getY())
-        );
+        });
 
         target.draw(sprite);
     }

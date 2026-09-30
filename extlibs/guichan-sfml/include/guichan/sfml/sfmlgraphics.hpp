@@ -4,6 +4,7 @@
 #include "guichan/color.hpp"
 #include "guichan/graphics.hpp"
 #include "guichan/platform.hpp"
+#include "hikari/core/util/SfmlResources.hpp"
 
 #include <SFML/Graphics/Sprite.hpp>
 #include <SFML/Graphics/View.hpp>
@@ -140,7 +141,7 @@ namespace gcn
         sf::RenderTarget* mTarget;
         sf::View mContextView;
         sf::Vector2f mSize;
-        sf::Sprite mSprite;
+        hikari::SfmlResources::DefaultSprite mSprite;
         sf::Color mSfmlColor;
         Color mColor;
 

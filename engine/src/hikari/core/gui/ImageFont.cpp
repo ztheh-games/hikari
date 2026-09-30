@@ -19,7 +19,7 @@ namespace hikari {
                 itr < end; 
                 ++itr, ++i) {
                     char glyph = (*itr);
-                    glyphMap[glyph] = sf::IntRect(i * glyphWidth, 0, glyphWidth, glyphHeight);
+                    glyphMap[glyph] = sf::IntRect({i * glyphWidth, 0}, {glyphWidth, glyphHeight});
             }
     }
 
@@ -51,7 +51,7 @@ namespace hikari {
                 }
 
                 glyphSprite.setTextureRect(glyphMap[glyph]);
-                glyphSprite.setPosition(static_cast<float>(x + dx), static_cast<float>(y + dy));
+                glyphSprite.setPosition({static_cast<float>(x + dx), static_cast<float>(y + dy)});
                 glyphSprite.setColor(color);
 
                 target.draw(glyphSprite);

@@ -1,6 +1,7 @@
 #include "hikari/core/util/ImageCache.hpp"
 #include "hikari/core/util/FileSystem.hpp"
 #include "hikari/core/util/Log.hpp"
+#include <SFML/Graphics/Image.hpp>
 #include <SFML/Graphics/Texture.hpp>
 #include <iostream>
 #include <sstream>
@@ -57,7 +58,7 @@ namespace hikari {
                 // HIKARI_LOG(debug4) << "Image data 2: (" << static_cast<int>(pixel2.r) << ", " << static_cast<int>(pixel2.g) << ", " << static_cast<int>(pixel2.b) << ", " << static_cast<int>(pixel2.a) << ")";
 
                 // Then copy the processed pixels to the texture
-                if(texture->create(imageData.getSize().x, imageData.getSize().y)) {
+                if(texture->resize(imageData.getSize())) {
                     texture->update(imageData);
                     texture->setSmooth(enableSmoothing);
                     texture->setRepeated(false);

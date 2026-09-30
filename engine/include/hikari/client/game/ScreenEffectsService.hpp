@@ -3,6 +3,7 @@
 
 #include "hikari/core/util/Service.hpp"
 #include "hikari/core/util/NonCopyable.hpp"
+#include "hikari/core/util/SfmlResources.hpp"
 
 #include <memory>
 #include <vector>
@@ -39,7 +40,7 @@ namespace hikari {
     private:
         std::weak_ptr<EventBusService> eventBus;
         sf::RenderTexture backBuffer;
-        sf::Sprite inputSprite;
+        SfmlResources::DefaultSprite inputSprite;
         std::vector<std::shared_ptr<ScreenEffect>> effects;
 
     public:
@@ -74,8 +75,8 @@ namespace hikari {
             pixelShader = ScreenEffectsService::FADE_IN_SHADER.get();
 
             if(pixelShader) {
-                pixelShader->setParameter("texture", sf::Shader::CurrentTexture);
-                pixelShader->setParameter("fadePercent", (timer / fadeDuration) * 100.0f);
+                pixelShader->setUniform("texture", sf::Shader::CurrentTexture);
+                pixelShader->setUniform("fadePercent", (timer / fadeDuration) * 100.0f);
             }
         }
 
@@ -84,7 +85,7 @@ namespace hikari {
         }
 
         virtual void render(sf::RenderTarget & target) {
-            pixelShader->setParameter("fadePercent", (timer / fadeDuration) * 100.0f);
+            pixelShader->setUniform("fadePercent", (timer / fadeDuration) * 100.0f);
             target.draw(*inputSprite, pixelShader);
         }
     };
@@ -101,8 +102,8 @@ namespace hikari {
             pixelShader = ScreenEffectsService::FADE_IN_SHADER.get();
 
             if(pixelShader) {
-                pixelShader->setParameter("texture", sf::Shader::CurrentTexture);
-                pixelShader->setParameter("fadePercent", (timer / fadeDuration) * 100.0f);
+                pixelShader->setUniform("texture", sf::Shader::CurrentTexture);
+                pixelShader->setUniform("fadePercent", (timer / fadeDuration) * 100.0f);
             }
         }
 
@@ -115,7 +116,7 @@ namespace hikari {
         }
 
         virtual void render(sf::RenderTarget & target) {
-            pixelShader->setParameter("fadePercent", (timer / fadeDuration) * 100.0f);
+            pixelShader->setUniform("fadePercent", (timer / fadeDuration) * 100.0f);
             target.draw(*inputSprite, pixelShader);
         }
     };

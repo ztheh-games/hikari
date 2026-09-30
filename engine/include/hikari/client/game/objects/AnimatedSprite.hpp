@@ -4,6 +4,7 @@
 #include "hikari/core/game/SpriteAnimator.hpp"
 #include "hikari/core/game/Updatable.hpp"
 #include "hikari/core/math/Vector2.hpp"
+#include "hikari/core/util/SfmlResources.hpp"
 
 #include <SFML/Graphics/Sprite.hpp>
 
@@ -20,7 +21,7 @@ namespace hikari {
 
     class AnimatedSprite {
     protected:
-        sf::Sprite sprite;
+        SfmlResources::DefaultSprite sprite;
 
     private:
         std::string currentAnimation;

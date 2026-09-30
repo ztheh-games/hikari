@@ -8,15 +8,15 @@ namespace hikari {
         , keybindings()
     {
         // Set up defaut key bindings
-        bindKey(Input::BUTTON_UP,    sf::Keyboard::Up);
-        bindKey(Input::BUTTON_RIGHT, sf::Keyboard::Right);
-        bindKey(Input::BUTTON_DOWN,  sf::Keyboard::Down);
-        bindKey(Input::BUTTON_LEFT,  sf::Keyboard::Left);
-        bindKey(Input::BUTTON_SHOOT, sf::Keyboard::A);
-        bindKey(Input::BUTTON_JUMP,  sf::Keyboard::S);
-        bindKey(Input::BUTTON_START, sf::Keyboard::Return);
-        bindKey(Input::BUTTON_SELECT, sf::Keyboard::RShift);
-        bindKey(Input::BUTTON_CANCEL, sf::Keyboard::Escape);
+        bindKey(Input::BUTTON_UP,    sf::Keyboard::Key::Up);
+        bindKey(Input::BUTTON_RIGHT, sf::Keyboard::Key::Right);
+        bindKey(Input::BUTTON_DOWN,  sf::Keyboard::Key::Down);
+        bindKey(Input::BUTTON_LEFT,  sf::Keyboard::Key::Left);
+        bindKey(Input::BUTTON_SHOOT, sf::Keyboard::Key::A);
+        bindKey(Input::BUTTON_JUMP,  sf::Keyboard::Key::S);
+        bindKey(Input::BUTTON_START, sf::Keyboard::Key::Enter);
+        bindKey(Input::BUTTON_SELECT, sf::Keyboard::Key::RShift);
+        bindKey(Input::BUTTON_CANCEL, sf::Keyboard::Key::Escape);
     }
 
     const bool RealTimeInput::isUp(const Button &button) const {

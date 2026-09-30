@@ -84,15 +84,15 @@ namespace hikari {
         isXAxisFlipped = isFlipped;
 
         if(isXAxisFlipped) {
-            sprite.setScale(
+            sprite.setScale({
                 -1.0f * std::abs(sprite.getScale().x),
                 sprite.getScale().y
-            );
+            });
         } else {
-            sprite.setScale(
+            sprite.setScale({
                 std::abs(sprite.getScale().x),
                 sprite.getScale().y
-            );
+            });
         }
     }
 
@@ -104,15 +104,15 @@ namespace hikari {
         isYAxisFlipped = isFlipped;
 
         if(isYAxisFlipped) {
-            sprite.setScale(
+            sprite.setScale({
                 sprite.getScale().x,
                 -1.0f * std::abs(sprite.getScale().y)
-            );
+            });
         } else {
-            sprite.setScale(
+            sprite.setScale({
                 sprite.getScale().x,
                 std::abs(sprite.getScale().y)
-            );
+            });
         }
     }
 
@@ -121,7 +121,7 @@ namespace hikari {
     }
 
     void AnimatedSprite::setPosition(const Vector2<float> & position) {
-        sprite.setPosition(position.getX(), position.getY());
+        sprite.setPosition({position.getX(), position.getY()});
     }
 
     void AnimatedSprite::rewind() {

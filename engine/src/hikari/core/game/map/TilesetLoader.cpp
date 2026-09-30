@@ -104,10 +104,11 @@ namespace hikari {
 
             if(isValidTileJson(tileJson)) {
                 tiles.at(i) = sf::IntRect(
-                    tileJson[PROPERTY_NAME_X].asInt(),
-                    tileJson[PROPERTY_NAME_Y].asInt(),
-                    tileSize,
-                    tileSize
+                    {
+                        tileJson[PROPERTY_NAME_X].asInt(),
+                        tileJson[PROPERTY_NAME_Y].asInt()
+                    },
+                    {tileSize, tileSize}
                 );
 
                 if(isTileAnimated(tileJson)) {

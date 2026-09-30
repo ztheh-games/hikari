@@ -28,8 +28,8 @@ namespace gui {
 
         foreground.setSize(
             sf::Vector2f(
-                overlay.getLocalBounds().width,
-                overlay.getLocalBounds().height
+                overlay.getLocalBounds().size.x,
+                overlay.getLocalBounds().size.y
             )
         );
 
@@ -61,7 +61,7 @@ namespace gui {
     void EnergyMeter::updateFill() {
         float yScale = ((maximumValue - value)/maximumValue);
 
-        foreground.setScale(1.0f, yScale);
+        foreground.setScale({1.0f, yScale});
     }
 
     void EnergyMeter::setOrientation(const int &newOrientation) {
@@ -73,49 +73,49 @@ namespace gui {
 
     void EnergyMeter::updateOrientation() {
         if(orientation == HORIZONTAL_ORIENTATION) {
-            const sf::Vector2f bgSize(overlay.getLocalBounds().width, overlay.getLocalBounds().height);
+            const sf::Vector2f bgSize = overlay.getLocalBounds().size;
             const sf::Vector2f bgPosition = overlay.getPosition();
 
-            overlay.setOrigin(bgSize.x, 0.0f);
-            overlay.setRotation(HORIZONTAL_ROTATION_ANGLE);
+            overlay.setOrigin({bgSize.x, 0.0f});
+            overlay.setRotation(sf::degrees(HORIZONTAL_ROTATION_ANGLE));
 
-            foreground.setOrigin(bgSize.x, 0.0f);
-            foreground.setRotation(HORIZONTAL_ROTATION_ANGLE);
-            foreground.setPosition(bgPosition.x, bgPosition.y);
+            foreground.setOrigin({bgSize.x, 0.0f});
+            foreground.setRotation(sf::degrees(HORIZONTAL_ROTATION_ANGLE));
+            foreground.setPosition(bgPosition);
 
-            primaryBackground.setOrigin(bgSize.x, 0.0f);
-            primaryBackground.setRotation(HORIZONTAL_ROTATION_ANGLE);
-            primaryBackground.setPosition(bgPosition.x, bgPosition.y);
+            primaryBackground.setOrigin({bgSize.x, 0.0f});
+            primaryBackground.setRotation(sf::degrees(HORIZONTAL_ROTATION_ANGLE));
+            primaryBackground.setPosition(bgPosition);
 
-            secondaryBackground.setOrigin(bgSize.x - HIGHLIGHT_OFFSET_X, 0.0f);
-            secondaryBackground.setRotation(HORIZONTAL_ROTATION_ANGLE);
-            secondaryBackground.setPosition(bgPosition.x, bgPosition.y);
+            secondaryBackground.setOrigin({bgSize.x - HIGHLIGHT_OFFSET_X, 0.0f});
+            secondaryBackground.setRotation(sf::degrees(HORIZONTAL_ROTATION_ANGLE));
+            secondaryBackground.setPosition(bgPosition);
         } else if(orientation == VERTICAL_ORIENTATION) {
             const sf::Vector2f bgPosition = overlay.getPosition();
 
-            overlay.setOrigin(0.0f, 0.0f);
-            overlay.setRotation(VERTICAL_ROTATION_ANGLE);
+            overlay.setOrigin({0.0f, 0.0f});
+            overlay.setRotation(sf::degrees(VERTICAL_ROTATION_ANGLE));
 
-            foreground.setOrigin(0.0f, 0.0f);
-            foreground.setRotation(VERTICAL_ROTATION_ANGLE);
+            foreground.setOrigin({0.0f, 0.0f});
+            foreground.setRotation(sf::degrees(VERTICAL_ROTATION_ANGLE));
             foreground.setPosition(bgPosition);
 
-            primaryBackground.setOrigin(0.0f, 0.0f);
-            primaryBackground.setRotation(VERTICAL_ROTATION_ANGLE);
+            primaryBackground.setOrigin({0.0f, 0.0f});
+            primaryBackground.setRotation(sf::degrees(VERTICAL_ROTATION_ANGLE));
             primaryBackground.setPosition(bgPosition);
 
-            secondaryBackground.setOrigin(-HIGHLIGHT_OFFSET_X, 0.0f);
-            secondaryBackground.setRotation(VERTICAL_ROTATION_ANGLE);
+            secondaryBackground.setOrigin({-HIGHLIGHT_OFFSET_X, 0.0f});
+            secondaryBackground.setRotation(sf::degrees(VERTICAL_ROTATION_ANGLE));
             secondaryBackground.setPosition(bgPosition);
         }
     }
 
     void EnergyMeter::setPosition(const sf::Vector2i &newPosition) {
         Widget::setPosition(newPosition);
-        overlay.setPosition(static_cast<float>(newPosition.x), static_cast<float>(newPosition.y));
-        foreground.setPosition(static_cast<float>(newPosition.x), static_cast<float>(newPosition.y));
+        overlay.setPosition({static_cast<float>(newPosition.x), static_cast<float>(newPosition.y)});
+        foreground.setPosition({static_cast<float>(newPosition.x), static_cast<float>(newPosition.y)});
         primaryBackground.setPosition(foreground.getPosition());
-        secondaryBackground.setPosition(foreground.getPosition().x, foreground.getPosition().y);
+        secondaryBackground.setPosition(foreground.getPosition());
     }
 
     const float& EnergyMeter::getValue() const {

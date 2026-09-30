@@ -34,7 +34,7 @@ namespace hikari {
     }
 
     bool NSFSoundStream::open(const std::string& fileName) {
-        sf::Lock lock(mutex);
+        std::lock_guard<std::mutex> lock(mutex);
 
         if(!FileSystem::exists(fileName)) {
             return false;
@@ -86,14 +86,14 @@ namespace hikari {
             return false;
         }
 
-        initialize(2, SAMPLE_RATE);
+        initialize(2, SAMPLE_RATE, {sf::SoundChannel::FrontLeft, sf::SoundChannel::FrontRight});
         //setCurrentTrack(0);
 
         return true;
     }
 
     void NSFSoundStream::onSeek(sf::Time timeOffset) {
-        sf::Lock lock(mutex);
+        std::lock_guard<std::mutex> lock(mutex);
 
         if(!activeSamplers.empty()) {
             auto & sampler = activeSamplers.front();
@@ -104,7 +104,7 @@ namespace hikari {
     }
 
     bool NSFSoundStream::onGetData(sf::SoundStream::Chunk& Data) {
-        sf::Lock lock(mutex);
+        std::lock_guard<std::mutex> lock(mutex);
 
         auto * mixedBuffer = masterBuffer.get();
         bool keepGoing = true;
@@ -220,7 +220,7 @@ namespace hikari {
     }
 
     void NSFSoundStream::setCurrentTrack(int track) {
-        sf::Lock lock(mutex);
+        std::lock_guard<std::mutex> lock(mutex);
 
         if(track >= 0 && track < getTrackCount()) {
             // sampleEmus[activeSampler]->start_track(track);
@@ -253,7 +253,7 @@ namespace hikari {
     }
 
     void NSFSoundStream::stopAllSamplers() {
-        sf::Lock lock(mutex);
+        std::lock_guard<std::mutex> lock(mutex);
 
         activeSamplers.remove_if([&](const SamplerPair & pair) -> bool {
             int track = (pair.first)->current_track();
@@ -266,7 +266,7 @@ namespace hikari {
     }
 
     const std::string NSFSoundStream::getTrackName() {
-        sf::Lock lock(mutex);
+        std::lock_guard<std::mutex> lock(mutex);
         handleError(sampleEmus[0]->track_info(trackInfo.get()));
         return std::string(trackInfo->song);
     }

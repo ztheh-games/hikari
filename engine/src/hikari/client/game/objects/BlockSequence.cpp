@@ -5,6 +5,8 @@
 #include "hikari/client/game/objects/Entity.hpp"
 #include "hikari/client/game/objects/Enemy.hpp"
 #include "hikari/client/game/objects/BlockSequence.hpp"
+
+#include <algorithm>
 #include "hikari/client/game/objects/BlockTiming.hpp"
 #include "hikari/core/util/Log.hpp"
 

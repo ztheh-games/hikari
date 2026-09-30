@@ -24,8 +24,8 @@ namespace hikari {
     void PalettedAnimatedSprite::setShaderFile(const std::string & file) {
         const std::string shaderCode = FileSystem::readFileAsString(file);
         pixelShader.reset(new sf::Shader());
-        pixelShader->loadFromMemory(shaderCode, sf::Shader::Fragment);
-        pixelShader->setParameter("texture", sf::Shader::CurrentTexture);
+        pixelShader->loadFromMemory(shaderCode, sf::Shader::Type::Fragment);
+        pixelShader->setUniform("texture", sf::Shader::CurrentTexture);
     }
 
     void PalettedAnimatedSprite::createColorTable(const std::vector<std::vector<sf::Color>> & colors) {
@@ -35,14 +35,14 @@ namespace hikari {
             colorTableImage.reset(new sf::Image());
         }
 
-        colorTableImage->create(colorTableWidth, colorTableHeight, sf::Color(0, 0, 255, 255));
+        colorTableImage->resize({colorTableWidth, colorTableHeight}, sf::Color(0, 0, 255, 255));
 
         for(unsigned int row = 0; row < colors.size(); ++row) {
             const auto & paletteRow = colors[row];
             for(unsigned int column = 0; column < paletteRow.size(); ++column) {
                 const auto color = paletteRow[column];
 
-                colorTableImage->setPixel(column, row, color);
+                colorTableImage->setPixel({column, row}, color);
             }
         }
 
@@ -50,11 +50,11 @@ namespace hikari {
             colorTableTexture.reset(new sf::Texture());
         }
 
-        colorTableTexture->create(colorTableWidth, colorTableHeight);
+        colorTableTexture->resize({colorTableWidth, colorTableHeight});
         colorTableTexture->update(*colorTableImage);
-        pixelShader->setParameter("colorTableTexture", *colorTableTexture);
-        pixelShader->setParameter("colorTableWidth", static_cast<float>(colorTableWidth));
-        pixelShader->setParameter("colorTableHeight", static_cast<float>(colorTableHeight));
+        pixelShader->setUniform("colorTableTexture", *colorTableTexture);
+        pixelShader->setUniform("colorTableWidth", static_cast<float>(colorTableWidth));
+        pixelShader->setUniform("colorTableHeight", static_cast<float>(colorTableHeight));
     }
 
     void PalettedAnimatedSprite::destroySharedResources() {
@@ -103,7 +103,7 @@ namespace hikari {
     void PalettedAnimatedSprite::render(sf::RenderTarget &target) const {
         if(isUsingPalette()) {
             if(pixelShader) {
-                pixelShader->setParameter("paletteIndex",
+                pixelShader->setUniform("paletteIndex",
                     static_cast<float>(isUsingSharedPalette() ? sharedPaletteIndex : paletteIndex));
                 target.draw(sprite, pixelShader.get());
             }

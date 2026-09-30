@@ -22,7 +22,7 @@ namespace hikari {
     }
 
     bool GMESoundStream::open(const std::string& fileName) {
-        sf::Lock lock(mutex);
+        std::unique_lock<std::mutex> lock(mutex);
 
         int length = 0;
         auto fs = FileSystem::openFileRead(fileName);
@@ -58,7 +58,8 @@ namespace hikari {
             return false;
         }
 
-        initialize(2, SAMPLE_RATE);
+        initialize(2, SAMPLE_RATE, {sf::SoundChannel::FrontLeft, sf::SoundChannel::FrontRight});
+        lock.unlock();
         setCurrentTrack(0);
 
         // int count = emu->track_count();
@@ -78,7 +79,7 @@ namespace hikari {
     }
 
     void GMESoundStream::onSeek(sf::Time timeOffset) {
-        sf::Lock lock(mutex);
+        std::lock_guard<std::mutex> lock(mutex);
 
         if(emu) {
             handleError(emu->seek(static_cast<long>(timeOffset.asMilliseconds())));
@@ -86,7 +87,7 @@ namespace hikari {
     }
 
     bool GMESoundStream::onGetData(sf::SoundStream::Chunk& Data) {
-        sf::Lock lock(mutex);
+        std::lock_guard<std::mutex> lock(mutex);
 
         if(emu) {
             handleError(emu->play(myBufferSize, myBuffer.get()));
@@ -127,7 +128,7 @@ namespace hikari {
     }
 
     void GMESoundStream::setCurrentTrack(int track) {
-        sf::Lock lock(mutex);
+        std::lock_guard<std::mutex> lock(mutex);
 
         if(track >= 0 && track < getTrackCount()) {
             if(emu) {
@@ -145,7 +146,7 @@ namespace hikari {
     }
 
     const std::string GMESoundStream::getTrackName() {
-        sf::Lock lock(mutex);
+        std::lock_guard<std::mutex> lock(mutex);
 
         if(emu) {
             handleError(emu->track_info(trackInfo.get()));
@@ -173,7 +174,7 @@ namespace hikari {
     }
 
     std::unique_ptr<sf::SoundBuffer> GMESoundStream::renderTrackToBuffer(int track) {
-        sf::Lock lock(mutex);
+        std::lock_guard<std::mutex> lock(mutex);
         std::unique_ptr<sf::SoundBuffer> buffer(new sf::SoundBuffer);
         std::vector<short> samples;
 
@@ -195,7 +196,8 @@ namespace hikari {
                 &samples[0],    // Spec gaurantees that std::vector's memory is contiguous
                 samples.size(),
                 2,
-                SAMPLE_RATE
+                SAMPLE_RATE,
+                {sf::SoundChannel::FrontLeft, sf::SoundChannel::FrontRight}
             );
         }
 

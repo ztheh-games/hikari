@@ -140,12 +140,12 @@ namespace hikari {
         const auto & eyePosition = config.getEyePositions().at(cursorIndex);
 
         const Point2D<float> &leftEyePosition = eyePosition.first;
-        leftEye.setPosition(leftEyePosition.getX(), leftEyePosition.getY());
+        leftEye.setPosition({leftEyePosition.getX(), leftEyePosition.getY()});
         guiLeftEye->setX(static_cast<int>(leftEyePosition.getX()));
         guiLeftEye->setY(static_cast<int>(leftEyePosition.getY()));
 
         const Point2D<float> &rightEyePosition = eyePosition.second;
-        rightEye.setPosition(rightEyePosition.getX(), rightEyePosition.getY());
+        rightEye.setPosition({rightEyePosition.getX(), rightEyePosition.getY()});
         guiRightEye->setX(static_cast<int>(rightEyePosition.getX()));
         guiRightEye->setY(static_cast<int>(rightEyePosition.getY()));
 
@@ -261,21 +261,21 @@ namespace hikari {
         bool playSample = false;
         const float SINGLE_FRAME = 1.0f / 60.0f;
 
-        if(event.type == sf::Event::KeyPressed) {
+        if(const auto* keyPressed = event.getIf<sf::Event::KeyPressed>()) {
             if(enableCursorMovement) {
-                if(event.key.code == sf::Keyboard::Up) {
+                if(keyPressed->code == sf::Keyboard::Key::Up) {
                     cursorRow = std::max(0, cursorRow - 1);
                     playSample = true;
-                } else if(event.key.code == sf::Keyboard::Down) {
+                } else if(keyPressed->code == sf::Keyboard::Key::Down) {
                     cursorRow = std::min(NUM_OF_CURSOR_ROWS - 1, cursorRow + 1);
                     playSample = true;
-                } else if(event.key.code == sf::Keyboard::Left) {
+                } else if(keyPressed->code == sf::Keyboard::Key::Left) {
                     cursorColumn = std::max(0, cursorColumn - 1);
                     playSample = true;
-                } else if(event.key.code == sf::Keyboard::Right) {
+                } else if(keyPressed->code == sf::Keyboard::Key::Right) {
                     cursorColumn = std::min(NUM_OF_CURSOR_COLUMNS - 1, cursorColumn + 1);
                     playSample = true;
-                } else if(event.key.code == sf::Keyboard::Return) {
+                } else if(keyPressed->code == sf::Keyboard::Key::Enter) {
                     // Play the "selected" sound
                     taskQueue.push(std::make_shared<FunctionTask>(0, [&](float dt) -> bool {
                         if(auto audio = audioService.lock()) {

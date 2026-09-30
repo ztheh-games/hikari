@@ -1,4 +1,5 @@
 #include "hikari/core/game/StateTransition.hpp"
+#include "hikari/core/util/SfmlResources.hpp"
 
 #include <SFML/Graphics/Color.hpp>
 #include <SFML/Graphics/RectangleShape.hpp>
@@ -22,10 +23,10 @@ namespace hikari {
         SliceDirection direction;
         const float duration;
         float accumulator;
-        sf::Sprite exitingStateSpriteLayerTop;
-        sf::Sprite exitingStateSpriteLayerMiddle;
-        sf::Sprite exitingStateSpriteLayerBottom;
-        sf::Sprite enteringStateSpriteLayer;
+        SfmlResources::DefaultSprite exitingStateSpriteLayerTop;
+        SfmlResources::DefaultSprite exitingStateSpriteLayerMiddle;
+        SfmlResources::DefaultSprite exitingStateSpriteLayerBottom;
+        SfmlResources::DefaultSprite enteringStateSpriteLayer;
 
     public:
         SliceStateTransition(SliceDirection direction, float duration);

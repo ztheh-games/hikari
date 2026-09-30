@@ -17,7 +17,7 @@ namespace hikari {
             energyMeterImage.setSmooth(false);
 
             sf::Sprite meterSprite(energyMeterImage);
-            meterSprite.setTextureRect(sf::IntRect(0, 0, 8, 56));
+            meterSprite.setTextureRect(sf::IntRect({0, 0}, {8, 56}));
 
             energyMeter.reset(new EnergyMeter(meterSprite, 56.0f));
             energyMeter->setValue(54.0f);
@@ -26,17 +26,17 @@ namespace hikari {
     }
 
     void GuiTestState::handleEvent(sf::Event &event) {
-        if(event.type == sf::Event::KeyPressed) {
-            if(event.key.code == sf::Keyboard::Up) {
+        if(const auto* keyPressed = event.getIf<sf::Event::KeyPressed>()) {
+            if(keyPressed->code == sf::Keyboard::Key::Up) {
                 energyMeter->setValue(energyMeter->getValue() + 1);
             }
-            if(event.key.code == sf::Keyboard::Down) {
+            if(keyPressed->code == sf::Keyboard::Key::Down) {
                 energyMeter->setValue(energyMeter->getValue() - 1);
             }
-            if(event.key.code == sf::Keyboard::Left) {
+            if(keyPressed->code == sf::Keyboard::Key::Left) {
                 energyMeter->setOrientation(EnergyMeter::VERTICAL_ORIENTATION);
             }
-            if(event.key.code == sf::Keyboard::Right) {
+            if(keyPressed->code == sf::Keyboard::Key::Right) {
                 energyMeter->setOrientation(EnergyMeter::HORIZONTAL_ORIENTATION);
             }
         }

@@ -7,6 +7,7 @@
 #include "hikari/core/game/Renderable.hpp"
 #include "hikari/core/game/Animator.hpp"
 #include "hikari/core/util/Cloneable.hpp"
+#include "hikari/core/util/SfmlResources.hpp"
 
 #include <SFML/Graphics/Sprite.hpp>
 
@@ -33,7 +34,7 @@ namespace hikari {
         Vector2<float> velocity;
         BoundingBox<float> boundingBox;
 
-        sf::Sprite sprite;
+        SfmlResources::DefaultSprite sprite;
         std::shared_ptr<sf::Texture> spriteTexture;
         std::weak_ptr<Animation> animation;
         std::weak_ptr<AnimationSet> animationSet;

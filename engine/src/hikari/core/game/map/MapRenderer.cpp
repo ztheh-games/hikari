@@ -85,7 +85,7 @@ namespace hikari {
 
                 // TODO: Not sure about this... it may make the jittering MORE obvious...?
                 const auto & unQuantizedPosition = tileSprite.getPosition();
-                tileSprite.setPosition(std::ceil(unQuantizedPosition.x), std::ceil(unQuantizedPosition.y));
+                tileSprite.setPosition({std::ceil(unQuantizedPosition.x), std::ceil(unQuantizedPosition.y)});
 
                 target.draw(tileSprite);
             }
@@ -221,17 +221,17 @@ namespace hikari {
         const sf::IntRect& rect = tileData->getTileRect(tileIndex);
 
         tileSprite.setTextureRect(rect);
-        tileSprite.setPosition(
+        tileSprite.setPosition({
             static_cast<float>(x * tileData->getTileSize()),
             static_cast<float>(y * tileData->getTileSize())
-        );
+        });
     }
 
     inline void MapRenderer::applyTileAttributes(const int &attributes) {
         //tileSprite.FlipX(false);
         //tileSprite.FlipY(false);
-        tileSprite.setRotation(0.0f);
-        tileSprite.setOrigin(0.0f, 0.0f);
+        tileSprite.setRotation(sf::degrees(0.0f));
+        tileSprite.setOrigin({0.0f, 0.0f});
 
         if((attributes & TileAttribute::FLIP_HORIZONTAL) == TileAttribute::FLIP_HORIZONTAL) {
             //tileSprite.FlipX(true);
@@ -243,9 +243,9 @@ namespace hikari {
 
         if((attributes & TileAttribute::ROTATE_BY_90) == TileAttribute::ROTATE_BY_90) {
             float tileRotationOffset = static_cast<float>(tileData->getTileSize() * 0.5f);
-            tileSprite.setOrigin(tileRotationOffset, tileRotationOffset);
-            tileSprite.setRotation(90.0f);
-            tileSprite.move(tileRotationOffset, tileRotationOffset);
+            tileSprite.setOrigin({tileRotationOffset, tileRotationOffset});
+            tileSprite.setRotation(sf::degrees(90.0f));
+            tileSprite.move({tileRotationOffset, tileRotationOffset});
         }
     }
 

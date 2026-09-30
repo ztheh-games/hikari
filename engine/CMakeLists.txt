@@ -413,20 +413,10 @@ if(MSVC)
     set(SFML_STATIC_LIBRARIES TRUE)
 endif(MSVC)
 
-if(TARGET sfml-graphics)
-    target_link_libraries(hikari PRIVATE sfml-graphics sfml-window sfml-audio sfml-system)
-    if(WIN32 AND HIKARI_OPENAL_RUNTIME)
-        add_custom_target(
-            runtime-dependencies
-            ALL
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                "${HIKARI_OPENAL_RUNTIME}"
-                "$<TARGET_FILE_DIR:hikari>/openal32.dll"
-        )
-        add_dependencies(runtime-dependencies content hikari)
-    endif()
+if(TARGET SFML::Graphics)
+    target_link_libraries(hikari PRIVATE SFML::Graphics SFML::Window SFML::Audio SFML::System)
 else()
-    find_package(SFML 2 COMPONENTS graphics window audio system REQUIRED)
+    find_package(SFML 3 COMPONENTS Graphics Window Audio System REQUIRED)
     if(APPLE)
         set(OTHER_SFML_LDFLAGS ${OTHER_SFML_LDFLAGS} "-stdlib=libc++")
     endif(APPLE)

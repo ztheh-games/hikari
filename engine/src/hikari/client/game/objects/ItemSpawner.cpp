@@ -1,4 +1,6 @@
 #include "hikari/client/game/objects/ItemSpawner.hpp"
+
+#include <algorithm>
 #include "hikari/client/game/objects/CollectableItem.hpp"
 #include "hikari/client/game/GameWorld.hpp"
 #include "hikari/client/game/events/EventBus.hpp"

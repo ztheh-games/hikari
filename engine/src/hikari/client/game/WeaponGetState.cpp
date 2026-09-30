@@ -75,8 +75,8 @@ namespace hikari {
     }
 
     void WeaponGetState::handleEvent(sf::Event &event) {
-        if(event.type == sf::Event::KeyPressed) {
-            if(event.key.code == sf::Keyboard::Return) {
+        if(const auto* keyPressed = event.getIf<sf::Event::KeyPressed>()) {
+            if(keyPressed->code == sf::Keyboard::Key::Enter) {
                 if(!goToNextState) {
                     controller.requestStateChange("stageselect");
                     goToNextState = true;

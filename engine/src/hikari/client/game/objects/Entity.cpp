@@ -460,10 +460,10 @@ namespace hikari {
         if(debug) {
             const BoundingBoxF& bb = getBoundingBox();
 
-            boxOutline.setPosition(std::floor(bb.getLeft() ), std::floor(bb.getTop()));
+            boxOutline.setPosition({std::floor(bb.getLeft() ), std::floor(bb.getTop())});
             boxOutline.setSize(sf::Vector2f(std::floor(bb.getWidth() ), std::floor(bb.getHeight())));
 
-            boxPosition.setPosition(std::floor(getPosition().getX()), std::floor(getPosition().getY()));
+            boxPosition.setPosition({std::floor(getPosition().getX()), std::floor(getPosition().getY())});
             boxPosition.setSize(sf::Vector2f(1.0f, 1.0f));
         }
         #endif // HIKARI_DEBUG_ENTITIES
@@ -485,10 +485,10 @@ namespace hikari {
             ) {
                 auto & box = (*hitBox).bounds;
 
-                boxOutline.setPosition(std::floor(box.getLeft() ), std::floor(box.getTop()));
+                boxOutline.setPosition({std::floor(box.getLeft() ), std::floor(box.getTop())});
                 boxOutline.setSize(sf::Vector2f(std::floor(box.getWidth() ), std::floor(box.getHeight())));
 
-                boxPosition.setPosition(std::floor(box.getPosition().getX()), std::floor(box.getPosition().getY()));
+                boxPosition.setPosition({std::floor(box.getPosition().getX()), std::floor(box.getPosition().getY())});
                 boxPosition.setSize(sf::Vector2f(1.0f, 1.0f));
 
                 if((*hitBox).shieldFlag) {

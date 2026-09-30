@@ -32,30 +32,34 @@ namespace hikari {
             const auto& currentFrame = animation->getFrameAt(getCurrentFrameIndex());
             const auto& currentFrameRectangle = currentFrame.getSourceRectangle();
 
-            sourceRectangle.top = currentFrameRectangle.getTop();
-            sourceRectangle.width = currentFrameRectangle.getWidth();
-            sourceRectangle.height = currentFrameRectangle.getHeight();
-            sourceRectangle.left = currentFrameRectangle.getLeft();
+            sourceRectangle.position = {
+                currentFrameRectangle.getLeft(),
+                currentFrameRectangle.getTop()
+            };
+            sourceRectangle.size = {
+                currentFrameRectangle.getWidth(),
+                currentFrameRectangle.getHeight()
+            };
 
             sprite.setTextureRect(sourceRectangle);
         
-            sprite.setOrigin(
+            sprite.setOrigin({
                 static_cast<float>(currentFrame.getHotspot().getX()),
                 static_cast<float>(currentFrame.getHotspot().getY())
-            ); 
+            });
 
             if(invertXOffset) {
-                sprite.setOrigin(
+                sprite.setOrigin({
                     static_cast<float>(currentFrame.getSourceRectangle().getWidth() - currentFrame.getHotspot().getX()),
                     static_cast<float>(sprite.getOrigin().y)
-                ); 
+                });
             } 
 
             if(invertYOffset) {
-                sprite.setOrigin(
+                sprite.setOrigin({
                     static_cast<float>(sprite.getOrigin().x),
                     static_cast<float>(currentFrame.getSourceRectangle().getHeight() - currentFrame.getHotspot().getY())
-                ); 
+                });
             }
         }
     }
