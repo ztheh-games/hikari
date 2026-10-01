@@ -148,6 +148,7 @@ namespace hikari {
 
         void setVelocityY(const float &vy);
         float getVelocityY() const;
+        const Vector2<float>& getFrameDisplacement() const;
 
         float getAge() const;
         float getMaximumAge() const;
@@ -340,6 +341,7 @@ namespace hikari {
          * @param info information about the collision event
          */
         virtual void handleCollision(Movable& body, CollisionInfo& info);
+        virtual void handleCrush(Movable& body, CollisionInfo& info);
 
         /**
          * Updates the Entity allowing it to make changes to its internal state.

@@ -95,6 +95,10 @@ namespace hikari {
         }
     }
 
+    void Enemy::handleCrush(Movable& body, CollisionInfo& info) {
+        setHitPoints(0.0f);
+    }
+
     void Enemy::handleObjectTouch(int otherId) {
         // HIKARI_LOG(debug4) << "I'm being touched by something! My ID = " << getId() << ", Other ID = " << otherId;
         if(brain) {

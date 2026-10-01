@@ -37,12 +37,15 @@ namespace hikari {
         , treatPlatformAsGround(true)
         , applyHorizontalVelocity(true)
         , applyVerticalVelocity(true)
+        , supportObstacleId(-1)
         , ambientVelocity(0.0f, 0.0f)
         , velocity(0.0f, 0.0f)
+        , frameDisplacement(0.0f, 0.0f)
         , boundingBox(0.0f, 0.0f, 0.0f, 0.0f)
         , collisionInfo()
         , landingCallback()
         , collisionCallback()
+        , crushCallback()
     {
 
     }
@@ -61,12 +64,15 @@ namespace hikari {
         , treatPlatformAsGround(true)
         , applyHorizontalVelocity(true)
         , applyVerticalVelocity(true)
+        , supportObstacleId(-1)
         , ambientVelocity(0.0f, 0.0f)
         , velocity(0.0f, 0.0f)
+        , frameDisplacement(0.0f, 0.0f)
         , boundingBox(0.0f, 0.0f, width, height)
         , collisionInfo()
         , landingCallback()
         , collisionCallback()
+        , crushCallback()
     {
 
     }
@@ -85,12 +91,15 @@ namespace hikari {
         , treatPlatformAsGround(proto.treatPlatformAsGround)
         , applyHorizontalVelocity(proto.applyHorizontalVelocity)
         , applyVerticalVelocity(proto.applyVerticalVelocity)
+        , supportObstacleId(-1)
         , ambientVelocity(proto.ambientVelocity)
         , velocity(proto.velocity)
+        , frameDisplacement(0.0f, 0.0f)
         , boundingBox(proto.boundingBox)
         , collisionInfo(proto.collisionInfo)
         , landingCallback(proto.landingCallback)        // TODO: Cloning the callbacks is almost 100% wrong
         , collisionCallback(proto.collisionCallback)    // You should create new ones instead
+        , crushCallback(proto.crushCallback)
     {
 
     }
@@ -139,8 +148,16 @@ namespace hikari {
         return velocity;
     }
 
+    const Vector2<float>& Movable::getFrameDisplacement() const {
+        return frameDisplacement;
+    }
+
     const BoundingBoxF& Movable::getBoundingBox() const {
         return boundingBox;
+    }
+
+    int Movable::getSupportObstacleId() const {
+        return supportObstacleId;
     }
 
     const bool& Movable::isOnGroundNow() const {
@@ -187,29 +204,13 @@ namespace hikari {
     Vector2<float> Movable::checkCollision(const float& dt) {
         Vector2<float> translation = getVelocity() + getAmbientVelocity();
 
-        // Set "forceCheck" flags here based on whether we were previously
-        // inheriting velocity from something. If that's true, it means that
-        // we were on top of a moving platform or something else. If we're
-        // standing still then our velocity would be 0 so no checks on that axis
-        // would be performed, but since we're still technically moving we need
-        // a way to force checking for collisions so we don't ride a platform
-        // through a wall.
-        //
-        // Also the reason that there are four differene flags is because we
-        // don't want to incorrectly check for "up" collisions when we're moving
-        // down, or for "left" collisions when we're moving right.
-        bool forceCheckXLeft = collisionInfo.inheritedVelocityX < 0.0;
-        bool forceCheckXRight = collisionInfo.inheritedVelocityX > 0.0;
-        bool forceCheckYUp = collisionInfo.inheritedVelocityY < 0.0;
-        bool forceCheckYDown = collisionInfo.inheritedVelocityY > 0.0;
-
         collisionInfo.clear();
         collisionInfo.treatPlatformAsGround = this->treatPlatformAsGround;
 
         preCheckCollision();
 
         // Check horizontal directions first
-        if(translation.getX() < 0 || forceCheckXLeft) {
+        if(translation.getX() < 0) {
             // Moving left
 
             // We subtract 1 here because getBottom() represents the first pixel outside of the bounding box.
@@ -232,7 +233,7 @@ namespace hikari {
                 }
             }
 
-        } else if(translation.getX() > 0 || forceCheckXRight) {
+        } else if(translation.getX() > 0) {
             // Moving right
 
             // We subtract 1 here because getBottom() represents the first pixel outside of the bounding box.
@@ -257,7 +258,7 @@ namespace hikari {
         }
 
         // Check vertical directions second
-        if(translation.getY() < 0 || forceCheckYUp) {
+        if(translation.getY() < 0) {
             // Moving up
 
             // We subtract 1 here because getRight() represents the first pixel outside of the bounding box.
@@ -280,7 +281,7 @@ namespace hikari {
                 }
             }
 
-        } else if(translation.getY() > 0 || forceCheckYDown) {
+        } else if(translation.getY() > 0) {
             // Moving down
 
             // We subtract 1 here because getRight() represents the first pixel outside of the bounding box.
@@ -298,6 +299,7 @@ namespace hikari {
                 translation.setY(velocity.getY());
                 onGroundNow = true;
                 bottomBlockedFlag = true;
+                supportObstacleId = collisionInfo.obstacleId;
 
                 if(collisionCallback) {
                     collisionCallback(*this, collisionInfo);
@@ -381,7 +383,124 @@ namespace hikari {
         this->collisionCallback = callback;
     }
 
+    void Movable::setCrushCallback(const CollisionCallback& callback) {
+        this->crushCallback = callback;
+    }
+
+    void Movable::clearSupport() {
+        supportObstacleId = -1;
+    }
+
+    bool Movable::applySupportDisplacement() {
+        if(supportObstacleId < 0 || velocity.getY() < 0.0f || !getCollisionResolver()) {
+            clearSupport();
+            return true;
+        }
+
+        BoundingBoxF supportBounds(0.0f, 0.0f, 0.0f, 0.0f);
+        Vector2<float> supportDisplacement;
+
+        if(!getCollisionResolver()->getObstacleState(supportObstacleId, supportBounds, supportDisplacement)) {
+            clearSupport();
+            return true;
+        }
+
+        BoundingBoxF previousSupportBounds(supportBounds);
+        previousSupportBounds.setPosition(supportBounds.getPosition() - supportDisplacement);
+
+        const bool overlapsPreviousSupport =
+            boundingBox.getRight() > previousSupportBounds.getLeft() &&
+            boundingBox.getLeft() < previousSupportBounds.getRight();
+        const bool wasOnTop =
+            std::abs(boundingBox.getBottom() - previousSupportBounds.getTop()) <= 1.0f;
+
+        if(!overlapsPreviousSupport || !wasOnTop) {
+            clearSupport();
+            return true;
+        }
+
+        CollisionInfo carrierCollision;
+        carrierCollision.treatPlatformAsGround = false;
+
+        const float dx = supportDisplacement.getX();
+        if(dx != 0.0f) {
+            const Direction direction = dx < 0.0f ? Directions::Left : Directions::Right;
+            const float edge = dx < 0.0f ? boundingBox.getLeft() : boundingBox.getRight();
+
+            getCollisionResolver()->checkHorizontalEdge(
+                static_cast<int>(edge + dx),
+                static_cast<int>(boundingBox.getTop()),
+                static_cast<int>(boundingBox.getBottom() - 1.0f),
+                direction,
+                carrierCollision,
+                supportObstacleId
+            );
+
+            if(carrierCollision.isCollisionX) {
+                if(direction == Directions::Left) {
+                    boundingBox.setLeft(static_cast<float>(carrierCollision.correctedX));
+                } else {
+                    boundingBox.setRight(static_cast<float>(carrierCollision.correctedX));
+                }
+
+                clearSupport();
+                if(crushCallback) {
+                    crushCallback(*this, carrierCollision);
+                }
+                return false;
+            }
+
+            boundingBox.setPosition(boundingBox.getPosition().getX() + dx, boundingBox.getPosition().getY());
+        }
+
+        const float dy = supportDisplacement.getY();
+        if(dy != 0.0f) {
+            const Direction direction = dy < 0.0f ? Directions::Up : Directions::Down;
+            const float edge = dy < 0.0f ? boundingBox.getTop() : boundingBox.getBottom();
+            const int destinationEdge = direction == Directions::Down
+                ? static_cast<int>(std::ceil(edge + dy))
+                : static_cast<int>(edge + dy);
+
+            carrierCollision.clear();
+            carrierCollision.treatPlatformAsGround = false;
+            getCollisionResolver()->checkVerticalEdge(
+                destinationEdge,
+                static_cast<int>(boundingBox.getLeft()),
+                static_cast<int>(boundingBox.getRight() - 1.0f),
+                direction,
+                carrierCollision,
+                supportObstacleId
+            );
+
+            if(carrierCollision.isCollisionY) {
+                if(direction == Directions::Up) {
+                    boundingBox.setTop(static_cast<float>(carrierCollision.correctedY));
+                } else {
+                    boundingBox.setBottom(static_cast<float>(carrierCollision.correctedY));
+                }
+
+                clearSupport();
+                if(crushCallback) {
+                    crushCallback(*this, carrierCollision);
+                }
+                return false;
+            }
+
+            boundingBox.setPosition(boundingBox.getPosition().getX(), boundingBox.getPosition().getY() + dy);
+        }
+
+        return true;
+    }
+
     void Movable::update(float dt) {
+        const Vector2<float> startingPosition = getPosition();
+
+        if(!applySupportDisplacement()) {
+            frameDisplacement = getPosition() - startingPosition;
+            return;
+        }
+
+        clearSupport();
         Vector2<float> translation;
 
         if(isGravitated()) {
@@ -406,13 +525,30 @@ namespace hikari {
             translation = velocity + getAmbientVelocity();
         }
 
-        float extraX = collisionInfo.inheritedVelocityX;
-        float extraY = collisionInfo.inheritedVelocityY;
-
         // Integrate the position
         setPosition(
-            getPosition().getX() + (applyHorizontalVelocity ? translation.getX() + extraX : 0 + extraX)/* * dt */,
-            getPosition().getY() + (applyVerticalVelocity   ? translation.getY() + extraY : 0 + extraY)/* * dt */);
+            getPosition().getX() + (applyHorizontalVelocity ? translation.getX() : 0.0f)/* * dt */,
+            getPosition().getY() + (applyVerticalVelocity   ? translation.getY() : 0.0f)/* * dt */);
+
+        if(supportObstacleId >= 0) {
+            BoundingBoxF supportBounds(0.0f, 0.0f, 0.0f, 0.0f);
+            Vector2<float> supportDisplacement;
+            const bool supportIsAvailable =
+                getCollisionResolver() &&
+                getCollisionResolver()->getObstacleState(supportObstacleId, supportBounds, supportDisplacement);
+            const bool overlapsSupport =
+                supportIsAvailable &&
+                boundingBox.getRight() > supportBounds.getLeft() &&
+                boundingBox.getLeft() < supportBounds.getRight();
+
+            if(!overlapsSupport) {
+                clearSupport();
+                onGroundNow = false;
+                bottomBlockedFlag = false;
+            }
+        }
+
+        frameDisplacement = getPosition() - startingPosition;
     }
 
     unsigned int Movable::getGravityApplicationThreshold() const {

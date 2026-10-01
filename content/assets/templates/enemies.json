@@ -322,7 +322,8 @@
             "type": "scripted",
             "name": "MovingPlatformBehavior",
             "config": {
-                "fallDelay": 0.0667,
+                "speed": 0.6,
+                "switchDirectionDelay": 3.0,
                 "animation": "platform-1"
             }
         },

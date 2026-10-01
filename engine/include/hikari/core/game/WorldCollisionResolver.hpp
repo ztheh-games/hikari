@@ -19,8 +19,8 @@ namespace hikari {
         GameWorld * world; // Non-owning pointer
         BoundingBox<int> tileBounds;
 
-        void sweepHorizontalEdge(const int& x, const int& yMin, const int& yMax, const Direction& directionX, CollisionInfo& collisionInfo);
-        void sweepVerticalEdge(const int& y, const int& xMin, const int& xMax, const Direction& directionY, CollisionInfo& collisionInfo);
+        void sweepHorizontalEdge(const int& x, const int& yMin, const int& yMax, const Direction& directionX, CollisionInfo& collisionInfo, int ignoredObstacleId);
+        void sweepVerticalEdge(const int& y, const int& xMin, const int& xMax, const Direction& directionY, CollisionInfo& collisionInfo, int ignoredObstacleId);
         void determineTileCorrection(const Direction& direction, CollisionInfo& collisionInfo);
 
         bool tileIsSolid(const int& tileAttribute) const;
@@ -31,8 +31,9 @@ namespace hikari {
     public:
         WorldCollisionResolver();
         virtual ~WorldCollisionResolver();
-        virtual void checkHorizontalEdge(const int& x, const int& yMin, const int& yMax, const Direction& directionX, CollisionInfo& collisionInfo);
-        virtual void checkVerticalEdge(const int& y, const int& xMin, const int& xMax, const Direction& directionY, CollisionInfo& collisionInfo);
+        virtual void checkHorizontalEdge(const int& x, const int& yMin, const int& yMax, const Direction& directionX, CollisionInfo& collisionInfo, int ignoredObstacleId = -1);
+        virtual void checkVerticalEdge(const int& y, const int& xMin, const int& xMax, const Direction& directionY, CollisionInfo& collisionInfo, int ignoredObstacleId = -1);
+        virtual bool getObstacleState(int obstacleId, BoundingBoxF& bounds, Vector2<float>& displacement) const;
 
         void setWorld(GameWorld * newWorld);
         GameWorld * getWorld() const;

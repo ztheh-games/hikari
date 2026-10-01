@@ -45,20 +45,24 @@ namespace hikari {
         bool treatPlatformAsGround;
         bool applyHorizontalVelocity;
         bool applyVerticalVelocity;
+        int supportObstacleId;
 
     protected:
         Vector2<float> ambientVelocity;
         Vector2<float> velocity;
+        Vector2<float> frameDisplacement;
         BoundingBoxF boundingBox;
         CollisionInfo collisionInfo;
 
         CollisionCallback landingCallback;
         CollisionCallback collisionCallback;
+        CollisionCallback crushCallback;
 
         virtual void preCheckCollision();
         virtual Vector2<float> checkCollision(const float& dt);
         virtual void postCheckCollision();
         virtual void onLanding();
+        bool applySupportDisplacement();
 
         //
         // Accessors
@@ -97,7 +101,9 @@ namespace hikari {
         const Vector2<float>& getPosition() const;
         const Vector2<float>& getAmbientVelocity() const;
         const Vector2<float>& getVelocity() const;
+        const Vector2<float>& getFrameDisplacement() const;
         const BoundingBoxF& getBoundingBox() const;
+        int getSupportObstacleId() const;
 
         void setOnGround(const bool & bypassCallback);
         void setPosition(const Vector2<float>& position);
@@ -122,6 +128,8 @@ namespace hikari {
 
         void setLandingCallback(const CollisionCallback& callback);
         void setCollisionCallback(const CollisionCallback& callback);
+        void setCrushCallback(const CollisionCallback& callback);
+        void clearSupport();
 
         virtual void update(float dt);
 

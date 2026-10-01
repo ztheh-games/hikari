@@ -35,11 +35,11 @@ namespace hikari {
         return map;
     }
 
-    void TileMapCollisionResolver::checkHorizontalEdge(const int& x, const int& yMin, const int& yMax, const Direction& directionX, CollisionInfo& collisionInfo) {
+    void TileMapCollisionResolver::checkHorizontalEdge(const int& x, const int& yMin, const int& yMax, const Direction& directionX, CollisionInfo& collisionInfo, int) {
         sweepHorizontalEdge(x, yMin, yMax, directionX, collisionInfo);
     }
 
-    void TileMapCollisionResolver::checkVerticalEdge(const int& y, const int& xMin, const int& xMax, const Direction& directionY, CollisionInfo& collisionInfo) {
+    void TileMapCollisionResolver::checkVerticalEdge(const int& y, const int& xMin, const int& xMax, const Direction& directionY, CollisionInfo& collisionInfo, int) {
         sweepVerticalEdge(y, xMin, xMax, directionY, collisionInfo);
     }
 
@@ -62,6 +62,7 @@ namespace hikari {
                         collisionInfo.tileY = tileY;
                         collisionInfo.tileType = currentTile;
                         collisionInfo.directionX = directionX;
+                        collisionInfo.obstacleId = -1;
                 
                         determineCorrection(directionX, collisionInfo);
 
@@ -94,6 +95,7 @@ namespace hikari {
                         collisionInfo.tileY = tileY;
                         collisionInfo.tileType = currentTile;
                         collisionInfo.directionY = directionY;
+                        collisionInfo.obstacleId = -1;
 
                         determineCorrection(directionY, collisionInfo);
 

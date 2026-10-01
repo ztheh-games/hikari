@@ -24,8 +24,8 @@ namespace hikari {
     public:
         TileMapCollisionResolver();
         virtual ~TileMapCollisionResolver();
-        virtual void checkHorizontalEdge(const int& x, const int& yMin, const int& yMax, const Direction& directionX, CollisionInfo& collisionInfo);
-        virtual void checkVerticalEdge(const int& y, const int& xMin, const int& xMax, const Direction& directionY, CollisionInfo& collisionInfo);
+        virtual void checkHorizontalEdge(const int& x, const int& yMin, const int& yMax, const Direction& directionX, CollisionInfo& collisionInfo, int ignoredObstacleId = -1);
+        virtual void checkVerticalEdge(const int& y, const int& xMin, const int& xMax, const Direction& directionY, CollisionInfo& collisionInfo, int ignoredObstacleId = -1);
 
         void setRoom(std::weak_ptr<Room> newRoom);
         std::weak_ptr<Room> getRoom() const;

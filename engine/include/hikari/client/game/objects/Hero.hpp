@@ -233,6 +233,7 @@ namespace hikari {
         virtual void update(float dt);
         virtual void render(sf::RenderTarget &target);
         virtual void handleCollision(Movable& body, CollisionInfo& info);
+        virtual void handleCrush(Movable& body, CollisionInfo& info);
         virtual void fireWeapon();
     };
 

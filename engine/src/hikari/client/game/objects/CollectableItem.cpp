@@ -71,6 +71,13 @@ namespace hikari {
         Entity::render(target);
     }
 
+    void CollectableItem::handleCrush(Movable& body, CollisionInfo& info) {
+        if(isActive()) {
+            setActive(false);
+            onDeath();
+        }
+    }
+
     void CollectableItem::reset() {
         Entity::reset();
     }

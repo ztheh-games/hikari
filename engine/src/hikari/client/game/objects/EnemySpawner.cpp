@@ -55,6 +55,10 @@ namespace hikari {
             int objectId = spawnedObject->getId();
             spawnedObject->reset();
 
+            if(getDirection() != Directions::None) {
+                spawnedObject->setDirection(getDirection());
+            }
+
             if(const auto brain = spawnedObject->getBrain()) {
                 brain->applyConfig(instanceConfig);
             }

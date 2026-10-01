@@ -497,6 +497,10 @@ namespace hikari {
         }
     }
 
+    void Hero::handleCrush(Movable& body, CollisionInfo& info) {
+        kill();
+    }
+
     void Hero::fireWeapon() {
         if(getActiveShotCount() > 0) {
             // A weapon is already fired (not consumed yet) so notify if possible.
