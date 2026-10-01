@@ -49,7 +49,7 @@ namespace hikari {
         }
     }
 
-    RoomPtr MapRenderer::getRoom() const {
+    const RoomPtr & MapRenderer::getRoom() const {
         return room;
     }
 
@@ -59,7 +59,7 @@ namespace hikari {
         cullTiles();
     }
 
-    TileDataPtr MapRenderer::getTileData() const {
+    const TileDataPtr & MapRenderer::getTileData() const {
         return tileData;
     }
 

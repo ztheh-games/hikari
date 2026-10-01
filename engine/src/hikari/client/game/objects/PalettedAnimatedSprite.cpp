@@ -58,8 +58,8 @@ namespace hikari {
     }
 
     void PalettedAnimatedSprite::destroySharedResources() {
-        colorTableTexture.release();
-        pixelShader.release();
+        colorTableTexture.reset();
+        pixelShader.reset();
     }
 
     void PalettedAnimatedSprite::setSharedPaletteIndex(int index) {

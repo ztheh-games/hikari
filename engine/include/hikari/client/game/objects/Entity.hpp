@@ -9,11 +9,13 @@
 #include "hikari/core/game/Renderable.hpp"
 #include "hikari/core/game/Direction.hpp"
 #include "hikari/core/math/Vector2.hpp"
+#include "hikari/client/game/Shot.hpp"
 
 #include <SFML/Graphics/RectangleShape.hpp>
 
 #include <list>
 #include <memory>
+#include <vector>
 
  #define HIKARI_DEBUG_ENTITIES
 
@@ -77,7 +79,7 @@ namespace hikari {
     protected:
         Movable body;
         std::unique_ptr<PalettedAnimatedSprite> & getAnimatedSprite();
-        std::list<Shot> activeShots;
+        std::vector<Shot> activeShots;
 
         virtual void renderEntity(sf::RenderTarget &target);
 
@@ -163,7 +165,7 @@ namespace hikari {
          *
          * @param shot the Shot to observe
          */
-        void observeShot(const Shot & shot);
+        void observeShot(Shot shot);
 
         /**
          * Returns how many active shots the Entity is observing.

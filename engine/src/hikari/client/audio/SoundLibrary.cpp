@@ -151,14 +151,16 @@ namespace hikari {
             const std::shared_ptr<SamplePlayer> & samplePlayer = (*iterator).second;
             const auto & player = samplePlayer->player;
 
-            // Stop any sounds currently playing with lower priority
-            std::for_each(std::begin(samplePlayers), std::end(samplePlayers), [&](std::unordered_map<std::string, std::shared_ptr<SamplePlayer>>::value_type & pair) {
+            // Stop any sounds currently playing with lower priority (skip ones
+            // that are already stopped to avoid needless audio-thread work)
+            for(const auto & pair : samplePlayers) {
                 const auto & otherPlayer = pair.second;
 
-                if(otherPlayer->priority <= samplePlayer->priority) {
+                if(otherPlayer->priority <= samplePlayer->priority &&
+                    otherPlayer->player->getStatus() != sf::SoundSource::Status::Stopped) {
                     otherPlayer->player->stop();
                 }
-            });
+            }
 
             // Play (or restart) the sound we want to play
             player->setVolume(volume);

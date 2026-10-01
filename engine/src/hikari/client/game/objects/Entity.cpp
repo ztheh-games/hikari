@@ -384,8 +384,8 @@ namespace hikari {
         agelessFlag = isAgeless;
     }
 
-    void Entity::observeShot(const Shot & shot) {
-        activeShots.push_back(shot);
+    void Entity::observeShot(Shot shot) {
+        activeShots.push_back(std::move(shot));
     }
 
     unsigned int Entity::getActiveShotCount() const {

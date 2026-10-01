@@ -70,6 +70,7 @@ namespace hikari {
     class MapRenderer;
     class Hero;
     class Enemy;
+    class Renderable;
     class CutSceneHeroActionController;
     class WorldCollisionResolver;
     class Spawner;
@@ -131,6 +132,8 @@ namespace hikari {
         std::unique_ptr<gui::EnergyGauge> guiMenuLifeEnergyGauge;
         std::unique_ptr<gcn::Label> guiLivesLabel;
         std::unique_ptr<gcn::Label> guiETanksLabel;
+        int guiLivesShown = -1;
+        int guiETanksShown = -1;
         std::unique_ptr<gcn::Label> guiReadyLabel;
         std::unique_ptr<gui::Menu> guiWeaponMenu;
         std::unique_ptr<gcn::ActionListener> guiWeaponMenuActionListener;
@@ -141,6 +144,7 @@ namespace hikari {
         std::vector<std::weak_ptr<Spawner>> itemSpawners;
         std::vector<std::weak_ptr<Spawner>> deactivatedItemSpawners;
         std::vector<std::shared_ptr<BlockSequence>> blockSequences;
+        mutable std::vector<Renderable*> renderQueue;
         std::vector<std::pair<EventListenerDelegate, EventType>> eventHandlerDelegates;
         std::list<std::pair<int, std::string>> bonusChancesTable;
         std::queue<std::shared_ptr<Task>> taskQueue;
@@ -323,12 +327,12 @@ namespace hikari {
         // Event handlers
         //
         void bindEventHandlers();
-        void handleEntityDamageEvent(EventDataPtr evt);
-        void handleEntityDeathEvent(EventDataPtr evt);
-        void handleWeaponFireEvent(EventDataPtr evt);
-        void handleEntityStateChangeEvent(EventDataPtr evt);
-        void handleDoorEvent(EventDataPtr evt);
-        void handleAudioEvent(EventDataPtr evt);
+        void handleEntityDamageEvent(const EventDataPtr & evt);
+        void handleEntityDeathEvent(const EventDataPtr & evt);
+        void handleWeaponFireEvent(const EventDataPtr & evt);
+        void handleEntityStateChangeEvent(const EventDataPtr & evt);
+        void handleDoorEvent(const EventDataPtr & evt);
+        void handleAudioEvent(const EventDataPtr & evt);
 
         //
         // GUI

@@ -39,9 +39,12 @@ namespace hikari {
         , animation(proto.animation)
         , animationSet(proto.animationSet)
         , animator(new SpriteAnimator(sprite))
+        , trackedObject()
+        , trackX(proto.trackX)
+        , trackY(proto.trackY)
     {
-        setAnimationSet(animationSet);
-        setSpriteTexture(spriteTexture);
+        // sprite, spriteTexture and animationSet are already copied above, so
+        // only the animator needs to be pointed at the animation.
         animator->setAnimation(animation.lock());
         animator->rewind();
     }
@@ -58,20 +61,6 @@ namespace hikari {
         GameObject::update(dt);
 
         animator->update(dt);
-
-        Vector2<float> trackingOffset;
-
-        if(trackX) {
-            if(auto ptr = trackedObject.lock()) {
-                trackingOffset.setX(ptr->getPosition().getX());
-            }
-        }
-
-        if(trackY) {
-            if(auto ptr = trackedObject.lock()) {
-                trackingOffset.setY(ptr->getPosition().getY());
-            }
-        }
 
         setPosition(getPosition() + getVelocity());
 
@@ -182,7 +171,7 @@ namespace hikari {
     }
 
     bool Particle::getTrackY() const {
-        return trackX;
+        return trackY;
     }
 
 } // hikari

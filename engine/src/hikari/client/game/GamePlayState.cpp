@@ -398,14 +398,21 @@ namespace hikari {
             );
 
             if(isViewingMenu) {
-                std::string livesCaption = (gp->getLives() < 10 ? "0" : "") + StringUtils::toString(static_cast<int>(gp->getLives()));
                 guiLivesLabel->setVisible(true);
-                guiLivesLabel->setCaption(livesCaption);
-                guiLivesLabel->adjustSize();
 
-                std::string etanksCaption = (gp->getETanks() < 10 ? "0" : "") + StringUtils::toString(static_cast<int>(gp->getETanks()));
-                guiETanksLabel->setCaption(etanksCaption);
-                guiETanksLabel->adjustSize();
+                const int lives = static_cast<int>(gp->getLives());
+                if(lives != guiLivesShown) {
+                    guiLivesShown = lives;
+                    guiLivesLabel->setCaption((lives < 10 ? "0" : "") + StringUtils::toString(lives));
+                    guiLivesLabel->adjustSize();
+                }
+
+                const int etanks = static_cast<int>(gp->getETanks());
+                if(etanks != guiETanksShown) {
+                    guiETanksShown = etanks;
+                    guiETanksLabel->setCaption((etanks < 10 ? "0" : "") + StringUtils::toString(etanks));
+                    guiETanksLabel->adjustSize();
+                }
 
                 // Update the energy levels of each gauge
                 for(int i = 0; i < guiWeaponMenu->getItemCount(); ++i) {
@@ -821,29 +828,28 @@ namespace hikari {
             // This type of explosion shoots in 8 directions. Two explosions per
             // direction; one fast and one slow. It's the death that happens to Rock
             // as well as Robot Masters.
-            std::list<Vector2<float>> velocities;
-            velocities.emplace_back(Vector2<float>(-2.125f,  -2.125f )); // Fast up left
-            velocities.emplace_back(Vector2<float>(0.0f,     -3.0f   )); // Fast up
-            velocities.emplace_back(Vector2<float>(2.125f,   -2.125f )); // Fast up right
-            velocities.emplace_back(Vector2<float>(-3.0f,     0.0f   )); // Fast left
-            velocities.emplace_back(Vector2<float>(-2.125f,   2.125f )); // Fast down left
-            velocities.emplace_back(Vector2<float>(0.0f,      3.0f   )); // Fast down
-            velocities.emplace_back(Vector2<float>(2.125f,    2.125f )); // Fast down right
-            velocities.emplace_back(Vector2<float>(3.0f,      0.0f   )); // Fast right
-            velocities.emplace_back(Vector2<float>(-1.0625f, -1.0625f)); // Slow up left
-            velocities.emplace_back(Vector2<float>(0.0f,     -1.5f   )); // Slow up
-            velocities.emplace_back(Vector2<float>(1.0625f,  -1.0625f)); // Slow up right
-            velocities.emplace_back(Vector2<float>(-1.5f,     0.0f   )); // Slow left
-            velocities.emplace_back(Vector2<float>(-1.0625f,  1.0625f)); // Slow down left
-            velocities.emplace_back(Vector2<float>(0.0f,      1.5f   )); // Slow down
-            velocities.emplace_back(Vector2<float>(1.0625f,   1.0625f)); // Slow down right
-            velocities.emplace_back(Vector2<float>(1.5f,      0.0f   )); // Slow right
+            static const Vector2<float> velocities[] = {
+                Vector2<float>(-2.125f,  -2.125f ), // Fast up left
+                Vector2<float>(0.0f,     -3.0f   ), // Fast up
+                Vector2<float>(2.125f,   -2.125f ), // Fast up right
+                Vector2<float>(-3.0f,     0.0f   ), // Fast left
+                Vector2<float>(-2.125f,   2.125f ), // Fast down left
+                Vector2<float>(0.0f,      3.0f   ), // Fast down
+                Vector2<float>(2.125f,    2.125f ), // Fast down right
+                Vector2<float>(3.0f,      0.0f   ), // Fast right
+                Vector2<float>(-1.0625f, -1.0625f), // Slow up left
+                Vector2<float>(0.0f,     -1.5f   ), // Slow up
+                Vector2<float>(1.0625f,  -1.0625f), // Slow up right
+                Vector2<float>(-1.5f,     0.0f   ), // Slow left
+                Vector2<float>(-1.0625f,  1.0625f), // Slow down left
+                Vector2<float>(0.0f,      1.5f   ), // Slow down
+                Vector2<float>(1.0625f,   1.0625f), // Slow down right
+                Vector2<float>(1.5f,      0.0f   ), // Slow right
+            };
+            static const std::string explosionName = "Medium Explosion (Loop)";
 
-            while(!velocities.empty()) {
-                auto vel = velocities.front();
-                velocities.pop_front();
-
-                if(std::shared_ptr<Particle> clone = world.spawnParticle("Medium Explosion (Loop)")) {
+            for(const auto & vel : velocities) {
+                if(std::shared_ptr<Particle> clone = world.spawnParticle(explosionName)) {
                     clone->setPosition(position);
                     clone->setVelocity(vel);
                     clone->setActive(true);
@@ -1385,7 +1391,8 @@ namespace hikari {
     void GamePlayState::renderWorld(sf::RenderTarget &target) const {
         const auto& oldView = target.getDefaultView();
         auto newView = camera.getPixelAlignedView();
-        std::vector<Renderable*> orderedEntities;
+        auto & orderedEntities = renderQueue;
+        orderedEntities.clear();
 
         target.setView(newView);
         mapRenderer->setRoom(currentRoom);
@@ -1393,72 +1400,71 @@ namespace hikari {
         // Render the map background first
         mapRenderer->renderBackground(target);
 
-        // 1) Partition the list of renderables by "z-index"
+        // 1) Gather the list of renderables
         const auto & activeItems = world.getActiveItems();
-
-        for(auto it = std::begin(activeItems), end = std::end(activeItems); it != end; it++) {
-            orderedEntities.push_back((*it).get());
-        }
-
         const auto & activeEnemies = world.getActiveEnemies();
+        const auto & activeParticles = world.getActiveParticles();
+        const auto & activeProjectiles = world.getActiveProjectiles();
 
-        for(auto it = std::begin(activeEnemies), end = std::end(activeEnemies); it != end; it++) {
-            orderedEntities.push_back((*it).get());
+        orderedEntities.reserve(
+            activeItems.size() + activeEnemies.size() + blockSequences.size() +
+            activeParticles.size() + activeProjectiles.size() + 1);
+
+        for(const auto & item : activeItems) {
+            orderedEntities.push_back(item.get());
         }
 
-        for(auto it = std::begin(blockSequences), end = std::end(blockSequences); it != end; it++) {
-            orderedEntities.push_back((*it).get());
+        for(const auto & enemy : activeEnemies) {
+            orderedEntities.push_back(enemy.get());
+        }
+
+        for(const auto & blockSequence : blockSequences) {
+            orderedEntities.push_back(blockSequence.get());
         }
 
         if(isHeroAlive) {
             orderedEntities.push_back(hero.get());
         }
 
-        const auto & activeParticles = world.getActiveParticles();
-
-        for(auto it = std::begin(activeParticles), end = std::end(activeParticles); it != end; it++) {
-            orderedEntities.push_back((*it).get());
+        for(const auto & particle : activeParticles) {
+            orderedEntities.push_back(particle.get());
         }
 
-        const auto & activeProjectiles = world.getActiveProjectiles();
-
-        for(auto it = std::begin(activeProjectiles), end = std::end(activeProjectiles); it != end; it++) {
-            orderedEntities.push_back((*it).get());
+        for(const auto & projectile : activeProjectiles) {
+            orderedEntities.push_back(projectile.get());
         }
 
-        // Sort by z-index, then partition the list so we have two groups:
-        // Group 1) Background sprites
+        // Sort by z-index, then split the list into two groups:
+        // Group 1) Background sprites (z-index < 0)
         // Group 2) Foreground sprites
-
+        // The list is already sorted, so a binary search finds the split point.
         std::stable_sort(
             std::begin(orderedEntities),
             std::end(orderedEntities),
-            [&](const Renderable* a, const Renderable* b) {
+            [](const Renderable* a, const Renderable* b) {
                 return a->getZIndex() < b->getZIndex();
             });
 
-        auto backgroundSprites = std::stable_partition(
+        const auto backgroundSprites = std::partition_point(
             std::begin(orderedEntities),
             std::end(orderedEntities),
-            [&](const Renderable* renderable) -> bool {
+            [](const Renderable* renderable) -> bool {
                 return renderable->getZIndex() < 0;
             });
 
         // These are the background sprites and are rendered on top of the map's
         // background, but beneath the map's foreground.
-        std::for_each(
-            std::begin(orderedEntities),
-            backgroundSprites,
-            std::bind(&Renderable::render, std::placeholders::_1, ReferenceWrapper<sf::RenderTarget>(target)));
+        for(auto it = std::begin(orderedEntities); it != backgroundSprites; ++it) {
+            (*it)->render(target);
+        }
 
         mapRenderer->renderForeground(target);
 
         // These are the foreground sprites and are rendered on top of the map's
         // foreground.
-        std::for_each(
-            backgroundSprites,
-            std::end(orderedEntities),
-            std::bind(&Renderable::render, std::placeholders::_1, ReferenceWrapper<sf::RenderTarget>(target)));
+        for(auto it = backgroundSprites; it != std::end(orderedEntities); ++it) {
+            (*it)->render(target);
+        }
 
         // Restore UI view
         target.setView(oldView);
@@ -1492,7 +1498,7 @@ namespace hikari {
         }
     }
 
-    void GamePlayState::handleEntityDamageEvent(EventDataPtr evt) {
+    void GamePlayState::handleEntityDamageEvent(const EventDataPtr & evt) {
         auto eventData = std::static_pointer_cast<EntityDamageEventData>(evt);
 
         if(eventData->getEntityId() == hero->getId()) {
@@ -1531,7 +1537,7 @@ namespace hikari {
         }
     }
 
-    void GamePlayState::handleEntityDeathEvent(EventDataPtr evt) {
+    void GamePlayState::handleEntityDeathEvent(const EventDataPtr & evt) {
         auto eventData = std::static_pointer_cast<EntityDeathEventData>(evt);
 
         if(eventData->getEntityId() == hero->getId()) {
@@ -1615,7 +1621,7 @@ namespace hikari {
         }
     }
 
-    void GamePlayState::handleWeaponFireEvent(EventDataPtr evt) {
+    void GamePlayState::handleWeaponFireEvent(const EventDataPtr & evt) {
         auto eventData = std::static_pointer_cast<WeaponFireEventData>(evt);
         HIKARI_LOG(debug) << "Member Weapon Fired! wid=" <<
                           eventData->getWeaponId() << ", sid=" << eventData->getShooterId() <<
@@ -1634,7 +1640,7 @@ namespace hikari {
 
                         if(weaponEnergy > 0) {
                             Shot shot = weapon->fire(world, *eventData.get());
-                            hero->observeShot(shot);
+                            hero->observeShot(std::move(shot));
 
                             // Use up the weapon energy
                             gp->setWeaponEnergy(currentWeapon, weaponEnergy - weapon->getUsageCost());
@@ -1658,7 +1664,7 @@ namespace hikari {
 
                     if(auto enemyGoPtr = possibleEnemyPtr.lock()) {
                         if(std::shared_ptr<Enemy> enemy = std::static_pointer_cast<Enemy>(enemyGoPtr)) {
-                            enemy->observeShot(shot);
+                            enemy->observeShot(std::move(shot));
 
                             if(auto sound = audioService.lock()) {
                                 sound->playSample(weapon->getUsageSound());
@@ -1672,7 +1678,7 @@ namespace hikari {
         }
     }
 
-    void GamePlayState::handleEntityStateChangeEvent(EventDataPtr evt) {
+    void GamePlayState::handleEntityStateChangeEvent(const EventDataPtr & evt) {
         auto eventData = std::static_pointer_cast<EntityStateChangeEventData>(evt);
 
         if(eventData->getEntityId() == hero->getId()) {
@@ -1709,13 +1715,13 @@ namespace hikari {
         }
     }
 
-    void GamePlayState::handleDoorEvent(EventDataPtr evt) {
+    void GamePlayState::handleDoorEvent(const EventDataPtr & evt) {
         if(auto sound = audioService.lock()) {
             sound->playSample("Door Open/Close");
         }
     }
 
-    void GamePlayState::handleAudioEvent(EventDataPtr evt) {
+    void GamePlayState::handleAudioEvent(const EventDataPtr & evt) {
         auto eventData = std::static_pointer_cast<AudioEventData>(evt);
 
         if(auto sound = audioService.lock()) {

@@ -47,8 +47,10 @@ namespace hikari {
     }
 
     const AnimationPtr& AnimationSet::get(const std::string& name) {
-        if(has(name)) {
-            return animationMap.find(name)->second;
+        const auto it = animationMap.find(name);
+
+        if(it != animationMap.end()) {
+            return it->second;
         }
 
         return NULL_ANIMATION;

@@ -2,6 +2,7 @@
 #define HIKARI_CLIENT_EventBusIMPL
 
 #include "hikari/client/game/events/EventBus.hpp"
+#include <deque>
 #include <list>
 #include <map>
 
@@ -14,7 +15,7 @@ namespace hikari {
     private:
         typedef std::list<EventListenerDelegate> EventListenerList;
         typedef std::map<EventType, EventListenerList> EventListenerMap;
-        typedef std::list<EventDataPtr> EventQueue;
+        typedef std::deque<EventDataPtr> EventQueue;
 
         EventListenerMap eventListeners;
         EventQueue eventQueues[2];

@@ -195,7 +195,7 @@ namespace hikari {
         return blockSequences;
     }
 
-    const std::list<BoundingBox<float>> & Room::getLadders() const {
+    const std::vector<BoundingBox<float>> & Room::getLadders() const {
         return ladders;
     }
 

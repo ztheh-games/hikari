@@ -414,62 +414,81 @@ namespace hikari {
         }
     }
 
+    namespace {
+        // Interned so chooseAnimation() (called every frame) doesn't build std::string temporaries.
+        const std::string ANIM_DAMAGED_STANDING = "damaged-standing";
+        const std::string ANIM_MORPHING = "morphing";
+        const std::string ANIM_TELEPORTING = "teleporting";
+        const std::string ANIM_CLIMBING_SHOOTING = "climbing-shooting";
+        const std::string ANIM_CLIMBING_TOP = "climbing-top";
+        const std::string ANIM_CLIMBING = "climbing";
+        const std::string ANIM_RUNNING_STOPPING = "running-stopping";
+        const std::string ANIM_STANDING_SHOOTING = "standing-shooting";
+        const std::string ANIM_STANDING = "standing";
+        const std::string ANIM_RUNNING_ACCELERATING = "running-accelerating";
+        const std::string ANIM_RUNNING_SHOOTING = "running-shooting";
+        const std::string ANIM_RUNNING = "running";
+        const std::string ANIM_SLIDING = "sliding";
+        const std::string ANIM_JUMPING_SHOOTING = "jumping-shooting";
+        const std::string ANIM_JUMPING = "jumping";
+    } // anonymous
+
     void Hero::chooseAnimation() {
         if(isStunned) {
-            changeAnimation("damaged-standing");
+            changeAnimation(ANIM_DAMAGED_STANDING);
         }
         else if(isTeleporting) {
             if(isMorphing) {
-                changeAnimation("morphing");
+                changeAnimation(ANIM_MORPHING);
             } else {
-                changeAnimation("teleporting");
+                changeAnimation(ANIM_TELEPORTING);
             }
         } else {
             if(isClimbing) {
                 if(isShooting) {
-                    changeAnimation("climbing-shooting");
+                    changeAnimation(ANIM_CLIMBING_SHOOTING);
                 } else {
                     if(isTouchingLadderTop) {
-                        changeAnimation("climbing-top");
+                        changeAnimation(ANIM_CLIMBING_TOP);
                     } else {
-                        changeAnimation("climbing");
+                        changeAnimation(ANIM_CLIMBING);
                     }
                 }
             }
             // Idle animations
             if(isStanding) {
                 if(isDecelerating) {
-                    changeAnimation("running-stopping");
+                    changeAnimation(ANIM_RUNNING_STOPPING);
                 } else {
                     if(isShooting) {
-                        changeAnimation("standing-shooting");
+                        changeAnimation(ANIM_STANDING_SHOOTING);
                     } else {
-                        changeAnimation("standing");
+                        changeAnimation(ANIM_STANDING);
                     }
                 }
             }
             // Walking animations
             else if(isWalking) {
                 if(!isFullyAccelerated) {
-                    changeAnimation("running-accelerating");
+                    changeAnimation(ANIM_RUNNING_ACCELERATING);
                 } else {
                     if(isShooting) {
-                        changeAnimation("running-shooting");
+                        changeAnimation(ANIM_RUNNING_SHOOTING);
                     } else {
-                        changeAnimation("running");
+                        changeAnimation(ANIM_RUNNING);
                     }
                 }
             }
             // Sliding
             else if(isSliding) {
-                changeAnimation("sliding");
+                changeAnimation(ANIM_SLIDING);
             }
             // Falling or Jumping
             else if(isAirborn) {
                 if(isShooting) {
-                    changeAnimation("jumping-shooting");
+                    changeAnimation(ANIM_JUMPING_SHOOTING);
                 } else {
-                    changeAnimation("jumping");
+                    changeAnimation(ANIM_JUMPING);
                 }
             }
         }

@@ -1,8 +1,8 @@
 #ifndef HIKARI_CLIENT_GAME_SHOT
 #define HIKARI_CLIENT_GAME_SHOT
 
-#include <list>
 #include <memory>
+#include <vector>
 
 namespace hikari {
 
@@ -10,11 +10,10 @@ namespace hikari {
 
     class Shot {
     private:
-        std::list<std::weak_ptr<GameObject>> trackedObjects;
+        std::vector<std::weak_ptr<GameObject>> trackedObjects;
 
     public:
-        explicit Shot(std::list<std::weak_ptr<GameObject>> trackedObjects);
-        Shot(const Shot & proto);
+        explicit Shot(std::vector<std::weak_ptr<GameObject>> trackedObjects);
 
         /**
          * Returns whether the shot is active or not.

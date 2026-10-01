@@ -33,7 +33,7 @@ namespace hikari {
         // No-op
     }
 
-    void EnemySpawner::handleObjectRemovedEvent(EventDataPtr event) {
+    void EnemySpawner::handleObjectRemovedEvent(const EventDataPtr & event) {
         auto eventData = std::static_pointer_cast<ObjectRemovedEventData>(event);
 
         // When an enemy "dies" it means that we can potentially spawn another
@@ -41,13 +41,13 @@ namespace hikari {
 
         int deadEntityId = eventData->getObjectId();
 
-        if(std::find(std::begin(spawnedEnemyIds), std::end(spawnedEnemyIds), deadEntityId) != std::end(spawnedEnemyIds)) {
+        const auto newEnd = std::remove(std::begin(spawnedEnemyIds), std::end(spawnedEnemyIds), deadEntityId);
+
+        if(newEnd != std::end(spawnedEnemyIds)) {
             HIKARI_LOG(debug4) << "EnemySpawner's enemy was consumed! id = " << eventData->getObjectId();
 
-            spawnedEnemyIds.erase(
-                std::remove(std::begin(spawnedEnemyIds), std::end(spawnedEnemyIds), deadEntityId)
-            );
-        } 
+            spawnedEnemyIds.erase(newEnd, std::end(spawnedEnemyIds));
+        }
     }
 
     void EnemySpawner::performAction(GameWorld & world) {

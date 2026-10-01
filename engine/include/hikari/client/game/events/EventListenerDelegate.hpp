@@ -17,14 +17,14 @@ namespace hikari {
     private:
         static long long nextId;
         long long id;
-        std::function<void(EventDataPtr)> fn;
+        std::function<void(const EventDataPtr &)> fn;
 
     public:
         /**
          * Constructor which wraps a std::function object to be called as a
          * delegate.
          */
-        FunctionDelegateBase(const std::function<void(EventDataPtr)> & func);
+        FunctionDelegateBase(std::function<void(const EventDataPtr &)> func);
 
         /**
          * Calls the delegated function (if it is valid) with a given event
@@ -32,7 +32,7 @@ namespace hikari {
          * 
          * @param eventPtr EventDataPtr object containing event details
          */
-        void operator()(EventDataPtr eventPtr);
+        void operator()(const EventDataPtr & eventPtr) const;
 
         /**
          * Tests if two FunctionDelegateBase objects are the same. They are

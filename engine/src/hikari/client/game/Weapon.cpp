@@ -7,6 +7,7 @@
 #include "hikari/core/util/Log.hpp"
 
 #include <algorithm>
+#include <utility>
 
 namespace hikari {
 
@@ -84,7 +85,8 @@ namespace hikari {
   Shot Weapon::fire(GameWorld & world, WeaponFireEventData & eventData) const {
     HIKARI_LOG(debug4) << "Weapon::fire executed. name=" << getName();
 
-    std::list<std::weak_ptr<GameObject>> spawnedObjects;
+    std::vector<std::weak_ptr<GameObject>> spawnedObjects;
+    spawnedObjects.reserve(actions.size());
 
     std::for_each(std::begin(actions), std::end(actions), [this, &world, &eventData, &spawnedObjects](const std::shared_ptr<WeaponAction> & action) {
       if(action) {
@@ -92,6 +94,6 @@ namespace hikari {
       }
     });
 
-    return Shot(spawnedObjects);
+    return Shot(std::move(spawnedObjects));
   }
 } // hikari

@@ -23,7 +23,7 @@ namespace hikari {
         // No-op
     }
 
-    void ItemSpawner::handleEntityDeathEvent(EventDataPtr event) {
+    void ItemSpawner::handleEntityDeathEvent(const EventDataPtr & event) {
         auto eventData = std::static_pointer_cast<EntityDeathEventData>(event);
 
         // When an item "dies" it means that it was consumed.

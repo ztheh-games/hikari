@@ -17,7 +17,56 @@
 #include "hikari/core/util/Log.hpp"
 #include "hikari/core/util/exception/HikariException.hpp"
 
+#include <algorithm>
+#include <utility>
+
 namespace hikari {
+
+    namespace {
+
+        // Moves every queued object into the active list. Objects queued while
+        // draining (by onAdded) are processed in the same pass.
+        template <typename T, typename OnAdded>
+        void drainAdditions(std::vector<std::shared_ptr<T>> & queue, std::vector<std::shared_ptr<T>> & active, const OnAdded & onAdded) {
+            for(std::size_t i = 0; i < queue.size(); ++i) {
+                const std::shared_ptr<T> obj = std::move(queue[i]);
+                active.push_back(obj);
+                onAdded(obj);
+            }
+
+            queue.clear();
+        }
+
+        // Removes every queued object from the active list in a single pass per
+        // batch rather than one erase/remove sweep per object.
+        template <typename T, typename OnRemoved>
+        void drainRemovals(std::vector<std::shared_ptr<T>> & queue, std::vector<std::shared_ptr<T>> & active, const OnRemoved & onRemoved) {
+            std::size_t processed = 0;
+
+            while(processed < queue.size()) {
+                const std::size_t batchEnd = queue.size();
+                const auto batchFirst = std::begin(queue) + processed;
+                const auto batchLast = std::begin(queue) + batchEnd;
+
+                active.erase(
+                    std::remove_if(std::begin(active), std::end(active), [&](const std::shared_ptr<T> & obj) {
+                        return std::find(batchFirst, batchLast, obj) != batchLast;
+                    }),
+                    std::end(active)
+                );
+
+                for(std::size_t i = processed; i < batchEnd; ++i) {
+                    const std::shared_ptr<T> obj = queue[i];
+                    onRemoved(obj);
+                }
+
+                processed = batchEnd;
+            }
+
+            queue.clear();
+        }
+
+    } // anonymous
 
     GameWorld::GameWorld()
         : eventBus()
@@ -222,161 +271,48 @@ namespace hikari {
     }
 
     void GameWorld::processAdditions() {
-        // Generic objects
-        while(!queuedAdditions.empty()) {
-            auto objectToBeAdded = queuedAdditions.front();
+        const auto registerObject = [this](const std::shared_ptr<GameObject> & obj) {
+            objectRegistry.emplace(obj->getId(), obj);
+        };
 
-            activeObjects.push_back(objectToBeAdded);
-            objectRegistry.emplace(std::make_pair(objectToBeAdded->getId(), objectToBeAdded));
+        const auto attachToWorld = [this, &registerObject](const auto & obj) {
+            registerObject(obj);
+            obj->setRoom(getCurrentRoom());
+            obj->setEventBus(getEventBus());
+        };
 
-            queuedAdditions.pop_front();
-        }
-
-        // Collectable Items
-        while(!queuedItemAdditions.empty()) {
-            auto objectToBeAdded = queuedItemAdditions.front();
-
-            activeItems.push_back(objectToBeAdded);
-            objectRegistry.emplace(std::make_pair(objectToBeAdded->getId(), objectToBeAdded));
-
-            objectToBeAdded->setRoom(getCurrentRoom());
-            objectToBeAdded->setEventBus(getEventBus());
-
-            queuedItemAdditions.pop_front();
-        }
-
-        // Enemies
-        while(!queuedEnemyAdditions.empty()) {
-            auto objectToBeAdded = queuedEnemyAdditions.front();
-
-            activeEnemies.push_back(objectToBeAdded);
-            objectRegistry.emplace(std::make_pair(objectToBeAdded->getId(), objectToBeAdded));
-
-            objectToBeAdded->setRoom(getCurrentRoom());
-            objectToBeAdded->setEventBus(getEventBus());
-
-            queuedEnemyAdditions.pop_front();
-        }
-
-        // Particles
-        while(!queuedParticleAdditions.empty()) {
-            auto objectToBeAdded = queuedParticleAdditions.front();
-
-            activeParticles.push_back(objectToBeAdded);
-            objectRegistry.emplace(std::make_pair(objectToBeAdded->getId(), objectToBeAdded));
-
-            queuedParticleAdditions.pop_front();
-        }
-
-        // Projectiles
-        while(!queuedProjectileAdditions.empty()) {
-            auto objectToBeAdded = queuedProjectileAdditions.front();
-
-            activeProjectiles.push_back(objectToBeAdded);
-            objectRegistry.emplace(std::make_pair(objectToBeAdded->getId(), objectToBeAdded));
-
-            objectToBeAdded->setRoom(getCurrentRoom());
-            objectToBeAdded->setEventBus(getEventBus());
-
-            queuedProjectileAdditions.pop_front();
-        }
+        drainAdditions(queuedAdditions, activeObjects, registerObject);
+        drainAdditions(queuedItemAdditions, activeItems, attachToWorld);
+        drainAdditions(queuedEnemyAdditions, activeEnemies, attachToWorld);
+        drainAdditions(queuedParticleAdditions, activeParticles, registerObject);
+        drainAdditions(queuedProjectileAdditions, activeProjectiles, attachToWorld);
     }
 
     void GameWorld::processRemovals() {
-        auto eventBusPtr = eventBus.lock();
+        const auto eventBusPtr = eventBus.lock();
 
-        while(!queuedRemovals.empty()) {
-            auto objectToBeRemoved = queuedRemovals.front();
-
-            activeObjects.erase(
-                std::remove(std::begin(activeObjects), std::end(activeObjects), objectToBeRemoved),
-                std::end(activeObjects)
-            );
-
-            objectRegistry.erase(objectToBeRemoved->getId());
-
-            queuedRemovals.pop_front();
-
-            //objectToBeRemoved->setEventBus(std::weak_ptr<EventBus>());
+        const auto unregisterObject = [this, &eventBusPtr](const std::shared_ptr<GameObject> & obj) {
+            objectRegistry.erase(obj->getId());
 
             if(eventBusPtr) {
-                eventBusPtr->queueEvent(std::make_shared<ObjectRemovedEventData>(objectToBeRemoved->getId()));
+                eventBusPtr->queueEvent(std::make_shared<ObjectRemovedEventData>(obj->getId()));
             }
-        }
+        };
 
-        while(!queuedItemRemovals.empty()) {
-            auto objectToBeRemoved = queuedItemRemovals.front();
-
-            activeItems.erase(
-                std::remove(std::begin(activeItems), std::end(activeItems), objectToBeRemoved),
-                std::end(activeItems)
-            );
-
-            objectRegistry.erase(objectToBeRemoved->getId());
-
-            queuedItemRemovals.pop_front();
-
-            objectToBeRemoved->setEventBus(std::weak_ptr<EventBus>());
+        const auto detachFromWorld = [this, &eventBusPtr](const auto & obj) {
+            objectRegistry.erase(obj->getId());
+            obj->setEventBus(std::weak_ptr<EventBus>());
 
             if(eventBusPtr) {
-                eventBusPtr->queueEvent(std::make_shared<ObjectRemovedEventData>(objectToBeRemoved->getId()));
+                eventBusPtr->queueEvent(std::make_shared<ObjectRemovedEventData>(obj->getId()));
             }
-        }
+        };
 
-        while(!queuedEnemyRemovals.empty()) {
-            auto objectToBeRemoved = queuedEnemyRemovals.front();
-
-            activeEnemies.erase(
-                std::remove(std::begin(activeEnemies), std::end(activeEnemies), objectToBeRemoved),
-                std::end(activeEnemies)
-            );
-
-            objectRegistry.erase(objectToBeRemoved->getId());
-
-            queuedEnemyRemovals.pop_front();
-
-            objectToBeRemoved->setEventBus(std::weak_ptr<EventBus>());
-
-            if(eventBusPtr) {
-                eventBusPtr->queueEvent(std::make_shared<ObjectRemovedEventData>(objectToBeRemoved->getId()));
-            }
-        }
-
-        while(!queuedParticleRemovals.empty()) {
-            auto objectToBeRemoved = queuedParticleRemovals.front();
-
-            activeParticles.erase(
-                std::remove(std::begin(activeParticles), std::end(activeParticles), objectToBeRemoved),
-                std::end(activeParticles)
-            );
-
-            objectRegistry.erase(objectToBeRemoved->getId());
-
-            queuedParticleRemovals.pop_front();
-
-            if(eventBusPtr) {
-                eventBusPtr->queueEvent(std::make_shared<ObjectRemovedEventData>(objectToBeRemoved->getId()));
-            }
-        }
-
-        while(!queuedProjectileRemovals.empty()) {
-            auto objectToBeRemoved = queuedProjectileRemovals.front();
-
-            activeProjectiles.erase(
-                std::remove(std::begin(activeProjectiles), std::end(activeProjectiles), objectToBeRemoved),
-                std::end(activeProjectiles)
-            );
-
-            objectRegistry.erase(objectToBeRemoved->getId());
-
-            queuedProjectileRemovals.pop_front();
-
-            objectToBeRemoved->setEventBus(std::weak_ptr<EventBus>());
-
-            if(eventBusPtr) {
-                eventBusPtr->queueEvent(std::make_shared<ObjectRemovedEventData>(objectToBeRemoved->getId()));
-            }
-        }
+        drainRemovals(queuedRemovals, activeObjects, unregisterObject);
+        drainRemovals(queuedItemRemovals, activeItems, detachFromWorld);
+        drainRemovals(queuedEnemyRemovals, activeEnemies, detachFromWorld);
+        drainRemovals(queuedParticleRemovals, activeParticles, unregisterObject);
+        drainRemovals(queuedProjectileRemovals, activeProjectiles, detachFromWorld);
     }
 
     void GameWorld::removeAllObjects() {
@@ -386,7 +322,7 @@ namespace hikari {
         std::for_each(
             std::begin(activeItems),
             std::end(activeItems),
-            [this](const std::shared_ptr<CollectableItem> item) {
+            [this](const std::shared_ptr<CollectableItem> & item) {
                 this->queueObjectRemoval(item);
             });
 
@@ -394,7 +330,7 @@ namespace hikari {
         std::for_each(
             std::begin(activeEnemies),
             std::end(activeEnemies),
-            [this](const std::shared_ptr<Enemy> enemy) {
+            [this](const std::shared_ptr<Enemy> & enemy) {
                 this->queueObjectRemoval(enemy);
             });
 
@@ -402,7 +338,7 @@ namespace hikari {
         std::for_each(
             std::begin(activeParticles),
             std::end(activeParticles),
-            [this](const std::shared_ptr<Particle> particle) {
+            [this](const std::shared_ptr<Particle> & particle) {
                 this->queueObjectRemoval(particle);
             });
 
@@ -410,7 +346,7 @@ namespace hikari {
         std::for_each(
             std::begin(activeProjectiles),
             std::end(activeProjectiles),
-            [this](const std::shared_ptr<Projectile> projectile) {
+            [this](const std::shared_ptr<Projectile> & projectile) {
                 this->queueObjectRemoval(projectile);
             });
 
@@ -476,8 +412,13 @@ namespace hikari {
     }
 
     bool GameWorld::getObstacleState(int obstacleId, BoundingBoxF& bounds, Vector2<float>& displacement) const {
-        auto object = getObjectById(obstacleId).lock();
-        auto obstacle = std::dynamic_pointer_cast<Entity>(object);
+        const auto finder = objectRegistry.find(obstacleId);
+
+        if(finder == std::end(objectRegistry)) {
+            return false;
+        }
+
+        const auto * obstacle = dynamic_cast<const Entity*>(finder->second.get());
 
         if(!obstacle || !obstacle->isActive() || !obstacle->isObstacle()) {
             return false;

@@ -44,24 +44,24 @@ namespace hikari {
         std::weak_ptr<EnemyFactory> enemyFactory;
         std::weak_ptr<ParticleFactory> particleFactory;
         std::weak_ptr<ProjectileFactory> projectileFactory;
-        std::list<std::shared_ptr<GameObject>> queuedAdditions;
-        std::list<std::shared_ptr<GameObject>> queuedRemovals;
+        std::vector<std::shared_ptr<GameObject>> queuedAdditions;
+        std::vector<std::shared_ptr<GameObject>> queuedRemovals;
         std::vector<std::shared_ptr<GameObject>> activeObjects;
 
-        std::list<std::shared_ptr<CollectableItem>> queuedItemAdditions;
-        std::list<std::shared_ptr<CollectableItem>> queuedItemRemovals;
+        std::vector<std::shared_ptr<CollectableItem>> queuedItemAdditions;
+        std::vector<std::shared_ptr<CollectableItem>> queuedItemRemovals;
         std::vector<std::shared_ptr<CollectableItem>> activeItems;
 
-        std::list<std::shared_ptr<Enemy>> queuedEnemyAdditions;
-        std::list<std::shared_ptr<Enemy>> queuedEnemyRemovals;
+        std::vector<std::shared_ptr<Enemy>> queuedEnemyAdditions;
+        std::vector<std::shared_ptr<Enemy>> queuedEnemyRemovals;
         std::vector<std::shared_ptr<Enemy>> activeEnemies;
 
-        std::list<std::shared_ptr<Particle>> queuedParticleAdditions;
-        std::list<std::shared_ptr<Particle>> queuedParticleRemovals;
+        std::vector<std::shared_ptr<Particle>> queuedParticleAdditions;
+        std::vector<std::shared_ptr<Particle>> queuedParticleRemovals;
         std::vector<std::shared_ptr<Particle>> activeParticles;
 
-        std::list<std::shared_ptr<Projectile>> queuedProjectileAdditions;
-        std::list<std::shared_ptr<Projectile>> queuedProjectileRemovals;
+        std::vector<std::shared_ptr<Projectile>> queuedProjectileAdditions;
+        std::vector<std::shared_ptr<Projectile>> queuedProjectileRemovals;
         std::vector<std::shared_ptr<Projectile>> activeProjectiles;
 
         std::unordered_map<int, std::shared_ptr<GameObject>> objectRegistry;

@@ -131,7 +131,7 @@ namespace hikari {
     }
 
     void Client::initEventBus() {
-        EventListenerDelegate quitRequestDelegate([&](EventDataPtr evt) {
+        EventListenerDelegate quitRequestDelegate([&](const EventDataPtr & evt) {
             HIKARI_LOG(info) << "Quit requested!";
             quitGame = true;
         });
@@ -453,16 +453,17 @@ namespace hikari {
                     if(guiService) {
                         guiService->processEvent(*event);
                     }
+                }
 
-                    if(gui.getTop()) {
-                        try {
-                            gui.logic();
-                        } catch(gcn::Exception & gex) {
-                            HIKARI_LOG(error) << "Uncaught exception from GUI: " << gex.getMessage()
-                                << "\n\tFile: " << gex.getFilename()
-                                << "\n\tFunction: " << gex.getFunction()
-                                << "\n\tLine: " << gex.getLine();
-                        }
+                // Process queued GUI input once per tick, after all events are polled.
+                if(gui.getTop()) {
+                    try {
+                        gui.logic();
+                    } catch(gcn::Exception & gex) {
+                        HIKARI_LOG(error) << "Uncaught exception from GUI: " << gex.getMessage()
+                            << "\n\tFile: " << gex.getFilename()
+                            << "\n\tFunction: " << gex.getFunction()
+                            << "\n\tLine: " << gex.getLine();
                     }
                 }
 
