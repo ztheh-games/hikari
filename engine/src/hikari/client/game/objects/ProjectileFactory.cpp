@@ -10,12 +10,8 @@
 
 namespace hikari {
 
-    ProjectileFactory::ProjectileFactory(const std::weak_ptr<AnimationSetCache>& animationSetCache, const std::weak_ptr<ImageCache>& imageCache, const std::weak_ptr<SquirrelService>& squirrel)
-        : Service()
-        , animationSetCache(animationSetCache)
-        , imageCache(imageCache)
-        , squirrel(squirrel)
-        , prototypeRegistry()
+    ProjectileFactory::ProjectileFactory()
+        : prototypeRegistry()
     {
          
     }

@@ -8,7 +8,6 @@
 #include "hikari/client/gui/GuiService.hpp"
 #include "hikari/client/gui/Icon.hpp"
 #include "hikari/client/gui/IconAnimator.hpp"
-#include "hikari/client/Services.hpp"
 
 #include "hikari/core/game/GameController.hpp"
 #include "hikari/core/game/StateTransition.hpp"
@@ -17,7 +16,6 @@
 #include "hikari/core/util/ImageCache.hpp"
 #include "hikari/core/util/AnimationSetCache.hpp"
 #include "hikari/core/util/StringUtils.hpp"
-#include "hikari/core/util/ServiceLocator.hpp"
 #include "hikari/core/util/Log.hpp"
 
 #include <SFML/Graphics.hpp>
@@ -46,14 +44,14 @@ namespace hikari {
     const int StageSelectState::DEFAULT_CURSOR_ROW = 1;
     const int StageSelectState::DEFAULT_CURSOR_COLUMN = 1;
 
-    StageSelectState::StageSelectState(const std::string &name, const Json::Value &params, const StageSelectStateConfig & config, GameController & controller, ServiceLocator &services)
+    StageSelectState::StageSelectState(const std::string &name, const Json::Value &params, const StageSelectStateConfig & config, GameController & controller, GuiService & guiService, AudioService & audioService, GameProgress & gameProgress, ScreenEffectsService & screenEffectsService, ImageCache & imageCache, AnimationSetCache & animationCache)
         : name(name)
         , controller(controller)
         , config(config)
-        , guiService(services.locateService<GuiService>(Services::GUISERVICE))
-        , audioService(services.locateService<AudioService>(Services::AUDIO))
-        , gameProgress(services.locateService<GameProgress>(Services::GAMEPROGRESS))
-        , screenEffectsService(services.locateService<ScreenEffectsService>(Services::SCREENEFFECTS))
+        , guiService(guiService)
+        , audioService(audioService)
+        , gameProgress(gameProgress)
+        , screenEffectsService(screenEffectsService)
         , taskQueue()
         , guiContainer(new gcn::Container())
         , guiFlashLayer(new gcn::Container())
@@ -71,18 +69,14 @@ namespace hikari {
         , cursorColumn(DEFAULT_CURSOR_COLUMN)
         , enableCursorMovement(false)
     {
-        std::weak_ptr<ImageCache> imageCache = services.locateService<ImageCache>(Services::IMAGECACHE);
-        std::weak_ptr<AnimationSetCache> animationCache = services.locateService<AnimationSetCache>(Services::ANIMATIONSETCACHE);
 
         // Load sprites from config
         // TODO: This needs to be refactored to be safer and things like that
         // TODO: Need a utility method to load sf:Sprite from JSON
-        if(auto imageCachePtr = imageCache.lock()) {
-            background.setTexture(*imageCachePtr->get(params[PROPERTY_BACKGROUND].asString()).get());
-            foreground.setTexture(*imageCachePtr->get(params[PROPERTY_FOREGROUND].asString()).get());
-            leftEye.setTexture(*imageCachePtr->get(params[PROPERTY_EYE_SPRITE].asString()).get());
-            rightEye.setTexture(*imageCachePtr->get(params[PROPERTY_EYE_SPRITE].asString()).get());
-        }
+        background.setTexture(*imageCache.get(params[PROPERTY_BACKGROUND].asString()).get());
+        foreground.setTexture(*imageCache.get(params[PROPERTY_FOREGROUND].asString()).get());
+        leftEye.setTexture(*imageCache.get(params[PROPERTY_EYE_SPRITE].asString()).get());
+        rightEye.setTexture(*imageCache.get(params[PROPERTY_EYE_SPRITE].asString()).get());
 
         guiCursor.first.reset(new gui::Icon(params[PROPERTY_CURSOR_SPRITE].asString()));
 
@@ -121,10 +115,8 @@ namespace hikari {
             }
         }
 
-        if(auto animations = animationCache.lock()) {
-            cursorAnimations = animations->get("assets/animations/cursor.json");
-            portraitAnimations = animations->get("assets/animations/stage-select.json");
-        }
+        cursorAnimations = animationCache.get("assets/animations/cursor.json");
+        portraitAnimations = animationCache.get("assets/animations/stage-select.json");
 
         buildGui();
     }
@@ -278,9 +270,7 @@ namespace hikari {
                 } else if(keyPressed->code == sf::Keyboard::Key::Enter) {
                     // Play the "selected" sound
                     taskQueue.push(std::make_shared<FunctionTask>(0, [&](float dt) -> bool {
-                        if(auto audio = audioService.lock()) {
-                            audio->playSample("Stage Selected");
-                        }
+                        audioService.playSample("Stage Selected");
 
                         enableCursorMovement = false;
 
@@ -292,10 +282,8 @@ namespace hikari {
 
                     // Stop the regular music, start playing the boss intro music
                     taskQueue.push(std::make_shared<FunctionTask>(0, [&](float dt) -> bool {
-                        if(auto audio = audioService.lock()) {
-                            audio->stopMusic();
-                            audio->playMusic("Boss Selected (MM3)");
-                        }
+                        audioService.stopMusic();
+                        audioService.playMusic("Boss Selected (MM3)");
 
                         return true;
                     }));
@@ -320,18 +308,16 @@ namespace hikari {
                     // Determine the label to display on the boss name caption.
                     const auto & portraitInfo = config.getPortraits();
 
-                    if(auto gp = gameProgress.lock()) {
-                        const auto & selectedPortraitInfo = portraitInfo.at(gp->getCurrentBoss());
-                        guiBossIntroLabel->setCaption(selectedPortraitInfo.introLabel);
-                        guiBossIntroLabel->adjustSize();
+                    const auto & selectedPortraitInfo = portraitInfo.at(gameProgress.getCurrentBoss());
+                    guiBossIntroLabel->setCaption(selectedPortraitInfo.introLabel);
+                    guiBossIntroLabel->adjustSize();
 
-                        // Set the correct X position to center the text before
-                        // showing each letter of it.
-                        guiBossIntroLabel->setX(guiBossStripe->getWidth() / 2 - guiBossIntroLabel->getWidth() / 2);
+                    // Set the correct X position to center the text before
+                    // showing each letter of it.
+                    guiBossIntroLabel->setX(guiBossStripe->getWidth() / 2 - guiBossIntroLabel->getWidth() / 2);
 
-                        // Now we decrease the width so it shows no letters.
-                        guiBossIntroLabel->setWidth(0);
-                    }
+                    // Now we decrease the width so it shows no letters.
+                    guiBossIntroLabel->setWidth(0);
 
                     // Show the boss stripe thing (where the boss does his dance)
                     taskQueue.push(std::make_shared<FunctionTask>(0, [&](float dt) -> bool {
@@ -355,10 +341,8 @@ namespace hikari {
 
                     // Fade out
                     taskQueue.push(std::make_shared<FunctionTask>(0, [&](float dt) -> bool {
-                        if(auto effects = screenEffectsService.lock()) {
-                            std::cout << "Stage select fading out" << std::endl;
-                            effects->fadeOut((1.0f / 60.0f) * 13.0f);
-                        }
+                        std::cout << "Stage select fading out" << std::endl;
+                        screenEffectsService.fadeOut((1.0f / 60.0f) * 13.0f);
 
                         return true;
                     }));
@@ -379,24 +363,18 @@ namespace hikari {
 
                 selectCurrentPortrait();
 
-                if(auto gp = gameProgress.lock()) {
-                    const unsigned int bossIndex = ((cursorIndex < 4) ? cursorIndex : (cursorIndex - 1));
-                    gp->setCurrentBoss(bossIndex);
-                }
+                const unsigned int bossIndex = ((cursorIndex < 4) ? cursorIndex : (cursorIndex - 1));
+                gameProgress.setCurrentBoss(bossIndex);
 
                 if(playSample) {
-                    if(auto audio = audioService.lock()) {
-                        audio->playSample("Menu Item Select");
-                    }
+                    audioService.playSample("Menu Item Select");
                 }
             }
         }
     }
 
     void StageSelectState::render(sf::RenderTarget &target) {
-        if(auto gui = guiService.lock()) {
-            gui->renderAsTop(guiContainer.get(), target);
-        }
+        guiService.renderAsTop(guiContainer.get(), target);
     }
 
     bool StageSelectState::update(float dt) {
@@ -421,9 +399,7 @@ namespace hikari {
         enableCursorMovement = true;
 
         // Start music
-        if(auto audio = audioService.lock()) {
-            audio->playMusic(config.getMusicName());
-        }
+        audioService.playMusic(config.getMusicName());
 
         // Reset cursor to default location
         cursorColumn = DEFAULT_CURSOR_COLUMN;
@@ -431,23 +407,19 @@ namespace hikari {
 
         guiBossIntroLayer->setVisible(false);
 
-        if(auto gp = gameProgress.lock()) {
-            portraits.at(0).first->setVisible(!gp->bossIsDefeated(0));
-            portraits.at(1).first->setVisible(!gp->bossIsDefeated(1));
-            portraits.at(2).first->setVisible(!gp->bossIsDefeated(2));
-            portraits.at(3).first->setVisible(!gp->bossIsDefeated(3));
-            portraits.at(5).first->setVisible(!gp->bossIsDefeated(4));
-            portraits.at(6).first->setVisible(!gp->bossIsDefeated(5));
-            portraits.at(7).first->setVisible(!gp->bossIsDefeated(6));
-            portraits.at(8).first->setVisible(!gp->bossIsDefeated(7));
-        }
+        portraits.at(0).first->setVisible(!gameProgress.bossIsDefeated(0));
+        portraits.at(1).first->setVisible(!gameProgress.bossIsDefeated(1));
+        portraits.at(2).first->setVisible(!gameProgress.bossIsDefeated(2));
+        portraits.at(3).first->setVisible(!gameProgress.bossIsDefeated(3));
+        portraits.at(5).first->setVisible(!gameProgress.bossIsDefeated(4));
+        portraits.at(6).first->setVisible(!gameProgress.bossIsDefeated(5));
+        portraits.at(7).first->setVisible(!gameProgress.bossIsDefeated(6));
+        portraits.at(8).first->setVisible(!gameProgress.bossIsDefeated(7));
 
-        if(auto gui = guiService.lock()) {
-            auto & topContainer = gui->getRootContainer();
+        auto & topContainer = guiService.getRootContainer();
 
-            topContainer.add(guiContainer.get(), 0, 0);
-            guiContainer->setEnabled(true);
-        }
+        topContainer.add(guiContainer.get(), 0, 0);
+        guiContainer->setEnabled(true);
 
         selectCurrentPortrait();
     }
@@ -456,19 +428,15 @@ namespace hikari {
         enableCursorMovement = false;
 
         // Stop music
-        if(auto audio = audioService.lock()) {
-            audio->stopMusic();
-        }
+        audioService.stopMusic();
 
         guiBossIntroLayer->setVisible(false);
 
         // Remove our GUI
-        if(auto gui = guiService.lock()) {
-            auto & topContainer = gui->getRootContainer();
+        auto & topContainer = guiService.getRootContainer();
 
-            topContainer.remove(guiContainer.get());
-            guiContainer->setEnabled(false);
-        }
+        topContainer.remove(guiContainer.get());
+        guiContainer->setEnabled(false);
     }
 
     const std::string& StageSelectState::getName() const {

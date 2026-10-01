@@ -1,14 +1,13 @@
 #ifndef HIKARI_CLIENT_GAME_DAMAGETABLE
 #define HIKARI_CLIENT_GAME_DAMAGETABLE
 
-#include "hikari/core/util/Service.hpp"
 #include "hikari/client/game/DamageKey.hpp"
 
 #include <unordered_map>
 
 namespace hikari {
 
-  class DamageTable : public Service {
+  class DamageTable {
   private:
     std::unordered_map<int, float> damageValues;
     // std::unordered_map<DamageKey, float> damageBuffs;

@@ -7,8 +7,8 @@ namespace hikari {
     const float RefillHealthTask::DELAY_PER_HEALTH_TICK = (1.0f / 60.0f) * 4.0f; // 4-frames
 
     RefillHealthTask::RefillHealthTask(RefillType type, int refillAmount,
-            const std::weak_ptr<AudioService> & audioService,
-            const std::weak_ptr<GameProgress> & gameProgress)
+            AudioService & audioService,
+            GameProgress & gameProgress)
         : BaseTask(0, Task::TYPE_BLOCKING)
         , type(type)
         , refillCounter(refillAmount)
@@ -18,24 +18,22 @@ namespace hikari {
     {
         delayTimer = DELAY_PER_HEALTH_TICK;
 
-        if(const auto & progress = gameProgress.lock()) {
-            if(type == PLAYER_ENERGY) {
-                int energy = progress->getPlayerEnergy();
-                int diff = progress->getPlayerMaxEnergy() - energy;
+        if(type == PLAYER_ENERGY) {
+            int energy = gameProgress.getPlayerEnergy();
+            int diff = gameProgress.getPlayerMaxEnergy() - energy;
 
-                refillCounter = std::min(refillAmount, diff);
-            } else if(type == WEAPON_ENERGY) {
-                unsigned char currentWeapon = progress->getCurrentWeapon();
-                int energy = progress->getWeaponEnergy(currentWeapon);
-                int diff = progress->getWeaponMaxEnergy() - energy;
+            refillCounter = std::min(refillAmount, diff);
+        } else if(type == WEAPON_ENERGY) {
+            unsigned char currentWeapon = gameProgress.getCurrentWeapon();
+            int energy = gameProgress.getWeaponEnergy(currentWeapon);
+            int diff = gameProgress.getWeaponMaxEnergy() - energy;
 
-                refillCounter = std::min(refillAmount, diff);
-            } else if(type == BOSS_ENERGY) {
-                int energy = progress->getBossEnergy();
-                int diff = progress->getBossMaxEnergy() - energy;
+            refillCounter = std::min(refillAmount, diff);
+        } else if(type == BOSS_ENERGY) {
+            int energy = gameProgress.getBossEnergy();
+            int diff = gameProgress.getBossMaxEnergy() - energy;
 
-                refillCounter = std::min(refillAmount, diff);
-            }
+            refillCounter = std::min(refillAmount, diff);
         }
     }
 
@@ -50,20 +48,16 @@ namespace hikari {
                 delayTimer = DELAY_PER_HEALTH_TICK;
                 refillCounter -= 1;
 
-                if(const auto & audio = audioService.lock()) {
-                    audio->playSample("Energy Refill");
-                }
+                audioService.playSample("Energy Refill");
 
-                if(const auto & progress = gameProgress.lock()) {
-                    if(type == PLAYER_ENERGY) {
-                        progress->setPlayerEnergy(progress->getPlayerEnergy() + 1);
-                    } else if(type == WEAPON_ENERGY) {
-                        unsigned char currentWeapon = progress->getCurrentWeapon();
-                        int energy = progress->getWeaponEnergy(currentWeapon);
-                        progress->setWeaponEnergy(currentWeapon, energy + 1);
-                    } else if(type == BOSS_ENERGY) {
-                        progress->setBossEnergy(progress->getBossEnergy() + 1);
-                    }
+                if(type == PLAYER_ENERGY) {
+                    gameProgress.setPlayerEnergy(gameProgress.getPlayerEnergy() + 1);
+                } else if(type == WEAPON_ENERGY) {
+                    unsigned char currentWeapon = gameProgress.getCurrentWeapon();
+                    int energy = gameProgress.getWeaponEnergy(currentWeapon);
+                    gameProgress.setWeaponEnergy(currentWeapon, energy + 1);
+                } else if(type == BOSS_ENERGY) {
+                    gameProgress.setBossEnergy(gameProgress.getBossEnergy() + 1);
                 }
             }
 

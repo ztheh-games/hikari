@@ -20,6 +20,13 @@ namespace hikari {
 
     const SQInteger SquirrelService::DEFAULT_STACK_SIZE = 1024;
 
+    void SquirrelService::VmDeleter::operator()(HSQUIRRELVM vm) const {
+        if(Sqrat::DefaultVM::Get() == vm) {
+            Sqrat::DefaultVM::Set(nullptr);
+        }
+        sq_close(vm);
+    }
+
     void SquirrelService::squirrelPrintFunction(HSQUIRRELVM vm, const SQChar *s, ...) {
         va_list vl;
         va_start(vl, s);
@@ -41,8 +48,7 @@ namespace hikari {
     }
 
     SquirrelService::SquirrelService(SQInteger initialStackSize)
-        : Service()
-        , initialStackSize(initialStackSize)
+        : initialStackSize(initialStackSize)
         , vm(nullptr)
     {
         initVirtualMachine();
@@ -56,7 +62,11 @@ namespace hikari {
 
     void SquirrelService::initVirtualMachine() {
         if(!vm) {
-            vm = sq_open(initialStackSize);
+            vmOwner.reset(sq_open(initialStackSize));
+            vm = vmOwner.get();
+            if(!vm) {
+                throw std::runtime_error("Failed to create the Squirrel VM.");
+            }
             sq_setprintfunc(vm, squirrelPrintFunction, squirrelPrintFunction);
         }
     }
@@ -71,7 +81,8 @@ namespace hikari {
 
     void SquirrelService::deinitVirtualMachine() {
         if(vm) {
-            sq_close(vm);
+            vmOwner.reset();
+            vm = nullptr;
         }
     }
 

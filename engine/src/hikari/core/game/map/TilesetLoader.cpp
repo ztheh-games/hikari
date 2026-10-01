@@ -21,8 +21,8 @@ namespace hikari {
     const char* TilesetLoader::PROPERTY_NAME_ANIMATION = "animation";
     const char* TilesetLoader::PROPERTY_NAME_VERSION = "version";
 
-    TilesetLoader::TilesetLoader(const std::shared_ptr<ImageCache> &imageCache,
-            const std::shared_ptr<AnimationLoader> &animationLoader)
+    TilesetLoader::TilesetLoader(ImageCache &imageCache,
+            AnimationLoader &animationLoader)
         : animationLoader(animationLoader)
         , imageCache(imageCache)
     {
@@ -114,7 +114,7 @@ namespace hikari {
                 if(isTileAnimated(tileJson)) {
                     try {
                         std::shared_ptr<Animation> tileAnimation;
-                        tileAnimation = animationLoader->loadFromJsonObject(tileJson[PROPERTY_NAME_ANIMATION]);
+                        tileAnimation = animationLoader.loadFromJsonObject(tileJson[PROPERTY_NAME_ANIMATION]);
 
                         if(tileAnimation) {
                             TileAnimator animator(tiles, i);
@@ -134,7 +134,7 @@ namespace hikari {
 
         return TileDataPtr(
             new Tileset(
-                imageCache->get(surfaceName),
+                imageCache.get(surfaceName),
                 tileSize,
                 tiles,
                 tileAnimators

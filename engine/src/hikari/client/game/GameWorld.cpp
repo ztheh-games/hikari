@@ -68,14 +68,15 @@ namespace hikari {
 
     } // anonymous
 
-    GameWorld::GameWorld()
+    GameWorld::GameWorld(ItemFactory & items, EnemyFactory & enemies,
+            ParticleFactory & particles, ProjectileFactory & projectiles)
         : eventBus()
         , player(nullptr)
         , currentRoom(nullptr)
-        , itemFactory()
-        , enemyFactory()
-        , particleFactory()
-        , projectileFactory()
+        , itemFactory(items)
+        , enemyFactory(enemies)
+        , particleFactory(particles)
+        , projectileFactory(projectiles)
         , queuedAdditions()
         , queuedRemovals()
         , activeObjects()
@@ -114,23 +115,6 @@ namespace hikari {
     const std::shared_ptr<Room> & GameWorld::getCurrentRoom() const {
         return currentRoom;
     }
-
-    void GameWorld::setItemFactory(const std::weak_ptr<ItemFactory> & itemFactory) {
-        this->itemFactory = itemFactory;
-    }
-
-    void GameWorld::setEnemyFactory(const std::weak_ptr<EnemyFactory> & enemyFactory) {
-        this->enemyFactory = enemyFactory;
-    }
-
-    void GameWorld::setParticleFactory(const std::weak_ptr<ParticleFactory> & particleFactory) {
-        this->particleFactory = particleFactory;
-    }
-
-    void GameWorld::setProjectileFactory(const std::weak_ptr<ProjectileFactory> & projectileFactory) {
-        this->projectileFactory = projectileFactory;
-    }
-
     void GameWorld::render(sf::RenderTarget &target) {
 
     }
@@ -354,48 +338,40 @@ namespace hikari {
     }
 
     std::shared_ptr<CollectableItem> GameWorld::spawnCollectableItem(const std::string & name /* CollectableItemInstanceConfig instanceConfig */) const {
-        if(auto itemFactoryPtr = itemFactory.lock()) {
-            try {
-                return itemFactoryPtr->createItem(name);
-            } catch(HikariException & ex) {
-                HIKARI_LOG(debug) << ex.what();
-            }
+        try {
+            return itemFactory.createItem(name);
+        } catch(HikariException & ex) {
+            HIKARI_LOG(debug) << ex.what();
         }
 
         return std::shared_ptr<CollectableItem>(nullptr);
     }
 
     std::unique_ptr<Enemy> GameWorld::spawnEnemy(const std::string & name /* EnemyInstanceConfig instanceConfig */) const {
-        if(auto enemyFactoryPtr = enemyFactory.lock()) {
-            try {
-                return enemyFactoryPtr->create(name);
-            } catch(HikariException & ex) {
-                HIKARI_LOG(debug) << ex.what();
-            }
+        try {
+            return enemyFactory.create(name);
+        } catch(HikariException & ex) {
+            HIKARI_LOG(debug) << ex.what();
         }
 
         return std::unique_ptr<Enemy>(nullptr);
     }
 
     std::unique_ptr<Particle> GameWorld::spawnParticle(const std::string & name) const {
-        if(auto particleFactoryPtr = particleFactory.lock()) {
-            try {
-                return particleFactoryPtr->create(name);
-            } catch(HikariException & ex) {
-                HIKARI_LOG(debug) << ex.what();
-            }
+        try {
+            return particleFactory.create(name);
+        } catch(HikariException & ex) {
+            HIKARI_LOG(debug) << ex.what();
         }
 
         return std::unique_ptr<Particle>(nullptr);
     }
 
     std::unique_ptr<Projectile> GameWorld::spawnProjectile(const std::string & name) const {
-        if(auto projectileFactoryPtr = projectileFactory.lock()) {
-            try {
-                return projectileFactoryPtr->create(name);
-            } catch(HikariException & ex) {
-                HIKARI_LOG(debug) << ex.what();
-            }
+        try {
+            return projectileFactory.create(name);
+        } catch(HikariException & ex) {
+            HIKARI_LOG(debug) << ex.what();
         }
 
         return std::unique_ptr<Projectile>(nullptr);

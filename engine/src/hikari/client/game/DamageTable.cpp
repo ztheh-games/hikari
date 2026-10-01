@@ -3,8 +3,7 @@
 namespace hikari {
 
     DamageTable::DamageTable() 
-        : Service()
-        , damageValues()
+        : damageValues()
         // , damageBuffs()
     {
         

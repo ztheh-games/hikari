@@ -3,7 +3,6 @@
 
 #include "hikari/core/Platform.hpp"
 #include "hikari/core/util/SfmlResources.hpp"
-#include "hikari/core/util/Service.hpp"
 #include <SFML/Graphics/Color.hpp>
 #include <SFML/Graphics/Sprite.hpp>
 #include <SFML/Graphics/Rect.hpp>
@@ -18,7 +17,7 @@ namespace sf {
 
 namespace hikari {
 
-    class HIKARI_API ImageFont : public Service {
+    class HIKARI_API ImageFont {
     private:
         int glyphWidth;
         int glyphHeight;

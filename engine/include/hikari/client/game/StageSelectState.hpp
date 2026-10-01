@@ -29,12 +29,13 @@ namespace gcn {
 namespace hikari {
 
     class AnimationSet;
+    class AnimationSetCache;
+    class ImageCache;
     class AudioService;
     class ScreenEffectsService;
     class GameProgress;
     class GuiService;
     class ImageFont;
-    class ServiceLocator;
     class GameController;
     class Task;
 
@@ -52,10 +53,10 @@ namespace hikari {
         GameController & controller;
         StageSelectStateConfig config;
         sf::View view;
-        std::weak_ptr<GuiService> guiService;
-        std::weak_ptr<AudioService> audioService;
-        std::weak_ptr<GameProgress> gameProgress;
-        std::weak_ptr<ScreenEffectsService> screenEffectsService;
+        GuiService & guiService;
+        AudioService & audioService;
+        GameProgress & gameProgress;
+        ScreenEffectsService & screenEffectsService;
         std::queue<std::shared_ptr<Task>> taskQueue;
         std::unique_ptr<gcn::Container> guiContainer;
         std::unique_ptr<gcn::Container> guiFlashLayer;
@@ -110,7 +111,7 @@ namespace hikari {
         void buildGui();
 
     public:
-        StageSelectState(const std::string &name, const Json::Value &params, const StageSelectStateConfig & config, GameController & controller, ServiceLocator &services);
+        StageSelectState(const std::string &name, const Json::Value &params, const StageSelectStateConfig & config, GameController & controller, GuiService & guiService, AudioService & audioService, GameProgress & gameProgress, ScreenEffectsService & screenEffectsService, ImageCache & imageCache, AnimationSetCache & animationCache);
         virtual ~StageSelectState();
 
         virtual void handleEvent(sf::Event &event);

@@ -28,8 +28,8 @@ namespace hikari {
         static const char* PROPERTY_NAME_ANIMATION;
         static const char* PROPERTY_NAME_VERSION;
 
-        std::shared_ptr<AnimationLoader> animationLoader;
-        std::shared_ptr<ImageCache> imageCache;
+        AnimationLoader & animationLoader;
+        ImageCache & imageCache;
 
         bool isValidTilesetJson(const Json::Value &json) const;
         bool isValidTileJson(const Json::Value &json) const;
@@ -38,8 +38,8 @@ namespace hikari {
         TileDataPtr constructTileset(const Json::Value &json) const;
 
     public:
-        TilesetLoader(const std::shared_ptr<ImageCache> &imageCache,
-                const std::shared_ptr<AnimationLoader> &animationLoader);
+        TilesetLoader(ImageCache &imageCache,
+                AnimationLoader &animationLoader);
         TileDataPtr loadFromJson(const Json::Value &json);
     };
 

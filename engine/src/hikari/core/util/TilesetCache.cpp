@@ -7,7 +7,7 @@
 
 namespace hikari {
 
-    TilesetCache::TilesetCache(const std::shared_ptr<TilesetLoader> &loader) 
+    TilesetCache::TilesetCache(TilesetLoader &loader)
         : loader(loader) 
     {
 
@@ -41,7 +41,7 @@ namespace hikari {
             throw std::runtime_error(ss.str().c_str());
         }
 
-        return loader->loadFromJson(root);
+        return loader.loadFromJson(root);
     }
 
 }

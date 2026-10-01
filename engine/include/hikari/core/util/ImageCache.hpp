@@ -3,14 +3,13 @@
 
 #include "hikari/core/Platform.hpp"
 #include "hikari/core/util/ResourceCache.hpp"
-#include "hikari/core/util/Service.hpp"
 
 #include <SFML/Graphics/Color.hpp>
 #include <SFML/Graphics/Texture.hpp>
 
 namespace hikari {
 
-    class HIKARI_API ImageCache : public Service, public ResourceCache<sf::Texture> {
+    class HIKARI_API ImageCache : public ResourceCache<sf::Texture> {
     public:
         static const bool USE_SMOOTHING;
         static const bool NO_SMOOTHING;

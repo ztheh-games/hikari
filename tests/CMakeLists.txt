@@ -36,3 +36,13 @@ set( TEST_SOURCE_FILES
 include_directories( ${INCLUDE_DIRS} )
 
 add_executable( tests ${TEST_SOURCE_FILES} ${INCLUDE_DIRS} )
+
+add_executable(runtime-tests
+    src/test/Main.cpp
+    src/test/TestClientRuntime.cpp
+)
+target_link_libraries(runtime-tests PRIVATE hikari-runtime)
+target_include_directories(runtime-tests PRIVATE ${TEST_BASE_DIR}/include)
+target_compile_definitions(runtime-tests PRIVATE
+    HIKARI_TEST_CONTENT_DIR="${PROJECT_SOURCE_DIR}/content"
+)

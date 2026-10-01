@@ -40,10 +40,10 @@ namespace hikari {
         std::weak_ptr<EventBus> eventBus;
         std::shared_ptr<Hero> player;
         std::shared_ptr<Room> currentRoom;
-        std::weak_ptr<ItemFactory> itemFactory;
-        std::weak_ptr<EnemyFactory> enemyFactory;
-        std::weak_ptr<ParticleFactory> particleFactory;
-        std::weak_ptr<ProjectileFactory> projectileFactory;
+        ItemFactory & itemFactory;
+        EnemyFactory & enemyFactory;
+        ParticleFactory & particleFactory;
+        ProjectileFactory & projectileFactory;
         std::vector<std::shared_ptr<GameObject>> queuedAdditions;
         std::vector<std::shared_ptr<GameObject>> queuedRemovals;
         std::vector<std::shared_ptr<GameObject>> activeObjects;
@@ -70,7 +70,8 @@ namespace hikari {
         void processAdditions();
 
     public:
-        GameWorld();
+        GameWorld(ItemFactory & items, EnemyFactory & enemies,
+            ParticleFactory & particles, ProjectileFactory & projectiles);
         virtual ~GameWorld();
 
         void setEventBus(const std::weak_ptr<EventBus> & eventBus);
@@ -79,10 +80,6 @@ namespace hikari {
         void setCurrentRoom(const std::shared_ptr<Room> & room);
         const std::shared_ptr<Room> & getCurrentRoom() const;
 
-        void setItemFactory(const std::weak_ptr<ItemFactory> & itemFactory);
-        void setEnemyFactory(const std::weak_ptr<EnemyFactory> & enemyFactory);
-        void setParticleFactory(const std::weak_ptr<ParticleFactory> & particleFactory);
-        void setProjectileFactory(const std::weak_ptr<ProjectileFactory> & projectileFactory);
 
         void queueObjectAddition(const std::shared_ptr<GameObject> &obj);
         void queueObjectAddition(const std::shared_ptr<CollectableItem> &obj);

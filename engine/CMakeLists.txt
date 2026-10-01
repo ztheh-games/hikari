@@ -142,8 +142,8 @@ set( GUICHAN_HAKASE_SOURCE_FILES
 source_group(extlibs\\guichan-hakase FILES ${GUICHAN_HAKASE_SOURCE_FILES})
 
 set( HIKARI_CLIENT_SOURCE_FILES
-    src/hikari/client/Main.cpp
     src/hikari/client/Client.cpp
+    src/hikari/client/ClientRuntime.cpp
     src/hikari/client/ClientConfig.cpp
     src/hikari/client/CommandProcessor.cpp
 )
@@ -159,7 +159,6 @@ set( HIKARI_CLIENT_GAME_SOURCE_FILES
     src/hikari/client/game/GameProgress.cpp
     src/hikari/client/game/GameWorld.cpp
     src/hikari/client/game/GuiTestState.cpp
-    src/hikari/client/game/InputService.cpp
     src/hikari/client/game/KeyboardInput.cpp
     src/hikari/client/game/PasswordState.cpp
     src/hikari/client/game/WeaponGetState.cpp
@@ -201,7 +200,6 @@ set( HIKARI_CLIENT_GAME_EVENTS_SOURCE_FILES
     src/hikari/client/game/events/ObjectRemovedEventData.cpp
     src/hikari/client/game/events/TransitionCollisionEventData.cpp
     src/hikari/client/game/events/WeaponFireEventData.cpp
-    src/hikari/client/game/EventBusService.cpp
 )
 
 source_group(hikari\\client\\game\\events FILES ${HIKARI_CLIENT_GAME_EVENTS_SOURCE_FILES})
@@ -328,8 +326,8 @@ source_group(hikari\\core\\game FILES ${HIKARI_CORE_GAME_SOURCE_FILES})
 set( HIKARI_CORE_UTIL_SOURCE_FILES
     src/hikari/core/util/AnimationSetCache.cpp
     src/hikari/core/util/exception/HikariException.cpp
-    src/hikari/core/util/exception/ServiceNotRegisteredException.cpp
     src/hikari/core/util/FileSystem.cpp
+    src/hikari/core/util/FileSystemSession.cpp
     src/hikari/core/util/HashedString.cpp
     src/hikari/core/util/Log.cpp
     src/hikari/core/util/Timer.cpp
@@ -394,7 +392,10 @@ set( INCLUDE_DIRS
 
 include_directories( ${INCLUDE_DIRS} )
 
-add_executable( hikari ${HIKARI_SOURCE_FILES} ${INCLUDE_DIRS} )
+add_library(hikari-runtime STATIC ${HIKARI_SOURCE_FILES})
+target_include_directories(hikari-runtime PUBLIC ${INCLUDE_DIRS})
+add_executable(hikari src/hikari/client/Main.cpp)
+target_link_libraries(hikari PRIVATE hikari-runtime)
 
 #
 # Copy content files to output directory
@@ -414,14 +415,14 @@ if(MSVC)
 endif(MSVC)
 
 if(TARGET SFML::Graphics)
-    target_link_libraries(hikari PRIVATE SFML::Graphics SFML::Window SFML::Audio SFML::System)
+    target_link_libraries(hikari-runtime PUBLIC SFML::Graphics SFML::Window SFML::Audio SFML::System)
 else()
     find_package(SFML 3 COMPONENTS Graphics Window Audio System REQUIRED)
     if(APPLE)
         set(OTHER_SFML_LDFLAGS ${OTHER_SFML_LDFLAGS} "-stdlib=libc++")
     endif(APPLE)
-    include_directories( ${SFML_INCLUDE_DIR} )
-    target_link_libraries( hikari ${SFML_LIBRARIES} ${OTHER_SFML_LDFLAGS} )
+    target_include_directories(hikari-runtime PUBLIC ${SFML_INCLUDE_DIR})
+    target_link_libraries(hikari-runtime PUBLIC ${SFML_LIBRARIES} ${OTHER_SFML_LDFLAGS})
 
     #
     # Copy the correct .dll files from SFML's directory to the ouput directory.
@@ -437,13 +438,13 @@ else()
 endif()
 
 if(TARGET PhysFS::PhysFS-static)
-    target_link_libraries(hikari PRIVATE PhysFS::PhysFS-static)
+    target_link_libraries(hikari-runtime PUBLIC PhysFS::PhysFS-static)
 else()
     find_package(PhysFS REQUIRED)
     #ADD_DEFINITIONS(-fno-common)
     if(APPLE)
         set(OTHER_LDFLAGS ${OTHER_LDFLAGS} "-framework Carbon -framework IOKit")
     endif(APPLE)
-    include_directories( ${PHYSFS_INCLUDE_DIR} )
-    target_link_libraries( hikari ${PHYSFS_LIBRARY} ${OTHER_LDFLAGS} )
+    target_include_directories(hikari-runtime PUBLIC ${PHYSFS_INCLUDE_DIR})
+    target_link_libraries(hikari-runtime PUBLIC ${PHYSFS_LIBRARY} ${OTHER_LDFLAGS})
 endif()

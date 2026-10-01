@@ -31,7 +31,6 @@ namespace hikari {
     }
 
     class GameController;
-    class ServiceLocator;
 
     class GameOverState : public GameState {
     private:
@@ -42,14 +41,14 @@ namespace hikari {
 
         std::string name;
         GameController & controller;
-        std::weak_ptr<AudioService> audioService;
-        std::shared_ptr<Input> keyboardInput;
+        AudioService & audioService;
+        Input & keyboardInput;
         std::unique_ptr<gui::Panel> mainPanel;
         std::unique_ptr<gcn::Container> guiWrapper;
         std::unique_ptr<gui::Menu> guiMenu;
         std::unique_ptr<gui::Icon> guiCursorIcon;
         std::unique_ptr<gcn::Label> gameOverLabel;
-        std::weak_ptr<GuiService> guiService;
+        GuiService & guiService;
         std::unique_ptr<gcn::ActionListener> guiActionListener;
         std::unique_ptr<gcn::SelectionListener> guiSelectionListener;
 
@@ -58,7 +57,7 @@ namespace hikari {
         void positionCursorOnItem();
 
     public:
-        GameOverState(const std::string &name, const Json::Value &params, GameController & controller, ServiceLocator &services);
+        GameOverState(const std::string &name, const Json::Value &params, GameController & controller, GuiService & guiService, AudioService & audioService, Input & keyboardInput);
         virtual ~GameOverState();
 
         virtual void handleEvent(sf::Event &event);

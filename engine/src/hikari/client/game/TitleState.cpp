@@ -1,16 +1,13 @@
 #include "hikari/client/game/TitleState.hpp"
-#include "hikari/client/game/InputService.hpp"
-#include "hikari/client/game/EventBusService.hpp"
+#include "hikari/client/game/events/EventBus.hpp"
 #include "hikari/client/game/events/GameQuitEventData.hpp"
 #include "hikari/client/audio/AudioService.hpp"
 #include "hikari/client/gui/GuiService.hpp"
 #include "hikari/client/gui/Menu.hpp"
 #include "hikari/client/gui/MenuItem.hpp"
 #include "hikari/client/gui/Icon.hpp"
-#include "hikari/client/Services.hpp"
 
 #include "hikari/core/game/GameController.hpp"
-#include "hikari/core/util/ServiceLocator.hpp"
 #include "hikari/core/util/Log.hpp"
 
 #include <guichan/gui.hpp>
@@ -32,14 +29,13 @@ namespace hikari {
     const std::string TitleState::ITEM_OPTIONS = "OPTIONS";
     const std::string TitleState::ITEM_QUIT = "QUIT";
 
-    TitleState::TitleState(const std::string &name, const Json::Value &params, GameController & controller, ServiceLocator &services)
+    TitleState::TitleState(const std::string &name, const Json::Value &params, GameController & controller, GuiService & guiService, AudioService & audioService, EventBus & globalEventBus)
         : GameState()
         , name(name)
         , controller(controller)
-        , guiService(services.locateService<GuiService>(Services::GUISERVICE))
-        , audioService(services.locateService<AudioService>(Services::AUDIO))
-        , globalEventBus(services.locateService<EventBusService>(Services::EVENTBUS))
-        , keyboardInput(services.locateService<InputService>(Services::INPUT))
+        , guiService(guiService)
+        , audioService(audioService)
+        , globalEventBus(globalEventBus)
         , guiContainer(new gcn::Container())
         , guiLabel(new gcn::Label())
         , guiMenu(new gui::Menu())
@@ -80,9 +76,7 @@ namespace hikari {
                         controller.requestStateChange("options");
                         goToNextState = true;
                     } else if(menuItemName == ITEM_QUIT) {
-                        if(auto events = globalEventBus.lock()) {
-                            events->triggerEvent(EventDataPtr(new GameQuitEventData(GameQuitEventData::QUIT_NOW)));
-                        }
+                        globalEventBus.triggerEvent(EventDataPtr(new GameQuitEventData(GameQuitEventData::QUIT_NOW)));
                     }
                 } else {
                     std::cout << "Actioned on #" << guiMenu->getSelectedIndex() << std::endl;
@@ -95,9 +89,7 @@ namespace hikari {
 
             positionCursorOnItem();
 
-            if(auto audio = audioService.lock()) {
-                audio->playSample("Menu Item Select");
-            }
+            audioService.playSample("Menu Item Select");
         }));
 
         guiCursorIcon->setX(8);
@@ -179,9 +171,7 @@ namespace hikari {
     }
 
     void TitleState::render(sf::RenderTarget &target) {
-        if(auto gui = guiService.lock()) {
-            gui->renderAsTop(guiContainer.get(), target);
-        }
+        guiService.renderAsTop(guiContainer.get(), target);
     }
 
     bool TitleState::update(float dt) {
@@ -191,20 +181,16 @@ namespace hikari {
 
     void TitleState::onEnter() {
         // Attach our GUI
-        if(auto gui = guiService.lock()) {
-            auto & topContainer = gui->getRootContainer();
-            topContainer.add(guiContainer.get(), 0, 0);
-            guiContainer->setEnabled(true);
-            guiMenu->setEnabled(true);
-            guiMenu->requestFocus();
-            guiMenu->setSelectedIndex(0);
-        }
+        auto & topContainer = guiService.getRootContainer();
+        topContainer.add(guiContainer.get(), 0, 0);
+        guiContainer->setEnabled(true);
+        guiMenu->setEnabled(true);
+        guiMenu->requestFocus();
+        guiMenu->setSelectedIndex(0);
 
         positionCursorOnItem();
 
-        if(auto audio = audioService.lock()) {
-            audio->playMusic("Title Screen");
-        }
+        audioService.playMusic("Title Screen");
 
         goToNextState = false;
         guiMenu->addSelectionListener(guiSelectionListener.get());
@@ -212,16 +198,12 @@ namespace hikari {
 
     void TitleState::onExit() {
         // Remove our GUI
-        if(auto gui = guiService.lock()) {
-            auto & topContainer = gui->getRootContainer();
-            topContainer.remove(guiContainer.get());
-            guiContainer->setEnabled(false);
-            guiMenu->setEnabled(false);
-        }
+        auto & topContainer = guiService.getRootContainer();
+        topContainer.remove(guiContainer.get());
+        guiContainer->setEnabled(false);
+        guiMenu->setEnabled(false);
 
-        if(auto audio = audioService.lock()) {
-            audio->stopMusic();
-        }
+        audioService.stopMusic();
 
         guiMenu->removeSelectionListener(guiSelectionListener.get());
     }

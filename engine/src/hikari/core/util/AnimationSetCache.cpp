@@ -4,7 +4,7 @@
 
 namespace hikari {
 
-    AnimationSetCache::AnimationSetCache(const std::shared_ptr<AnimationLoader> & loader)
+    AnimationSetCache::AnimationSetCache(AnimationLoader & loader)
         : loader(loader)
     {
 
@@ -13,13 +13,7 @@ namespace hikari {
     AnimationSetCache::Resource AnimationSetCache::loadResource(const std::string &fileName) {
         HIKARI_LOG(debug) << "Caching animation set: " << fileName;
 
-        Resource animationSet;
-
-        if(loader) {
-            animationSet = loader->loadSet(fileName);
-        }
-
-        return animationSet;
+        return loader.loadSet(fileName);
     }
 
 } // hikari

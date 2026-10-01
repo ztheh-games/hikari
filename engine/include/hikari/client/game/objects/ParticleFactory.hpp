@@ -5,29 +5,22 @@
 #include <string>
 #include <unordered_map>
 
-#include "hikari/core/util/Service.hpp"
 
 namespace hikari {
-
-    class AnimationSetCache;
-    class ImageCache;
     class Particle;
 
-    class ParticleFactory : public Service {
+    class ParticleFactory {
     private:
         //
         // Fields
         //
-        std::weak_ptr<AnimationSetCache> animationSetCache;
-        std::weak_ptr<ImageCache> imageCache;
         std::unordered_map<std::string, std::shared_ptr<Particle>> prototypeRegistry;
 
     public:
         //
         // Constructor
         //
-        ParticleFactory(const std::weak_ptr<AnimationSetCache>& animationSetCache,
-            const std::weak_ptr<ImageCache>& imageCache);
+        ParticleFactory();
         virtual ~ParticleFactory();
 
         //

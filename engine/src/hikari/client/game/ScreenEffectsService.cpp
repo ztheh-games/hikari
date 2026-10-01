@@ -1,5 +1,4 @@
 #include "hikari/client/game/ScreenEffectsService.hpp"
-#include "hikari/client/game/EventBusService.hpp"
 #include "hikari/core/util/FileSystem.hpp"
 #include "hikari/core/util/Log.hpp"
 
@@ -7,35 +6,18 @@
 
 namespace hikari {
 
-    std::unique_ptr<sf::Shader> ScreenEffectsService::FADE_OUT_SHADER;
-    std::unique_ptr<sf::Shader> ScreenEffectsService::FADE_IN_SHADER;
-
-    ScreenEffectsService::ScreenEffectsService(const std::weak_ptr<EventBusService> & eventBus, int bufferWidth, int bufferHeight)
-        : Service()
-        , eventBus(eventBus)
-        , backBuffer({static_cast<unsigned int>(bufferWidth), static_cast<unsigned int>(bufferHeight)})
+    ScreenEffectsService::ScreenEffectsService(int bufferWidth, int bufferHeight)
+        : backBuffer({static_cast<unsigned int>(bufferWidth), static_cast<unsigned int>(bufferHeight)})
         , inputSprite(backBuffer.getTexture())
         , effects()
     {
-        FADE_OUT_SHADER.reset(new sf::Shader());
-        FADE_IN_SHADER.reset(new sf::Shader());
-        //preloadShaders();
-    }
-
-    ScreenEffectsService::~ScreenEffectsService() {
-        destroyShaders();
-    }
-
-    void ScreenEffectsService::preloadShaders() {
         const std::string shaderCode = FileSystem::readFileAsString("assets/shaders/fade.frag");
-        FADE_OUT_SHADER->loadFromMemory(shaderCode, sf::Shader::Type::Fragment);
-        FADE_IN_SHADER->loadFromMemory(shaderCode, sf::Shader::Type::Fragment);
+        if(!fadeShader.loadFromMemory(shaderCode, sf::Shader::Type::Fragment)) {
+            HIKARI_LOG(error) << "Failed to load screen-effect shader; shader fades are unavailable.";
+        }
     }
 
-    void ScreenEffectsService::destroyShaders() {
-        FADE_IN_SHADER.reset();
-        FADE_OUT_SHADER.reset();
-    }
+    ScreenEffectsService::~ScreenEffectsService() = default;
 
     void ScreenEffectsService::setInputTexture(const sf::RenderTexture & texture) {
         inputSprite.setTexture(texture.getTexture());
@@ -82,14 +64,14 @@ namespace hikari {
         HIKARI_LOG(debug) << "ScreenEffectsService::fadeOut";
 
         clearEffects();
-        effects.push_back(std::make_shared<FadeOutShaderScreenEffect>(fadeDuration));
+        effects.push_back(std::make_shared<FadeOutShaderScreenEffect>(fadeShader, fadeDuration));
     }
 
     void ScreenEffectsService::fadeIn(float fadeDuration) {
         HIKARI_LOG(debug) << "ScreenEffectsService::fadeIn";
 
         clearEffects();
-        effects.push_back(std::make_shared<FadeInShaderScreenEffect>(fadeDuration));
+        effects.push_back(std::make_shared<FadeInShaderScreenEffect>(fadeShader, fadeDuration));
     }
 
     void ScreenEffectsService::clearEffects() {

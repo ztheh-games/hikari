@@ -3,7 +3,6 @@
 
 #include "hikari/core/Platform.hpp"
 #include "hikari/core/util/ResourceCache.hpp"
-#include "hikari/core/util/Service.hpp"
 
 #include "hikari/core/game/AnimationSet.hpp"
 
@@ -13,15 +12,15 @@ namespace hikari {
 
     class AnimationLoader;
 
-    class HIKARI_API AnimationSetCache : public Service, public ResourceCache<AnimationSet> {
+    class HIKARI_API AnimationSetCache : public ResourceCache<AnimationSet> {
     private:
-        std::shared_ptr<AnimationLoader> loader;
+        AnimationLoader & loader;
 
     protected:
         virtual AnimationSetCache::Resource loadResource(const std::string &fileName);
 
     public:
-        AnimationSetCache(const std::shared_ptr<AnimationLoader> & loader);
+        AnimationSetCache(AnimationLoader & loader);
 
         virtual ~AnimationSetCache() { }
     };

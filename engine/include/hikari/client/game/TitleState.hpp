@@ -27,7 +27,6 @@ namespace hikari {
     class AudioService;
     class EventBus;
     class GuiService;
-    class ServiceLocator;
     class GameController;
     class Input;
 
@@ -40,10 +39,9 @@ namespace hikari {
 
         std::string name;
         GameController & controller;
-        std::weak_ptr<GuiService> guiService;
-        std::weak_ptr<AudioService> audioService;
-        std::weak_ptr<EventBus> globalEventBus;
-        std::shared_ptr<Input> keyboardInput;
+        GuiService & guiService;
+        AudioService & audioService;
+        EventBus & globalEventBus;
         std::unique_ptr<gcn::Container> guiContainer;
         std::unique_ptr<gcn::Label> guiLabel;
         std::unique_ptr<gui::Menu> guiMenu;
@@ -58,7 +56,7 @@ namespace hikari {
         void positionCursorOnItem();
 
     public:
-        TitleState(const std::string &name, const Json::Value &params, GameController & controller, ServiceLocator &services);
+        TitleState(const std::string &name, const Json::Value &params, GameController & controller, GuiService & guiService, AudioService & audioService, EventBus & globalEventBus);
         virtual ~TitleState();
 
         virtual void handleEvent(sf::Event &event);

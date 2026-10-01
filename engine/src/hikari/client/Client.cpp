@@ -1,5 +1,5 @@
 #include "hikari/client/Client.hpp"
-#include "hikari/client/Services.hpp"
+#include "hikari/client/ClientRuntime.hpp"
 #include "hikari/client/audio/AudioService.hpp"
 #include "hikari/client/game/GameProgress.hpp"
 #include "hikari/client/game/StageSelectState.hpp"
@@ -7,9 +7,9 @@
 #include "hikari/client/game/GamePlayState.hpp"
 #include "hikari/client/game/GameOverState.hpp"
 #include "hikari/client/game/KeyboardInput.hpp"
-#include "hikari/client/game/InputService.hpp"
+#include "hikari/client/game/Input.hpp"
 #include "hikari/client/game/ScreenEffectsService.hpp"
-#include "hikari/client/game/EventBusService.hpp"
+#include "hikari/client/game/events/EventBus.hpp"
 #include "hikari/client/game/events/EventBusImpl.hpp"
 #include "hikari/client/game/events/EventListenerDelegate.hpp"
 #include "hikari/client/game/events/GameQuitEventData.hpp"
@@ -41,6 +41,8 @@
 #include "hikari/core/game/map/TilesetLoader.hpp"
 #include "hikari/core/util/AnimationSetCache.hpp"
 #include "hikari/core/util/FileSystem.hpp"
+#include "hikari/core/util/FileSystemSession.hpp"
+#include "hikari/core/util/exception/HikariException.hpp"
 #include "hikari/core/util/ImageCache.hpp"
 #include "hikari/core/util/Log.hpp"
 #include "hikari/core/util/PhysFS.hpp"
@@ -58,6 +60,13 @@
 
 namespace hikari {
 
+    struct Client::SharedGraphicsResources {
+        ~SharedGraphicsResources() {
+            PalettedAnimatedSprite::destroySharedResources();
+            SliceStateTransition::destroySharedTextures();
+        }
+    };
+
     const std::string Client::APP_TITLE             = "hikari";
     const std::string Client::PATH_CONTENT          = "content.zip";
     const std::string Client::PATH_CUSTOM_CONTENT   = "custom.zip";
@@ -70,12 +79,10 @@ namespace hikari {
     const unsigned int Client::SCREEN_BITS_PER_PIXEL = 32;
 
     Client::Client(int argc, char** argv)
-        : gameConfigJson()
+        : filesystem()
+        , gameConfigJson()
         , clientConfig()
         , gameConfig()
-        , services()
-        , globalInput(new KeyboardInput())
-        , globalEventBus(new EventBusImpl("GlobalEvents", true))
         , videoMode({SCREEN_WIDTH, SCREEN_HEIGHT}, SCREEN_BITS_PER_PIXEL)
         , window()
         , screenBuffer()
@@ -84,12 +91,9 @@ namespace hikari {
         initLogging(argc, argv);
         initFileSystem(argc, argv);
         initConfig();
-        initEventBus();
     }
 
-    Client::~Client() {
-        deinitFileSystem();
-    }
+    Client::~Client() = default;
 
     void Client::initConfig() {
         // Load client config first
@@ -120,13 +124,13 @@ namespace hikari {
             bool success = reader.parse(*fs, value, false);
 
             if(!success) {
-                HIKARI_LOG(fatal) << "Game configuration file could not be found or was corrupt.";
+                throw HikariException("Game configuration file could not be found or was corrupt.");
             } else {
                 gameConfigJson = value;
                 gameConfig = std::make_shared<GameConfig>(value);
             }
         } else {
-            HIKARI_LOG(fatal) << "Couldn't find game configuration file '" << PATH_GAME_CONFIG_FILE << "'";
+            throw HikariException("Couldn't find game configuration file '" + PATH_GAME_CONFIG_FILE + "'");
         }
     }
 
@@ -136,12 +140,12 @@ namespace hikari {
             quitGame = true;
         });
 
-        globalEventBus->addListener(quitRequestDelegate, GameQuitEventData::Type);
+        runtime->events->addListener(quitRequestDelegate, GameQuitEventData::Type);
     }
 
     void Client::initFileSystem(int argc, char** argv) {
         // Create virtual file system
-        PhysFS::init(argv[0]);
+        filesystem = std::make_unique<FileSystemSession>(argv[0]);
         PhysFS::addToSearchPath(PhysFS::getBaseDir());
 
         // Load standard content
@@ -167,18 +171,26 @@ namespace hikari {
         loadObjectTemplates();
         loadDamageTable();
 
-        auto gamePlayState = std::make_shared<GamePlayState>("gameplay", controller, gameConfigJson, gameConfig, services);
+        auto & controller = runtime->controller;
+        const GamePlayDependencies dependencies{
+            *gameConfig, *runtime->audio, *runtime->gui, *runtime->weapons,
+            *runtime->damage, *runtime->progress, *runtime->screenEffects, *runtime->maps,
+            *runtime->animations, *runtime->items, *runtime->enemies,
+            *runtime->particles, *runtime->projectiles
+        };
+        auto gamePlayState = std::make_shared<GamePlayState>("gameplay", controller, gameConfigJson, dependencies);
         GamePlayStateScriptProxy::setWrappedService(gamePlayState);
 
         // Create controller and game states
         StageSelectStateConfig stageSelectConfig(gameConfigJson["states"]["select"]);
 
-        StatePtr stageSelectState(new StageSelectState("stageselect", gameConfigJson["states"]["select"], stageSelectConfig, controller, services));
-        StatePtr gameOverState(new GameOverState("gameover", gameConfigJson, controller, services));
-        StatePtr passwordState(new PasswordState("password", gameConfigJson, controller, services));
-        StatePtr weaponGetState(new WeaponGetState("weaponget", controller, gameConfig, services));
-        StatePtr titleState(new TitleState("title", gameConfigJson, controller, services));
-        StatePtr optionsState(new OptionsState("options", gameConfigJson, controller, services));
+        StatePtr stageSelectState(new StageSelectState("stageselect", gameConfigJson["states"]["select"], stageSelectConfig, controller,
+            *runtime->gui, *runtime->audio, *runtime->progress, *runtime->screenEffects, *runtime->images, *runtime->animations));
+        StatePtr gameOverState(new GameOverState("gameover", gameConfigJson, controller, *runtime->gui, *runtime->audio, *runtime->input));
+        StatePtr passwordState(new PasswordState("password", gameConfigJson, controller, *runtime->gui, *runtime->audio, *runtime->input));
+        StatePtr weaponGetState(new WeaponGetState("weaponget", controller, *gameConfig, *runtime->gui, *runtime->audio, *runtime->progress, *runtime->input));
+        StatePtr titleState(new TitleState("title", gameConfigJson, controller, *runtime->gui, *runtime->audio, *runtime->events));
+        StatePtr optionsState(new OptionsState("options", gameConfigJson, controller, *runtime->gui));
 
         controller.addState(stageSelectState->getName(), stageSelectState);
         controller.addState(gamePlayState->getName(), gamePlayState);
@@ -200,53 +212,8 @@ namespace hikari {
     }
 
     void Client::initServices() {
-        auto imageCache        = std::make_shared<ImageCache>(ImageCache::NO_SMOOTHING, ImageCache::USE_MASKING);
-        auto animationLoader   = std::make_shared<AnimationLoader>(std::weak_ptr<ImageCache>(imageCache));
-        auto animationSetCache = std::make_shared<AnimationSetCache>(animationLoader);
-        auto tilesetLoader     = std::make_shared<TilesetLoader>(imageCache, animationLoader);
-        auto tilesetCache      = std::make_shared<TilesetCache>(tilesetLoader);
-        auto mapLoader         = std::make_shared<MapLoader>(animationSetCache, imageCache, tilesetCache);
-        auto gameProgress      = std::make_shared<GameProgress>();
-        auto audioService      = std::make_shared<AudioService>(gameConfigJson["assets"]["audio"]);
-        auto squirrelService   = std::make_shared<SquirrelService>(clientConfig.getScriptingStackSize());
-        auto guiService        = std::make_shared<GuiService>(gameConfigJson, imageCache, screenBuffer);
-        auto itemFactory       = std::make_shared<ItemFactory>(animationSetCache, imageCache, squirrelService);
-        auto enemyFactory      = std::make_shared<EnemyFactory>(animationSetCache, imageCache, squirrelService);
-        auto projectileFactory = std::make_shared<ProjectileFactory>(animationSetCache, imageCache, squirrelService);
-        auto particleFactory   = std::make_shared<ParticleFactory>(animationSetCache, imageCache);
-        auto weaponTable       = std::make_shared<WeaponTable>();
-        auto damageTable       = std::make_shared<DamageTable>();
-        auto inputService      = std::make_shared<InputService>(globalInput);
-        auto eventBusService   = std::make_shared<EventBusService>(globalEventBus);
-        auto screenEffectsService = std::make_shared<ScreenEffectsService>(eventBusService, screenBuffer.getSize().x, screenBuffer.getSize().y);
-
-        gameProgress->setEventBus(globalEventBus);
-
-        // audioService->setSampleVolume(clientConfig.getSampleVolume());
-        // audioService->setMusicVolume(clientConfig.getMusicVolume());
-
-        services.registerService(Services::AUDIO,             audioService);
-        services.registerService(Services::GAMEPROGRESS,      gameProgress);
-        services.registerService(Services::IMAGECACHE,        imageCache);
-        services.registerService(Services::ANIMATIONSETCACHE, animationSetCache);
-        services.registerService(Services::MAPLOADER,         mapLoader);
-        services.registerService(Services::SCRIPTING,         squirrelService);
-        services.registerService(Services::GUISERVICE,        guiService);
-        services.registerService(Services::ITEMFACTORY,       itemFactory);
-        services.registerService(Services::ENEMYFACTORY,      enemyFactory);
-        services.registerService(Services::PROJECTILEFACTORY, projectileFactory);
-        services.registerService(Services::PARTICLEFACTORY,   particleFactory);
-        services.registerService(Services::WEAPONTABLE,       weaponTable);
-        services.registerService(Services::DAMAGETABLE,       damageTable);
-        services.registerService(Services::INPUT,             inputService);
-        services.registerService(Services::EVENTBUS,          eventBusService);
-        services.registerService(Services::SCREENEFFECTS,  screenEffectsService);
-
-        AnimationLoader::setImageCache(std::weak_ptr<ImageCache>(imageCache));
-
-        // Script wrappers/proxy classes
-        AudioServiceScriptProxy::setWrappedService(std::weak_ptr<AudioService>(audioService));
-        GameProgressScriptProxy::setWrappedService(std::weak_ptr<GameProgress>(gameProgress));
+        runtime = std::make_unique<ClientRuntime>(clientConfig, gameConfigJson, screenBuffer);
+        initEventBus();
     }
 
     void Client::initWindow() {
@@ -292,12 +259,8 @@ namespace hikari {
             static_cast<float>(SCREEN_WIDTH / 2),
             static_cast<float>(SCREEN_HEIGHT / 2)});
 
+        graphicsResources = std::make_unique<SharedGraphicsResources>();
         SliceStateTransition::createSharedTextures();
-        ScreenEffectsService::preloadShaders();
-    }
-
-    void Client::deinitFileSystem() {
-        PhysFS::deinit();
     }
 
     void Client::loadPalettes() {
@@ -307,88 +270,53 @@ namespace hikari {
     }
 
     void Client::loadScriptingEnvironment() {
-        if(auto squirrelService = services.locateService<SquirrelService>(Services::SCRIPTING).lock()) {
-            const std::vector<std::string> & startupScripts = gameConfig->getStartUpScripts();
-
-            std::for_each(std::begin(startupScripts), std::end(startupScripts), [&](const std::string & scriptPath) {
-                squirrelService->runScriptFile(scriptPath);
-            });
+        for(const auto & scriptPath : gameConfig->getStartUpScripts()) {
+            runtime->scripting->runScriptFile(scriptPath);
         }
     }
 
     void Client::loadObjectTemplates() {
-        if(auto itemFactory = services.locateService<ItemFactory>(Services::ITEMFACTORY).lock()) {
-            FactoryHelpers::populateCollectableItemFactory(
-                gameConfig->getItemTemplatePath(),
-                std::weak_ptr<ItemFactory>(itemFactory),
-                services
-            );
-        }
-
-        if(auto enemyFactory = services.locateService<EnemyFactory>(Services::ENEMYFACTORY).lock()) {
-            FactoryHelpers::populateEnemyFactory(
-                gameConfig->getEnemyTemplatePath(),
-                std::weak_ptr<EnemyFactory>(enemyFactory),
-                services
-            );
-        }
-
-        if(auto particleFactory = services.locateService<ParticleFactory>(Services::PARTICLEFACTORY).lock()) {
-            FactoryHelpers::populateParticleFactory(
-                gameConfig->getParticleTemplatePath(),
-                std::weak_ptr<ParticleFactory>(particleFactory),
-                services
-            );
-        }
-
-        if(auto projectileFactory = services.locateService<ProjectileFactory>(Services::PROJECTILEFACTORY).lock()) {
-            FactoryHelpers::populateProjectileFactory(
-                gameConfig->getProjectileTemplatePath(),
-                std::weak_ptr<ProjectileFactory>(projectileFactory),
-                services
-            );
-        }
-
-        if(auto weaponTable = services.locateService<WeaponTable>(Services::WEAPONTABLE).lock()) {
-            FactoryHelpers::populateWeaponTable(
-                gameConfig->getWeaponTemplatePath(),
-                std::weak_ptr<WeaponTable>(weaponTable),
-                services
-            );
-        }
+        FactoryHelpers::populateCollectableItemFactory(gameConfig->getItemTemplatePath(),
+            *runtime->items, *runtime->images, *runtime->animations, *runtime->scripting);
+        FactoryHelpers::populateEnemyFactory(gameConfig->getEnemyTemplatePath(),
+            *runtime->enemies, *runtime->images, *runtime->animations, *runtime->scripting);
+        FactoryHelpers::populateParticleFactory(gameConfig->getParticleTemplatePath(),
+            *runtime->particles, *runtime->images, *runtime->animations);
+        FactoryHelpers::populateProjectileFactory(gameConfig->getProjectileTemplatePath(),
+            *runtime->projectiles, *runtime->images, *runtime->animations);
+        FactoryHelpers::populateWeaponTable(gameConfig->getWeaponTemplatePath(), *runtime->weapons);
     }
 
     void Client::loadDamageTable() {
-        if(auto damageTable = services.locateService<DamageTable>(Services::DAMAGETABLE).lock()) {
-            auto fs = FileSystem::openFileRead(PATH_DAMAGE_FILE);
+        auto & damageTable = *runtime->damage;
+        auto fs = FileSystem::openFileRead(PATH_DAMAGE_FILE);
 
-            Json::Reader reader;
-            Json::Value value;
+        Json::Reader reader;
+        Json::Value value;
 
-            bool success = reader.parse(*fs, value, false);
+        bool success = reader.parse(*fs, value, false);
 
-            if(success) {
-                const auto & damageArray = value["damage"];
+        if(success) {
+            const auto & damageArray = value["damage"];
 
-                for(unsigned int i = 0, length = damageArray.size(); i < length; i++) {
-                    const auto & damageEntry = damageArray[i];
-                    const int damageId = damageEntry["id"].asInt();
-                    const float damageAmount = static_cast<float>(damageEntry["amount"].asDouble());
+            for(unsigned int i = 0, length = damageArray.size(); i < length; i++) {
+                const auto & damageEntry = damageArray[i];
+                const int damageId = damageEntry["id"].asInt();
+                const float damageAmount = static_cast<float>(damageEntry["amount"].asDouble());
 
-                    damageTable->addEntry(damageId, damageAmount);
-                }
-
-                const auto & buffsArray = value["buffs"];
-
-                for(unsigned int i = 0, length = buffsArray.size(); i < length; i++) {
-                    // const auto & damageEntry = buffsArray[i];
-                    // TODO: Add buffs to damage table
-                }
-            } else {
-                HIKARI_LOG(info) << "Damage table file could not be found or was corrupt, using defaults.";
-                damageTable->addEntry(0, 0.0f);
-                damageTable->addEntry(1, 1.0f);
+                damageTable.addEntry(damageId, damageAmount);
             }
+
+            const auto & buffsArray = value["buffs"];
+
+            for(unsigned int i = 0, length = buffsArray.size(); i < length; i++) {
+                // const auto & damageEntry = buffsArray[i];
+                // TODO: Add buffs to damage table
+            }
+        } else {
+            HIKARI_LOG(info) << "Damage table file could not be found or was corrupt, using defaults.";
+            damageTable.addEntry(0, 0.0f);
+            damageTable.addEntry(1, 1.0f);
         }
     }
 
@@ -403,9 +331,10 @@ namespace hikari {
         sf::Time currentTime = clock.getElapsedTime();
         float accumulator = 0.0f;
 
-        auto guiService = services.locateService<GuiService>(Services::GUISERVICE).lock();
-        auto audioService = services.locateService<AudioService>(Services::AUDIO).lock();
-        auto screenEffectsService = services.locateService<ScreenEffectsService>(Services::SCREENEFFECTS).lock();
+        auto & guiService = runtime->gui;
+        auto & audioService = runtime->audio;
+        auto & screenEffectsService = runtime->screenEffects;
+        auto & controller = runtime->controller;
 
         gcn::Gui & gui = guiService->getGui();
 
@@ -446,13 +375,11 @@ namespace hikari {
                             audioService->unmute();
                         }
 
-                        globalInput->processEvent(*event);
+                        runtime->input->processEvent(*event);
                         controller.handleEvent(*event);
                     }
 
-                    if(guiService) {
-                        guiService->processEvent(*event);
-                    }
+                    guiService->processEvent(*event);
                 }
 
                 // Process queued GUI input once per tick, after all events are polled.
@@ -472,7 +399,7 @@ namespace hikari {
 
                 // Update input after the game controller so you don't accidentally
                 // skip an event that took place.
-                globalInput->update(dt);
+                runtime->input->update(dt);
 
                 accumulator -= dt;
                 totalRuntime += dt;
@@ -504,10 +431,6 @@ namespace hikari {
             window.draw(renderSprite);
             window.display();
         }
-
-        PalettedAnimatedSprite::destroySharedResources();
-        SliceStateTransition::destroySharedTextures();
-        ScreenEffectsService::destroyShaders();
 
         HIKARI_LOG(debug) << "Quitting; total run time = " << totalRuntime << " seconds.";
     }

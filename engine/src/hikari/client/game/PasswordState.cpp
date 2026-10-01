@@ -1,11 +1,9 @@
 #include "hikari/client/game/PasswordState.hpp"
-#include "hikari/client/game/InputService.hpp"
+#include "hikari/client/game/Input.hpp"
 #include "hikari/client/audio/AudioService.hpp"
 #include "hikari/client/gui/Panel.hpp"
 #include "hikari/client/gui/GuiService.hpp"
-#include "hikari/client/Services.hpp"
 #include "hikari/core/game/GameController.hpp"
-#include "hikari/core/util/ServiceLocator.hpp"
 #include "hikari/core/util/Log.hpp"
 
 #include <guichan/gui.hpp>
@@ -14,15 +12,15 @@
 
 namespace hikari {
 
-    PasswordState::PasswordState(const std::string &name, const Json::Value &params, GameController & controller, ServiceLocator &services)
+    PasswordState::PasswordState(const std::string &name, const Json::Value &params, GameController & controller, GuiService & guiService, AudioService & audioService, Input & keyboardInput)
         : name(name)
         , controller(controller)
-        , audioService(services.locateService<AudioService>(Services::AUDIO))
-        , keyboardInput(services.locateService<InputService>(Services::INPUT))
+        , audioService(audioService)
+        , keyboardInput(keyboardInput)
         , passwordGrid(new gui::Panel())
         , guiWrapper(new gcn::Container())
         , testLabel(new gcn::Label())
-        , guiService(services.locateService<GuiService>(Services::GUISERVICE))
+        , guiService(guiService)
         , goToNextState(false)
     {
         guiWrapper->setWidth(256);
@@ -49,13 +47,11 @@ namespace hikari {
     }
 
     void PasswordState::render(sf::RenderTarget &target) {
-        if(auto gui = guiService.lock()) {
-            gui->renderAsTop(guiWrapper.get(), target);
-        }
+        guiService.renderAsTop(guiWrapper.get(), target);
     }
 
     bool PasswordState::update(float dt) {
-        if(keyboardInput->wasPressed(Input::BUTTON_CANCEL)) {
+        if(keyboardInput.wasPressed(Input::BUTTON_CANCEL)) {
             controller.requestStateChange(controller.getPreviousStateName());
             goToNextState = true;
         }
@@ -64,29 +60,21 @@ namespace hikari {
     }
 
     void PasswordState::onEnter() {
-        if(auto gui = guiService.lock()) {
-            auto & topContainer = gui->getRootContainer();
-            topContainer.add(guiWrapper.get(), 0, 0);
-            guiWrapper->setEnabled(true);
-        }
+        auto & topContainer = guiService.getRootContainer();
+        topContainer.add(guiWrapper.get(), 0, 0);
+        guiWrapper->setEnabled(true);
 
-        if(auto audio = audioService.lock()) {
-            audio->playMusic("Password (MM3)");
-        }
+        audioService.playMusic("Password (MM3)");
 
         goToNextState = false;
     }
 
     void PasswordState::onExit() {
-        if(auto gui = guiService.lock()) {
-            auto & topContainer = gui->getRootContainer();
-            topContainer.remove(guiWrapper.get());
-            guiWrapper->setEnabled(false);
-        }
+        auto & topContainer = guiService.getRootContainer();
+        topContainer.remove(guiWrapper.get());
+        guiWrapper->setEnabled(false);
         
-        if(auto audio = audioService.lock()) {
-            audio->stopMusic();
-        }
+        audioService.stopMusic();
     }
 
     const std::string & PasswordState::getName() const {

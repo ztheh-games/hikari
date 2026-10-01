@@ -25,7 +25,6 @@ namespace hikari {
 
     class AudioService;
     class GuiService;
-    class ServiceLocator;
     class GameController;
     class Input;
 
@@ -37,8 +36,7 @@ namespace hikari {
 
         std::string name;
         GameController & controller;
-        std::weak_ptr<GuiService> guiService;
-        std::shared_ptr<Input> input;
+        GuiService & guiService;
         std::unique_ptr<gcn::Container> guiContainer;
         std::unique_ptr<gcn::Label> guiLabel;
         std::unique_ptr<gcn::Label> audioLabel;
@@ -55,7 +53,7 @@ namespace hikari {
         void buildGui();
 
     public:
-        OptionsState(const std::string &name, const Json::Value &params, GameController & controller, ServiceLocator &services);
+        OptionsState(const std::string &name, const Json::Value &params, GameController & controller, GuiService & guiService);
         virtual ~OptionsState();
 
         virtual void handleEvent(sf::Event &event);

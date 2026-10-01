@@ -10,14 +10,13 @@ namespace hikari {
 
     class CutSceneHeroActionController : public HeroActionController {
     private:
-        std::shared_ptr<Hero> hero;
         bool moveLeftFlag;
         bool moveRightFlag;
         bool jumpFlag;
         bool superJumpFlag;
 
     public:
-        CutSceneHeroActionController(const std::shared_ptr<Hero> & heroPtr);
+        CutSceneHeroActionController();
         virtual ~CutSceneHeroActionController();
 
         virtual bool shouldMoveUp() const;
