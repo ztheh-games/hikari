@@ -29,6 +29,7 @@ set( TEST_SOURCE_FILES
     src/test/TestBoundingBox.cpp
     src/test/TestGeometryUtils.cpp
     src/test/TestEventBusImpl.cpp
+    src/test/TestCollisionSelection.cpp
     src/test/TestMovable.cpp
 )
 
