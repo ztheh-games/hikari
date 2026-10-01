@@ -11,6 +11,7 @@
 #include "hikari/client/game/objects/BlockSequence.hpp"
 
 #include "hikari/client/game/GameWorld.hpp"
+#include "hikari/client/game/GamePlayDependencies.hpp"
 #include "hikari/core/game/map/RoomTransition.hpp"
 #include "hikari/core/game/Direction.hpp"
 
@@ -59,9 +60,6 @@ namespace hikari {
     class GuiService;
     class ImageFont;
     class MapLoader;
-    class ServiceLocator;
-    class ImageCache;
-    class SquirrelService;
     class ScreenEffectsService;
     class RealTimeInput;
     class Door;
@@ -102,17 +100,15 @@ namespace hikari {
         static const std::string MENU_ACTION_ETANK;
         std::string name;
         GameController & controller;
-        std::weak_ptr<AudioService> audioService;
-        std::weak_ptr<GuiService> guiService;
+        AudioService & audioService;
+        GuiService & guiService;
         std::shared_ptr<EventBus> eventBus;
-        std::weak_ptr<WeaponTable> weaponTable;
-        std::weak_ptr<DamageTable> damageTable;
-        std::weak_ptr<GameConfig> gameConfig;
-        std::weak_ptr<GameProgress> gameProgress;
-        std::shared_ptr<ImageCache> imageCache;
+        WeaponTable & weaponTable;
+        DamageTable & damageTable;
+        const GameConfig & gameConfig;
+        GameProgress & gameProgress;
         std::shared_ptr<RealTimeInput> userInput;
-        std::shared_ptr<SquirrelService> scriptEnv;
-        std::shared_ptr<ScreenEffectsService> screenEffectsService;
+        ScreenEffectsService & screenEffectsService;
         std::shared_ptr<WorldCollisionResolver> collisionResolver;
         std::shared_ptr<Map> currentMap;
         std::shared_ptr<Tileset> currentTileset;
@@ -138,7 +134,6 @@ namespace hikari {
         std::unique_ptr<gui::Menu> guiWeaponMenu;
         std::unique_ptr<gcn::ActionListener> guiWeaponMenuActionListener;
         std::unique_ptr<gcn::SelectionListener> guiWeaponMenuSelectionListener;
-        std::unique_ptr<KeyboardInput> keyboardInput;
         std::unique_ptr<Vector2<float>> oldHeroPosition;
         std::map< std::string, std::shared_ptr<Map> > maps;
         std::vector<std::weak_ptr<Spawner>> itemSpawners;
@@ -167,7 +162,7 @@ namespace hikari {
         //
         // Resource Management
         //
-        void loadAllMaps(const std::weak_ptr<MapLoader> &mapLoader, const Json::Value &params);
+        void loadAllMaps(MapLoader & mapLoader, const Json::Value &params);
 
         //
         // Gameplay Mechanics
@@ -492,7 +487,7 @@ namespace hikari {
         };
 
     public:
-        GamePlayState(const std::string &name, GameController & controller, const Json::Value &params, const std::weak_ptr<GameConfig> & gameConfig, ServiceLocator &services);
+        GamePlayState(const std::string &name, GameController & controller, const Json::Value &params, const GamePlayDependencies & dependencies);
         virtual ~GamePlayState();
 
         virtual void handleEvent(sf::Event &event);

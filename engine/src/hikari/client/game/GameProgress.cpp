@@ -1,5 +1,4 @@
 #include "hikari/client/game/GameProgress.hpp"
-#include "hikari/client/game/events/EventBus.hpp"
 
 #include <algorithm>
 
@@ -32,14 +31,6 @@ namespace hikari {
     }
 
     GameProgress::~GameProgress() { }
-
-    void GameProgress::setEventBus(const std::weak_ptr<EventBus>& eventBus) {
-        this->eventBus = eventBus;
-    }
-
-    const std::weak_ptr<EventBus>& GameProgress::getEventBus() const {
-        return eventBus;
-    }
 
     const unsigned char GameProgress::getBossCount() const {
         return GameProgress::NUM_BOSSES;
@@ -178,13 +169,6 @@ namespace hikari {
         if(getCurrentWeapon() != weapon) {
             currentWeapon = weapon;
 
-            if(auto events = eventBus.lock()) {
-                // events->triggerEvent(
-                //     std::make_shared<PropertyChangedEventData>(
-                //         "currentWeapon"
-                //     )
-                // );
-            }
         }
 
     }

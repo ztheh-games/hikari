@@ -10,13 +10,13 @@ namespace hikari {
 
     class HIKARI_API TilesetCache : public ResourceCache<Tileset> {
     private:
-        std::shared_ptr<TilesetLoader> loader;
+        TilesetLoader & loader;
 
     protected:
         virtual TilesetCache::Resource loadResource(const std::string &fileName);
 
     public:
-        TilesetCache(const std::shared_ptr<TilesetLoader> &loader);
+        TilesetCache(TilesetLoader &loader);
 
         virtual ~TilesetCache() { }
     };

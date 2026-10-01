@@ -2,14 +2,10 @@
 #define HIKARI_CORE_GAME_GAMEPROGRESS
 
 #include "hikari/core/Platform.hpp"
-#include "hikari/core/util/Service.hpp"
-#include <memory>
 
 namespace hikari {
 
-    class EventBus;
-
-    class HIKARI_API GameProgress : public Service {
+    class HIKARI_API GameProgress {
     private:
         static const unsigned char NUM_BOSSES = 8;
         static const unsigned char NUM_WEAPONS = NUM_BOSSES + 3; // Need to determine this.
@@ -31,13 +27,9 @@ namespace hikari {
         bool bossesDefeated[NUM_BOSSES];
         bool weaponsEnabled[NUM_WEAPONS];
 
-        std::weak_ptr<EventBus> eventBus;
     public:
         GameProgress();
         virtual ~GameProgress();
-
-        void setEventBus(const std::weak_ptr<EventBus> & eventBus);
-        const std::weak_ptr<EventBus> & getEventBus() const;
 
         //
         // Getters

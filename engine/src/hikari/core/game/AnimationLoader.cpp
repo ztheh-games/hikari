@@ -33,14 +33,8 @@ namespace hikari {
     const char* AnimationLoader::PROPERTY_FRAME_LENGTH = "length";
     const char* AnimationLoader::PROPERTY_FRAME_HOTSPOT_X = "hotspotX";
     const char* AnimationLoader::PROPERTY_FRAME_HOTSPOT_Y = "hotspotY";
-    std::weak_ptr<ImageCache> AnimationLoader::imageCache = std::weak_ptr<ImageCache>();
-
-    AnimationLoader::AnimationLoader(const std::weak_ptr<ImageCache> & imageCache) {
-        // TODO: Make this less static...
-    }
-
-    void AnimationLoader::setImageCache(const std::weak_ptr<ImageCache> & imageCache) {
-        AnimationLoader::imageCache = imageCache;
+    AnimationLoader::AnimationLoader(ImageCache & imageCache)
+        : imageCache(imageCache) {
     }
 
     std::shared_ptr<Animation> AnimationLoader::load(const std::string &fileName) {
@@ -59,11 +53,7 @@ namespace hikari {
             // Extract name and image file path
             std::string name = root[PROPERTY_NAME].asString();
             std::string imageFileName = root[PROPERTY_IMAGE_FILE_NAME].asString();
-            std::shared_ptr<sf::Texture> texture;
-
-            if(auto cache = imageCache.lock()) {
-                texture = cache->get(imageFileName);
-            }
+            auto texture = imageCache.get(imageFileName);
 
             std::shared_ptr<AnimationSet> resultSet =
                 std::shared_ptr<AnimationSet>(new AnimationSet(name, imageFileName, texture));

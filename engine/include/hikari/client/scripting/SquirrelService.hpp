@@ -1,16 +1,16 @@
 #ifndef HIKARI_CLIENT_SCRIPTING_SQUIRRELSERVICE
 #define HIKARI_CLIENT_SCRIPTING_SQUIRRELSERVICE
 
-#include "hikari/core/util/Service.hpp"
 
 #include <squirrel.h>
 #include <sqstdmath.h>
 
 #include <string>
+#include <memory>
 
 namespace hikari {
 
-    class SquirrelService : public Service {
+    class SquirrelService {
     private:
         static void squirrelPrintFunction(HSQUIRRELVM vm, const SQChar *s, ...);
         static void squirrelErrorFunction(HSQUIRRELVM vm, const SQChar *s, ...);
@@ -19,6 +19,10 @@ namespace hikari {
         static const SQInteger DEFAULT_STACK_SIZE;
 
         SQInteger initialStackSize;
+        struct VmDeleter {
+            void operator()(HSQUIRRELVM vm) const;
+        };
+        std::unique_ptr<SQVM, VmDeleter> vmOwner;
         HSQUIRRELVM vm;
 
         void initVirtualMachine();

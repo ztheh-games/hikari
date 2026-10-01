@@ -19,8 +19,7 @@ namespace hikari {
     public:
         static std::shared_ptr<Animation> load(const std::string &fileName);
         std::shared_ptr<AnimationSet> loadSet(const std::string &fileName);
-        AnimationLoader(const std::weak_ptr<ImageCache> & imageCache);
-        static void setImageCache(const std::weak_ptr<ImageCache> & imageCache);
+        explicit AnimationLoader(ImageCache & imageCache);
         std::shared_ptr<Animation> loadFromJsonObject(const Json::Value &json);
     private:
         static const char* PROPERTY_NAME;
@@ -38,7 +37,7 @@ namespace hikari {
         static const char* PROPERTY_FRAME_LENGTH;
         static const char* PROPERTY_FRAME_HOTSPOT_X;
         static const char* PROPERTY_FRAME_HOTSPOT_Y;
-        static std::weak_ptr<ImageCache> imageCache;
+        ImageCache & imageCache;
         static std::shared_ptr<Animation> loadFromJson(const Json::Value &json);
     };
     

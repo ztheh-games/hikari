@@ -28,9 +28,7 @@
 #include "hikari/client/gui/EnergyGauge.hpp"
 #include "hikari/client/gui/Panel.hpp"
 #include "hikari/client/gui/Orientation.hpp"
-#include "hikari/client/Services.hpp"
 #include "hikari/client/audio/AudioService.hpp"
-#include "hikari/client/game/KeyboardInput.hpp"
 #include "hikari/client/game/Task.hpp"
 #include "hikari/client/game/FunctionTask.hpp"
 #include "hikari/client/game/RefillHealthTask.hpp"
@@ -70,7 +68,6 @@
 #include "hikari/core/util/JsonUtils.hpp"
 #include "hikari/core/util/FileSystem.hpp"
 #include "hikari/core/util/ReferenceWrapper.hpp"
-#include "hikari/core/util/ServiceLocator.hpp"
 #include "hikari/core/util/StringUtils.hpp"
 #include "hikari/core/util/Log.hpp"
 
@@ -98,20 +95,18 @@ namespace hikari {
 
     const std::string GamePlayState::MENU_ACTION_ETANK = "useETank";
 
-    GamePlayState::GamePlayState(const std::string &name, GameController & controller, const Json::Value &params, const std::weak_ptr<GameConfig> & gameConfig, ServiceLocator &services)
+    GamePlayState::GamePlayState(const std::string &name, GameController & controller, const Json::Value &params, const GamePlayDependencies & dependencies)
         : name(name)
         , controller(controller)
-        , audioService(services.locateService<AudioService>(Services::AUDIO))
-        , guiService(services.locateService<GuiService>(Services::GUISERVICE))
+        , audioService(dependencies.audio)
+        , guiService(dependencies.gui)
         , eventBus(new EventBusImpl("GamePlayEvents", false))
-        , weaponTable(services.locateService<WeaponTable>(Services::WEAPONTABLE))
-        , damageTable(services.locateService<DamageTable>(Services::DAMAGETABLE))
-        , gameConfig(gameConfig)
-        , gameProgress(services.locateService<GameProgress>(Services::GAMEPROGRESS))
-        , imageCache(services.locateService<ImageCache>(Services::IMAGECACHE))
+        , weaponTable(dependencies.weapons)
+        , damageTable(dependencies.damage)
+        , gameConfig(dependencies.config)
+        , gameProgress(dependencies.progress)
         , userInput(new RealTimeInput())
-        , scriptEnv(services.locateService<SquirrelService>(Services::SCRIPTING))
-        , screenEffectsService(services.locateService<ScreenEffectsService>(Services::SCREENEFFECTS))
+        , screenEffectsService(dependencies.screenEffects)
         , collisionResolver(new WorldCollisionResolver())
         , currentMap(nullptr)
         , currentTileset(nullptr)
@@ -135,7 +130,6 @@ namespace hikari {
         , guiWeaponMenu(new gui::Menu())
         , guiWeaponMenuActionListener(nullptr)
         , guiWeaponMenuSelectionListener(nullptr)
-        , keyboardInput(new KeyboardInput())
         , oldHeroPosition(new Vector2<float>())
         , maps()
         , itemSpawners()
@@ -143,7 +137,7 @@ namespace hikari {
         , eventHandlerDelegates()
         , bonusChancesTable()
         , taskQueue()
-        , world()
+        , world(dependencies.items, dependencies.enemies, dependencies.particles, dependencies.projectiles)
         , camera(Rectangle2D<float>(0.0f, 0.0f, 256.0f, 240.0f))
         , view()
         , spawnerMarker()
@@ -159,7 +153,7 @@ namespace hikari {
         , gotoNextState(false)
         , isRestoringEnergy(false)
     {
-        loadAllMaps(services.locateService<MapLoader>(hikari::Services::MAPLOADER), params);
+        loadAllMaps(dependencies.maps, params);
 
         bindEventHandlers();
 
@@ -168,40 +162,27 @@ namespace hikari {
         //
         buildGui();
 
-        auto animationCacheWeak = services.locateService<AnimationSetCache>(Services::ANIMATIONSETCACHE);
 
-        if(auto animationCache = animationCacheWeak.lock()) {
+        //
+        // Create/configure Rockman
+        //
+        auto heroId = GameObject::generateObjectId();
+        auto heroAnimationSet = dependencies.animations.get("assets/animations/rockman-32.json");
 
-            //
-            // Create/configure Rockman
-            //
-            auto heroId = GameObject::generateObjectId();
-            auto heroAnimationSet = animationCache->get("assets/animations/rockman-32.json");
+        hero = std::make_shared<Hero>(heroId, nullptr);
+        hero->setActive(true);
+        hero->setAnimationSet(heroAnimationSet);
+        hero->setBoundingBox(BoundingBoxF(0, 0, 16, 24).setOrigin(8, 20));
+        hero->changeAnimation("idle");
+        hero->setPosition(100.0f, 100.0f);
+        hero->setActionSpot(Vector2<float>(16.0, -8.0));
+        hero->setActionController(std::make_shared<PlayerInputHeroActionController>(userInput));
+        hero->setEventBus(std::weak_ptr<EventBus>(eventBus));
 
-            hero = std::make_shared<Hero>(heroId, nullptr);
-            hero->setActive(true);
-            hero->setAnimationSet(heroAnimationSet);
-            hero->setBoundingBox(BoundingBoxF(0, 0, 16, 24).setOrigin(8, 20));
-            hero->changeAnimation("idle");
-            hero->setPosition(100.0f, 100.0f);
-            hero->setActionSpot(Vector2<float>(16.0, -8.0));
-            hero->setActionController(std::make_shared<PlayerInputHeroActionController>(userInput));
-            hero->setEventBus(std::weak_ptr<EventBus>(eventBus));
-
-            cutSceneController = std::make_shared<CutSceneHeroActionController>(hero);
-        }
+        cutSceneController = std::make_shared<CutSceneHeroActionController>();
 
         world.setPlayer(hero);
         world.setEventBus(std::weak_ptr<EventBus>(eventBus));
-
-        const auto itemFactoryWeak  = services.locateService<ItemFactory>(Services::ITEMFACTORY);
-        const auto enemyFactoryWeak = services.locateService<EnemyFactory>(Services::ENEMYFACTORY);
-        const auto particleFactoryWeak = services.locateService<ParticleFactory>(Services::PARTICLEFACTORY);
-        const auto projectileFactoryWeak = services.locateService<ProjectileFactory>(Services::PROJECTILEFACTORY);
-        world.setItemFactory(itemFactoryWeak);
-        world.setEnemyFactory(enemyFactoryWeak);
-        world.setParticleFactory(particleFactoryWeak);
-        world.setProjectileFactory(projectileFactoryWeak);
 
         srand(static_cast<unsigned int>(time(nullptr)));
     }
@@ -222,250 +203,238 @@ namespace hikari {
     }
 
     void GamePlayState::buildGui() {
-        if(auto guiSvc = guiService.lock()) {
-            guiContainer->setWidth(256);
-            guiContainer->setHeight(240);
-            guiContainer->setOpaque(false);
-            guiContainer->setBackgroundColor(gcn::Color(0, 0, 0, 0));
-            guiContainer->add(guiBossEnergyGauge.get(), 32, 16);
-            guiContainer->add(guiHeroEnergyGauge.get(), 16, 16);
-            guiContainer->add(guiWeaponEnergyGauge.get(), 8, 16);
-            guiContainer->add(guiMenuPanel.get(), 0, 0);
+        guiContainer->setWidth(256);
+        guiContainer->setHeight(240);
+        guiContainer->setOpaque(false);
+        guiContainer->setBackgroundColor(gcn::Color(0, 0, 0, 0));
+        guiContainer->add(guiBossEnergyGauge.get(), 32, 16);
+        guiContainer->add(guiHeroEnergyGauge.get(), 16, 16);
+        guiContainer->add(guiWeaponEnergyGauge.get(), 8, 16);
+        guiContainer->add(guiMenuPanel.get(), 0, 0);
 
-            // The reddish energy gauge for bosses
-            guiBossEnergyGauge->setMaximumValue(28.0f);
-            guiBossEnergyGauge->setValue(28.0f);
-            guiBossEnergyGauge->setVisible(false);
-            guiBossEnergyGauge->setBackgroundColor(gcn::Color(0xe40058));
-            guiBossEnergyGauge->setForegroundColor(gcn::Color(0xfc9838));
+        // The reddish energy gauge for bosses
+        guiBossEnergyGauge->setMaximumValue(28.0f);
+        guiBossEnergyGauge->setValue(28.0f);
+        guiBossEnergyGauge->setVisible(false);
+        guiBossEnergyGauge->setBackgroundColor(gcn::Color(0xe40058));
+        guiBossEnergyGauge->setForegroundColor(gcn::Color(0xfc9838));
 
-            // Mega man's energy gauge
-            guiHeroEnergyGauge->setMaximumValue(28.0f);
-            guiHeroEnergyGauge->setValue(28.0f);
-            guiHeroEnergyGauge->setVisible(false);
+        // Mega man's energy gauge
+        guiHeroEnergyGauge->setMaximumValue(28.0f);
+        guiHeroEnergyGauge->setValue(28.0f);
+        guiHeroEnergyGauge->setVisible(false);
 
-            // Current weapon's energy gauge
-            guiWeaponEnergyGauge->setMaximumValue(28.0f);
-            guiWeaponEnergyGauge->setValue(28.0f);
-            guiWeaponEnergyGauge->setVisible(true);
-            guiWeaponEnergyGauge->setBackgroundColor(0x002a88);
-            guiWeaponEnergyGauge->setForegroundColor(0xadadad);
+        // Current weapon's energy gauge
+        guiWeaponEnergyGauge->setMaximumValue(28.0f);
+        guiWeaponEnergyGauge->setValue(28.0f);
+        guiWeaponEnergyGauge->setVisible(true);
+        guiWeaponEnergyGauge->setBackgroundColor(0x002a88);
+        guiWeaponEnergyGauge->setForegroundColor(0xadadad);
 
-            // "Life" energy gague on the weapon menu
-            guiMenuLifeEnergyGauge->setMaximumValue(28.0f);
-            guiMenuLifeEnergyGauge->setValue(28.0f);
-            guiMenuLifeEnergyGauge->setVisible(true);
-            guiMenuLifeEnergyGauge->setOrientation(gui::Orientation::HORIZONTAL);
-            guiMenuLifeEnergyGauge->setWidth(56);
-            guiMenuLifeEnergyGauge->setHeight(8);
+        // "Life" energy gague on the weapon menu
+        guiMenuLifeEnergyGauge->setMaximumValue(28.0f);
+        guiMenuLifeEnergyGauge->setValue(28.0f);
+        guiMenuLifeEnergyGauge->setVisible(true);
+        guiMenuLifeEnergyGauge->setOrientation(gui::Orientation::HORIZONTAL);
+        guiMenuLifeEnergyGauge->setWidth(56);
+        guiMenuLifeEnergyGauge->setHeight(8);
 
-            guiMenuPanel->setX(0);
-            guiMenuPanel->setY(0);
-            guiMenuPanel->setWidth(256);
-            guiMenuPanel->setHeight(240);
-            guiMenuPanel->setBaseColor(gcn::Color(0, 0, 0, 192));
-            guiMenuPanel->setVisible(false);
-            guiMenuPanel->add(guiWeaponMenuBackground.get(), 0, 0);
-            guiMenuPanel->add(guiMenuLifeEnergyGauge.get(), 104, 32);
-            guiMenuPanel->add(guiLivesLabel.get(), 208 + 1, 192 + 8);
-            guiMenuPanel->add(guiETanksLabel.get(), 56 + 1, 192 + 8);
+        guiMenuPanel->setX(0);
+        guiMenuPanel->setY(0);
+        guiMenuPanel->setWidth(256);
+        guiMenuPanel->setHeight(240);
+        guiMenuPanel->setBaseColor(gcn::Color(0, 0, 0, 192));
+        guiMenuPanel->setVisible(false);
+        guiMenuPanel->add(guiWeaponMenuBackground.get(), 0, 0);
+        guiMenuPanel->add(guiMenuLifeEnergyGauge.get(), 104, 32);
+        guiMenuPanel->add(guiLivesLabel.get(), 208 + 1, 192 + 8);
+        guiMenuPanel->add(guiETanksLabel.get(), 56 + 1, 192 + 8);
 
-            guiLivesLabel->setVisible(true);
-            guiETanksLabel->setVisible(true);
+        guiLivesLabel->setVisible(true);
+        guiETanksLabel->setVisible(true);
 
-            guiReadyLabel->setX(108);
-            guiReadyLabel->setY(121);
-            guiReadyLabel->setCaption("READY");
-            guiReadyLabel->setAlignment(gcn::Graphics::Left);
-            guiReadyLabel->adjustSize();
-            guiReadyLabel->setVisible(false);
+        guiReadyLabel->setX(108);
+        guiReadyLabel->setY(121);
+        guiReadyLabel->setCaption("READY");
+        guiReadyLabel->setAlignment(gcn::Graphics::Left);
+        guiReadyLabel->adjustSize();
+        guiReadyLabel->setVisible(false);
 
-            guiContainer->add(guiReadyLabel.get());
+        guiContainer->add(guiReadyLabel.get());
 
-            if(auto weaponItemFont = guiSvc->getFontByName("weapon-menu")) {
-                guiLivesLabel->setFont(weaponItemFont.get());
-                guiETanksLabel->setFont(weaponItemFont.get());
+        if(auto weaponItemFont = guiService.getFontByName("weapon-menu")) {
+            guiLivesLabel->setFont(weaponItemFont.get());
+            guiETanksLabel->setFont(weaponItemFont.get());
 
-                if(auto config = gameConfig.lock()) {
-                    const auto & weaponNames = config->getHeroWeaponNames();
+            const auto & weaponNames = gameConfig.getHeroWeaponNames();
 
-                    if(auto weapons = weaponTable.lock()) {
-                        int index = 0;
+            int index = 0;
 
-                        std::for_each(
-                            std::begin(weaponNames),
-                            std::end(weaponNames),
-                            [&](const std::string & name) {
-                                const auto & weapon = weapons->getWeaponByName(name);
-                                const auto weaponId = weapons->getWeaponIdByName(name);
+            std::for_each(
+                std::begin(weaponNames),
+                std::end(weaponNames),
+                [&](const std::string & name) {
+                    const auto & weapon = weaponTable.getWeaponByName(name);
+                    const auto weaponId = weaponTable.getWeaponIdByName(name);
 
-                                if(const auto & weaponPtr = weapon.lock()) {
-                                    std::shared_ptr<gui::WeaponMenuItem> weaponMenuItem(new gui::WeaponMenuItem(weaponPtr->getLabel(), weaponId));
-                                    weaponMenuItem->setForegroundColor(gcn::Color(0, 0, 0, 0));
-                                    weaponMenuItem->setSelectionColor(gcn::Color(250, 128, 128));
-                                    weaponMenuItem->setX(index < 5 ? 0 : 112);
-                                    weaponMenuItem->setY(index < 5 ? index * 16 : (index - 5) * 16);
-                                    weaponMenuItem->setFont(weaponItemFont.get());
-                                    weaponMenuItem->setVisible(true);
-                                    weaponMenuItem->setEnabled(true);
-                                    weaponMenuItem->setActionEventId("changeWeapon");
-                                    guiWeaponMenu->addItem(weaponMenuItem);
-                                } else {
-                                    HIKARI_LOG(debug4) << "The weapon \"" << name << "\" was not found when building the GUI.";
-                                }
-
-                                index++;
-                        });
+                    if(const auto & weaponPtr = weapon.lock()) {
+                        std::shared_ptr<gui::WeaponMenuItem> weaponMenuItem(new gui::WeaponMenuItem(weaponPtr->getLabel(), weaponId));
+                        weaponMenuItem->setForegroundColor(gcn::Color(0, 0, 0, 0));
+                        weaponMenuItem->setSelectionColor(gcn::Color(250, 128, 128));
+                        weaponMenuItem->setX(index < 5 ? 0 : 112);
+                        weaponMenuItem->setY(index < 5 ? index * 16 : (index - 5) * 16);
+                        weaponMenuItem->setFont(weaponItemFont.get());
+                        weaponMenuItem->setVisible(true);
+                        weaponMenuItem->setEnabled(true);
+                        weaponMenuItem->setActionEventId("changeWeapon");
+                        guiWeaponMenu->addItem(weaponMenuItem);
+                    } else {
+                        HIKARI_LOG(debug4) << "The weapon \"" << name << "\" was not found when building the GUI.";
                     }
+
+                    index++;
+                });
+        }
+
+        // Add menu item for E-tanks
+        std::shared_ptr<gui::WeaponMenuItem> etankMenuItem(new gui::WeaponMenuItem("E", -1));
+        etankMenuItem->setForegroundColor(gcn::Color(128, 0, 0, 0));
+        etankMenuItem->setSelectionColor(gcn::Color(250, 128, 128));
+        etankMenuItem->setX(0);
+        etankMenuItem->setY(16 * 9);
+        etankMenuItem->setVisible(true);
+        etankMenuItem->setEnabled(true);
+        etankMenuItem->setActionEventId(MENU_ACTION_ETANK);
+        guiWeaponMenu->addItem(etankMenuItem);
+        guiWeaponMenu->disableKeyPressIgnore();
+
+        guiWeaponMenu->setWidth(guiContainer->getWidth() - 32);
+        guiWeaponMenu->setHeight(guiContainer->getHeight());
+        guiWeaponMenu->setBackgroundColor(gcn::Color(0, 0, 0, 0));
+        guiWeaponMenu->enableWrapping();
+        guiWeaponMenu->setVisible(true);
+
+        guiMenuPanel->add(guiWeaponMenu.get(), 32, 48);
+
+        guiWeaponMenuActionListener.reset(new gcn::FunctorActionListener([&](const gcn::ActionEvent& event) {
+            auto item = guiWeaponMenu->getMenuItemAt(guiWeaponMenu->getSelectedIndex());
+            auto actionEventId = item->getActionEventId();
+
+            HIKARI_LOG(debug3) << "Actioned on #" << guiWeaponMenu->getSelectedIndex();
+
+            if(MENU_ACTION_ETANK == actionEventId) {
+                HIKARI_LOG(debug4) << "Trying to use an e-tank.";
+
+                if(!(isRefillingEnergy || isTransitioningMenu)) {
+                    if(gameProgress.getETanks() > 0 && gameProgress.getPlayerEnergy() < gameProgress.getPlayerMaxEnergy()) {
+                        gameProgress.setETanks(gameProgress.getETanks() - 1);
+                        refillPlayerEnergy(gameProgress.getPlayerMaxEnergy());
+                    }
+                }
+            } else {
+                if(!isTransitioningMenu) {
+                    HIKARI_LOG(debug4) << "Swapping weapon, exiting menu.";
+                    isTransitioningMenu = true;
+                    chooseCurrentWeapon();
+                    toggleWeaponMenu();
                 }
             }
+        }));
 
-            // Add menu item for E-tanks
-            std::shared_ptr<gui::WeaponMenuItem> etankMenuItem(new gui::WeaponMenuItem("E", -1));
-            etankMenuItem->setForegroundColor(gcn::Color(128, 0, 0, 0));
-            etankMenuItem->setSelectionColor(gcn::Color(250, 128, 128));
-            etankMenuItem->setX(0);
-            etankMenuItem->setY(16 * 9);
-            etankMenuItem->setVisible(true);
-            etankMenuItem->setEnabled(true);
-            etankMenuItem->setActionEventId(MENU_ACTION_ETANK);
-            guiWeaponMenu->addItem(etankMenuItem);
-            guiWeaponMenu->disableKeyPressIgnore();
+        guiWeaponMenuSelectionListener.reset(new gcn::FunctorSelectionListener([&](const gcn::SelectionEvent & event) {
+            // TODO: For now just use the index of the item in the menu.
+            auto selectedWeaponIndex = guiWeaponMenu->getSelectedIndex();
+            HIKARI_LOG(hikari::debug4) << "Selected a menu item " << selectedWeaponIndex;
+        }));
 
-            guiWeaponMenu->setWidth(guiContainer->getWidth() - 32);
-            guiWeaponMenu->setHeight(guiContainer->getHeight());
-            guiWeaponMenu->setBackgroundColor(gcn::Color(0, 0, 0, 0));
-            guiWeaponMenu->enableWrapping();
-            guiWeaponMenu->setVisible(true);
+        guiWeaponMenu->setEnabled(true);
+        guiWeaponMenu->addActionListener(guiWeaponMenuActionListener.get());
+        guiWeaponMenu->addSelectionListener(guiWeaponMenuSelectionListener.get());
+        guiWeaponMenu->setSelectedIndex(0);
 
-            guiMenuPanel->add(guiWeaponMenu.get(), 32, 48);
-
-            guiWeaponMenuActionListener.reset(new gcn::FunctorActionListener([&](const gcn::ActionEvent& event) {
-                auto item = guiWeaponMenu->getMenuItemAt(guiWeaponMenu->getSelectedIndex());
-                auto actionEventId = item->getActionEventId();
-
-                HIKARI_LOG(debug3) << "Actioned on #" << guiWeaponMenu->getSelectedIndex();
-
-                if(MENU_ACTION_ETANK == actionEventId) {
-                    HIKARI_LOG(debug4) << "Trying to use an e-tank.";
-
-                    if(!(isRefillingEnergy || isTransitioningMenu)) {
-                        if(auto gp = gameProgress.lock()) {
-                            if(gp->getETanks() > 0 && gp->getPlayerEnergy() < gp->getPlayerMaxEnergy()) {
-                                gp->setETanks(gp->getETanks() - 1);
-                                refillPlayerEnergy(gp->getPlayerMaxEnergy());
-                            }
-                        }
-                    }
-                } else {
-                    if(!isTransitioningMenu) {
-                        HIKARI_LOG(debug4) << "Swapping weapon, exiting menu.";
-                        isTransitioningMenu = true;
-                        chooseCurrentWeapon();
-                        toggleWeaponMenu();
-                    }
-                }
-            }));
-
-            guiWeaponMenuSelectionListener.reset(new gcn::FunctorSelectionListener([&](const gcn::SelectionEvent & event) {
-                // TODO: For now just use the index of the item in the menu.
-                auto selectedWeaponIndex = guiWeaponMenu->getSelectedIndex();
-                HIKARI_LOG(hikari::debug4) << "Selected a menu item " << selectedWeaponIndex;
-            }));
-
-            guiWeaponMenu->setEnabled(true);
-            guiWeaponMenu->addActionListener(guiWeaponMenuActionListener.get());
-            guiWeaponMenu->addSelectionListener(guiWeaponMenuSelectionListener.get());
-            guiWeaponMenu->setSelectedIndex(0);
-
-            guiContainer->setEnabled(true);
-            guiMenuPanel->setEnabled(true);
-        }
+        guiContainer->setEnabled(true);
+        guiMenuPanel->setEnabled(true);
     }
 
     void GamePlayState::updateGui() {
-        if(auto gp = gameProgress.lock()) {
-            guiHeroEnergyGauge->setValue(
-                static_cast<float>(gp->getPlayerEnergy())
-            );
+        guiHeroEnergyGauge->setValue(
+            static_cast<float>(gameProgress.getPlayerEnergy())
+        );
 
-            guiMenuLifeEnergyGauge->setValue(
-                static_cast<float>(gp->getPlayerEnergy())
-            );
+        guiMenuLifeEnergyGauge->setValue(
+            static_cast<float>(gameProgress.getPlayerEnergy())
+        );
 
-            guiBossEnergyGauge->setValue(
-                static_cast<float>(gp->getBossEnergy())
-            );
+        guiBossEnergyGauge->setValue(
+            static_cast<float>(gameProgress.getBossEnergy())
+        );
 
-            if(isViewingMenu) {
-                guiLivesLabel->setVisible(true);
+        if(isViewingMenu) {
+            guiLivesLabel->setVisible(true);
 
-                const int lives = static_cast<int>(gp->getLives());
-                if(lives != guiLivesShown) {
-                    guiLivesShown = lives;
-                    guiLivesLabel->setCaption((lives < 10 ? "0" : "") + StringUtils::toString(lives));
-                    guiLivesLabel->adjustSize();
-                }
-
-                const int etanks = static_cast<int>(gp->getETanks());
-                if(etanks != guiETanksShown) {
-                    guiETanksShown = etanks;
-                    guiETanksLabel->setCaption((etanks < 10 ? "0" : "") + StringUtils::toString(etanks));
-                    guiETanksLabel->adjustSize();
-                }
-
-                // Update the energy levels of each gauge
-                for(int i = 0; i < guiWeaponMenu->getItemCount(); ++i) {
-                    const auto & item = guiWeaponMenu->getMenuItemAt(i);
-                    int currentWeaponId = 0;
-
-                    if(const auto & weaponMenuItem = std::dynamic_pointer_cast<gui::WeaponMenuItem>(item)) {
-                        currentWeaponId = weaponMenuItem->getWeaponId();
-
-                        weaponMenuItem->setValue(static_cast<float>(gp->getWeaponEnergy(currentWeaponId)));
-                    }
-                }
+            const int lives = static_cast<int>(gameProgress.getLives());
+            if(lives != guiLivesShown) {
+                guiLivesShown = lives;
+                guiLivesLabel->setCaption((lives < 10 ? "0" : "") + StringUtils::toString(lives));
+                guiLivesLabel->adjustSize();
             }
 
-            int currentWeapon = gp->getCurrentWeapon();
+            const int etanks = static_cast<int>(gameProgress.getETanks());
+            if(etanks != guiETanksShown) {
+                guiETanksShown = etanks;
+                guiETanksLabel->setCaption((etanks < 10 ? "0" : "") + StringUtils::toString(etanks));
+                guiETanksLabel->adjustSize();
+            }
 
-            bool showWeaponMeter = currentWeapon != 0;
-            guiWeaponEnergyGauge->setVisible(showWeaponMeter);
+            // Update the energy levels of each gauge
+            for(int i = 0; i < guiWeaponMenu->getItemCount(); ++i) {
+                const auto & item = guiWeaponMenu->getMenuItemAt(i);
+                int currentWeaponId = 0;
 
-            if(auto weapons = weaponTable.lock()) {
-                auto weaponWeak = weapons->getWeaponById(currentWeapon);
+                if(const auto & weaponMenuItem = std::dynamic_pointer_cast<gui::WeaponMenuItem>(item)) {
+                    currentWeaponId = weaponMenuItem->getWeaponId();
 
-                if(auto weapon = weaponWeak.lock()) {
-                    int paletteId = weapon->getPaletteId();
+                    weaponMenuItem->setValue(static_cast<float>(gameProgress.getWeaponEnergy(currentWeaponId)));
+                }
+            }
+        }
 
-                    if(paletteId == -1) {
-                        paletteId = 3; // Fix the index so it defaults to the blue palette
-                    }
+        int currentWeapon = gameProgress.getCurrentWeapon();
 
-                    PalettedAnimatedSprite::setSharedPaletteIndex(paletteId);
+        bool showWeaponMeter = currentWeapon != 0;
+        guiWeaponEnergyGauge->setVisible(showWeaponMeter);
 
-                    if(showWeaponMeter) {
-                        // Update weapon gauge colors
-                        auto & colorTable = PalettedAnimatedSprite::getColorTable();
+        auto weaponWeak = weaponTable.getWeaponById(currentWeapon);
 
-                        if(paletteId > 0) {
-                            if(colorTable.size() > static_cast<unsigned int>(paletteId)) {
-                                auto & palette = colorTable.at(paletteId);
-                                auto & darkColor = palette.at(4);
-                                auto & lightColor = palette.at(5);
+        if(auto weapon = weaponWeak.lock()) {
+            int paletteId = weapon->getPaletteId();
 
-                                // Convert components to an RGB value
-                                int dark = (darkColor.r << 16) + (darkColor.g << 8) + darkColor.b;
-                                int light = (lightColor.r << 16) + (lightColor.g << 8) + lightColor.b;
+            if(paletteId == -1) {
+                paletteId = 3; // Fix the index so it defaults to the blue palette
+            }
 
-                                guiWeaponEnergyGauge->setBackgroundColor(dark);
-                                guiWeaponEnergyGauge->setForegroundColor(light);
-                            }
-                        }
+            PalettedAnimatedSprite::setSharedPaletteIndex(paletteId);
 
-                        guiWeaponEnergyGauge->setValue(static_cast<float>(gp->getWeaponEnergy(currentWeapon)));
+            if(showWeaponMeter) {
+                // Update weapon gauge colors
+                auto & colorTable = PalettedAnimatedSprite::getColorTable();
+
+                if(paletteId > 0) {
+                    if(colorTable.size() > static_cast<unsigned int>(paletteId)) {
+                        auto & palette = colorTable.at(paletteId);
+                        auto & darkColor = palette.at(4);
+                        auto & lightColor = palette.at(5);
+
+                        // Convert components to an RGB value
+                        int dark = (darkColor.r << 16) + (darkColor.g << 8) + darkColor.b;
+                        int light = (lightColor.r << 16) + (lightColor.g << 8) + lightColor.b;
+
+                        guiWeaponEnergyGauge->setBackgroundColor(dark);
+                        guiWeaponEnergyGauge->setForegroundColor(light);
                     }
                 }
+
+                guiWeaponEnergyGauge->setValue(static_cast<float>(gameProgress.getWeaponEnergy(currentWeapon)));
             }
         }
     }
@@ -512,15 +481,11 @@ namespace hikari {
         }
 
         if(keyPressed->code == sf::Keyboard::Key::T) {
-            if(auto gp = gameProgress.lock()) {
-                gp->setPlayerEnergy(0);
-            }
+            gameProgress.setPlayerEnergy(0);
         }
 
         if(keyPressed->code == sf::Keyboard::Key::Y) {
-            if(auto gp = gameProgress.lock()) {
-                gp->setPlayerEnergy(1.0f);
-            }
+            gameProgress.setPlayerEnergy(1.0f);
         }
 
         if(keyPressed->code == sf::Keyboard::Key::B) {
@@ -537,9 +502,7 @@ namespace hikari {
             subState->render(target);
         }
 
-        if(auto gui = guiService.lock()) {
-            gui->renderAsTop(guiContainer.get(), target);
-        }
+        guiService.renderAsTop(guiContainer.get(), target);
     }
 
     bool GamePlayState::update(float dt) {
@@ -598,13 +561,11 @@ namespace hikari {
     }
 
     void GamePlayState::onEnter() {
-        if(auto gui = guiService.lock()) {
-            auto & topContainer = gui->getRootContainer();
-            topContainer.add(guiContainer.get(), 0, 0);
-            guiContainer->setEnabled(true);
-            guiWeaponMenu->setEnabled(true);
-            guiWeaponMenu->requestFocus();
-        }
+        auto & topContainer = guiService.getRootContainer();
+        topContainer.add(guiContainer.get(), 0, 0);
+        guiContainer->setEnabled(true);
+        guiWeaponMenu->setEnabled(true);
+        guiWeaponMenu->requestFocus();
 
         collisionResolver->setWorld(&world);
         Movable::setCollisionResolver(collisionResolver);
@@ -619,23 +580,21 @@ namespace hikari {
         mapList.push_back("map-test3.json");
         mapList.push_back("map-test2.json");
 
-        if(auto gp = gameProgress.lock()) {
-			// Determine which stage we're on and set that to the current level...
-			if ((currentMap = maps.at(mapList.at(gp->getCurrentBoss() % mapList.size())))) {
-				currentTileset = currentMap->getTileset();
-			}
+        // Determine which stage we're on and set that to the current level...
+        if((currentMap = maps.at(mapList.at(gameProgress.getCurrentBoss() % mapList.size())))) {
+            currentTileset = currentMap->getTileset();
+        }
 
 
-            // Enable / disable weapon menu items based on GameProgress
-            int menuItemCount = guiWeaponMenu->getItemCount();
+        // Enable / disable weapon menu items based on GameProgress
+        int menuItemCount = guiWeaponMenu->getItemCount();
 
-            for(int i = 0; i < menuItemCount; ++i) {
-                const auto & menuItem = guiWeaponMenu->getMenuItemAt(i);
+        for(int i = 0; i < menuItemCount; ++i) {
+            const auto & menuItem = guiWeaponMenu->getMenuItemAt(i);
 
-                if(menuItem->getActionEventId() == "changeWeapon") {
-                    menuItem->setVisible(gp->weaponIsEnabled(i));
-                    menuItem->setEnabled(gp->weaponIsEnabled(i));
-                }
+            if(menuItem->getActionEventId() == "changeWeapon") {
+                menuItem->setVisible(gameProgress.weaponIsEnabled(i));
+                menuItem->setEnabled(gameProgress.weaponIsEnabled(i));
             }
         }
 
@@ -644,12 +603,10 @@ namespace hikari {
     }
 
     void GamePlayState::onExit() {
-        if(auto gui = guiService.lock()) {
-            auto & topContainer = gui->getRootContainer();
-            topContainer.remove(guiContainer.get());
-            guiContainer->setEnabled(false);
-            guiWeaponMenu->setEnabled(false);
-        }
+        auto & topContainer = guiService.getRootContainer();
+        topContainer.remove(guiContainer.get());
+        guiContainer->setEnabled(false);
+        guiWeaponMenu->setEnabled(false);
 
         blockSequences.clear();
 
@@ -796,26 +753,24 @@ namespace hikari {
         std::shared_ptr<CollectableItem> bonus;
 
         if(bonusTableIndex > -1) { // -1 is a special case where nothing drops, ever.
-            if(const auto & gameConfigPtr = gameConfig.lock()) {
-                const auto & chanceTable = gameConfigPtr->getItemChancePairs(bonusTableIndex);
-                int roll = rand() % 100;
+            const auto & chanceTable = gameConfig.getItemChancePairs(bonusTableIndex);
+            int roll = rand() % 100;
 
-                if(chanceTable.size() > 0) {
-                    int lowerBound = 0;
+            if(chanceTable.size() > 0) {
+                int lowerBound = 0;
 
-                    for(auto it = std::begin(chanceTable), end = std::end(chanceTable); it != end; it++) {
-                        const auto & chance = *it;
+                for(auto it = std::begin(chanceTable), end = std::end(chanceTable); it != end; it++) {
+                    const auto & chance = *it;
 
-                        int upperBound = lowerBound + chance.second;
+                    int upperBound = lowerBound + chance.second;
 
-                        if(roll >= lowerBound && roll < upperBound) {
-                            bonus = world.spawnCollectableItem(chance.first);
-                            break;
-                        }
-
-                        // Advance the lower bound
-                        lowerBound = upperBound;
+                    if(roll >= lowerBound && roll < upperBound) {
+                        bonus = world.spawnCollectableItem(chance.first);
+                        break;
                     }
+
+                    // Advance the lower bound
+                    lowerBound = upperBound;
                 }
             }
         }
@@ -857,9 +812,7 @@ namespace hikari {
                 }
             }
 
-            if(auto sound = audioService.lock()) {
-                sound->playSample("Rockman (Death)");
-            }
+            audioService.playSample("Rockman (Death)");
         } else if(type == EntityDeathType::Large) {
             if(std::shared_ptr<Particle> clone = world.spawnParticle("Large Explosion")) {
                 clone->setPosition(position);
@@ -875,48 +828,46 @@ namespace hikari {
         }
     }
 
-    void GamePlayState::loadAllMaps(const std::weak_ptr<MapLoader> &mapLoader, const Json::Value &params) {
-        if(auto mapLoaderPtr = mapLoader.lock()) {
-            try {
-                std::string stagesDirectory = params["assets"]["stages"].asString();
+    void GamePlayState::loadAllMaps(MapLoader & mapLoader, const Json::Value &params) {
+        try {
+            std::string stagesDirectory = params["assets"]["stages"].asString();
 
-                bool directoryExists = FileSystem::exists(stagesDirectory);
-                bool directoryIsDirectory = FileSystem::isDirectory(stagesDirectory);
+            bool directoryExists = FileSystem::exists(stagesDirectory);
+            bool directoryIsDirectory = FileSystem::isDirectory(stagesDirectory);
 
-                if(directoryExists && directoryIsDirectory) {
-                    // Get file listing and load all .json files as maps
-                    auto fileListing = FileSystem::getFileListing(stagesDirectory);
+            if(directoryExists && directoryIsDirectory) {
+                // Get file listing and load all .json files as maps
+                auto fileListing = FileSystem::getFileListing(stagesDirectory);
 
-                    HIKARI_LOG(debug3) << "Found " << fileListing.size() << " file(s) in map directory.";
+                HIKARI_LOG(debug3) << "Found " << fileListing.size() << " file(s) in map directory.";
 
-                    for(auto index = std::begin(fileListing), end = std::end(fileListing); index != end; index++) {
-                        const std::string & fileName = (*index);
-                        const std::string & filePath = stagesDirectory + "/" + fileName; // TODO: Handle file paths for real
+                for(auto index = std::begin(fileListing), end = std::end(fileListing); index != end; index++) {
+                    const std::string & fileName = (*index);
+                    const std::string & filePath = stagesDirectory + "/" + fileName; // TODO: Handle file paths for real
 
-                        if(StringUtils::endsWith(filePath, ".json")) {
-                            try {
-                                HIKARI_LOG(debug) << "Loading map from \"" << fileName << "\"...";
+                    if(StringUtils::endsWith(filePath, ".json")) {
+                        try {
+                            HIKARI_LOG(debug) << "Loading map from \"" << fileName << "\"...";
 
-                                auto mapJsonObject = JsonUtils::loadJson(filePath);
-                                auto map = mapLoaderPtr->loadFromJson(mapJsonObject);
+                            auto mapJsonObject = JsonUtils::loadJson(filePath);
+                            auto map = mapLoader.loadFromJson(mapJsonObject);
 
-                                if(map) {
-                                    maps[fileName] = map;
-                                    HIKARI_LOG(debug) << "Successfully loaded map from \"" << fileName << "\".";
-                                } else {
-                                    HIKARI_LOG(error) << "Failed to load map from \"" << filePath << "\".";
-                                }
-                            } catch(std::exception &ex) {
-                                HIKARI_LOG(error) << "Failed to load map from \"" << filePath << "\". Error: " << ex.what();
+                            if(map) {
+                                maps[fileName] = map;
+                                HIKARI_LOG(debug) << "Successfully loaded map from \"" << fileName << "\".";
+                            } else {
+                                HIKARI_LOG(error) << "Failed to load map from \"" << filePath << "\".";
                             }
+                        } catch(std::exception &ex) {
+                            HIKARI_LOG(error) << "Failed to load map from \"" << filePath << "\". Error: " << ex.what();
                         }
                     }
-                } else {
-                    HIKARI_LOG(error) << "Failed to load maps! Specified path doesn't exist or isn't a directory.";
                 }
-            } catch(std::exception& ex) {
-                HIKARI_LOG(error) << "Failed to load maps! Reason: " << ex.what();
+            } else {
+                HIKARI_LOG(error) << "Failed to load maps! Specified path doesn't exist or isn't a directory.";
             }
+        } catch(std::exception& ex) {
+            HIKARI_LOG(error) << "Failed to load maps! Reason: " << ex.what();
         }
     }
 
@@ -959,12 +910,10 @@ namespace hikari {
     }
 
     void GamePlayState::startRound() {
-        if(auto gp = gameProgress.lock()) {
-            gp->resetPlayerEnergyToDefault();
-            gp->setCurrentWeapon(0);
-            guiWeaponMenu->setSelectedIndex(0);
-            hero->setWeaponId(gp->getCurrentWeapon());
-        }
+        gameProgress.resetPlayerEnergyToDefault();
+        gameProgress.setCurrentWeapon(0);
+        guiWeaponMenu->setSelectedIndex(0);
+        hero->setWeaponId(gameProgress.getCurrentWeapon());
 
         // Reset direction to face right
         hero->setDirection(Directions::Right);
@@ -993,39 +942,33 @@ namespace hikari {
     }
 
     void GamePlayState::endRound() {
-        if(auto progress = gameProgress.lock()) {
-            // Perform the check to see if we're all the way dead, and if we are, go
-            // to a different game state.
-            if(progress->getLives() >= 0) {
-                taskQueue.push(std::make_shared<FunctionTask>(0, [&](float dt) -> bool {
-                    if(screenEffectsService) {
-                        screenEffectsService->fadeOut();
-                    }
-                    return true;
-                }));
+        // Perform the check to see if we're all the way dead, and if we are, go
+        // to a different game state.
+        if(gameProgress.getLives() >= 0) {
+            taskQueue.push(std::make_shared<FunctionTask>(0, [&](float dt) -> bool {
+                screenEffectsService.fadeOut();
+                return true;
+            }));
 
-                taskQueue.push(std::make_shared<WaitTask>((1.0f/60.0f) * 13.0f));
+            taskQueue.push(std::make_shared<WaitTask>((1.0f/60.0f) * 13.0f));
 
-                taskQueue.push(std::make_shared<FunctionTask>(0, [&](float dt) -> bool {
-                    startRound();
-                    return true;
-                }));
+            taskQueue.push(std::make_shared<FunctionTask>(0, [&](float dt) -> bool {
+                startRound();
+                return true;
+            }));
 
-                taskQueue.push(std::make_shared<WaitTask>((1.0f/60.0f) * 13.0f));
-            } else {
-                HIKARI_LOG(debug2) << "Hero has died all of his lives, go to password screen.";
-                progress->resetLivesToDefault();
-                progress->resetWeaponEnergyToDefault();
-                controller.requestStateChange("gameover");
-                gotoNextState = true;
-            }
+            taskQueue.push(std::make_shared<WaitTask>((1.0f/60.0f) * 13.0f));
+        } else {
+            HIKARI_LOG(debug2) << "Hero has died all of his lives, go to password screen.";
+            gameProgress.resetLivesToDefault();
+            gameProgress.resetWeaponEnergyToDefault();
+            controller.requestStateChange("gameover");
+            gotoNextState = true;
         }
     }
 
     void GamePlayState::startBossBattle() {
-        if(auto sound = audioService.lock()) {
-            sound->playMusic("Boss Battle");
-        }
+        audioService.playMusic("Boss Battle");
 
         // 1. Music starts
         // 2. Megaman is at idle state -- rested -- on the ground
@@ -1053,51 +996,49 @@ namespace hikari {
             world.queueObjectAddition(boss);
             world.update(0.0f);
 
-            if(auto gp = gameProgress.lock()) {
-                gp->setBossEnergy(0);
-                gp->setBossMaxEnergy(static_cast<int>(boss->getHitPoints()));
+            gameProgress.setBossEnergy(0);
+            gameProgress.setBossMaxEnergy(static_cast<int>(boss->getHitPoints()));
 
-                guiBossEnergyGauge->setValue(0.0f);
-                guiBossEnergyGauge->setMaximumValue(static_cast<float>(gp->getBossMaxEnergy()));
-                guiBossEnergyGauge->setVisible(true);
+            guiBossEnergyGauge->setValue(0.0f);
+            guiBossEnergyGauge->setMaximumValue(static_cast<float>(gameProgress.getBossMaxEnergy()));
+            guiBossEnergyGauge->setVisible(true);
 
-                // TODO: Get rid of this hack. Need to allocate it on the heap since it
-                // crossed into the boundary of the lambda. This is balls.
-                std::shared_ptr<float> waitTimeAfterLanding = std::make_shared<float>(0.1f);
+            // TODO: Get rid of this hack. Need to allocate it on the heap since it
+            // crossed into the boundary of the lambda. This is balls.
+            std::shared_ptr<float> waitTimeAfterLanding = std::make_shared<float>(0.1f);
 
-                // Diable the weapon menu temporarily until the battle is ready to begin.
-                taskQueue.push(std::make_shared<FunctionTask>(1, [&](float dt) {
-                    isRefillingEnergy = true;
-                    return true;
-                }));
+            // Diable the weapon menu temporarily until the battle is ready to begin.
+            taskQueue.push(std::make_shared<FunctionTask>(1, [&](float dt) {
+                isRefillingEnergy = true;
+                return true;
+            }));
 
-                taskQueue.push(std::make_shared<FunctionTask>(0, [this, waitTimeAfterLanding](float dt) -> bool {
-                    bool done = false;
+            taskQueue.push(std::make_shared<FunctionTask>(0, [this, waitTimeAfterLanding](float dt) -> bool {
+                bool done = false;
 
-                    if(hero->isOnGround()) {
-                        *waitTimeAfterLanding -= dt;
-                        done = *waitTimeAfterLanding <= 0.0f;
-                    }
+                if(hero->isOnGround()) {
+                    *waitTimeAfterLanding -= dt;
+                    done = *waitTimeAfterLanding <= 0.0f;
+                }
 
-                    hero->update(dt);
+                hero->update(dt);
 
-                    return done;
-                }));
+                return done;
+            }));
 
-                taskQueue.push(std::make_shared<RefillHealthTask>(
-                    RefillHealthTask::BOSS_ENERGY,
-                    gp->getBossMaxEnergy(),
-                    audioService,
-                    gameProgress)
-                );
+            taskQueue.push(std::make_shared<RefillHealthTask>(
+                RefillHealthTask::BOSS_ENERGY,
+                gameProgress.getBossMaxEnergy(),
+                audioService,
+                gameProgress)
+            );
 
-                // Return control to the player and re-enable the weapon menu.
-                taskQueue.push(std::make_shared<FunctionTask>(0, [this, playerHeroController](float dt) -> bool {
-                    hero->setActionController(playerHeroController);
-                    isRefillingEnergy = false;
-                    return true;
-                }));
-            }
+            // Return control to the player and re-enable the weapon menu.
+            taskQueue.push(std::make_shared<FunctionTask>(0, [this, playerHeroController](float dt) -> bool {
+                hero->setActionController(playerHeroController);
+                isRefillingEnergy = false;
+                return true;
+            }));
 
             taskQueue.push(std::make_shared<WaitTask>(1.0f));
         } else {
@@ -1217,10 +1158,8 @@ namespace hikari {
                                      // Deflect projectile
                                     projectile->deflect();
 
-                                    if(auto sound = audioService.lock()) {
-                                        HIKARI_LOG(debug4) << "PLAYING SAMPLE weapon DEFLECTED";
-                                        sound->playSample("Deflected");
-                                    }
+                                    HIKARI_LOG(debug4) << "PLAYING SAMPLE weapon DEFLECTED";
+                                    audioService.playSample("Deflected");
                                 } else if(collisionType == 1) {
                                     HIKARI_LOG(debug3) << "Hero bullet " << projectile->getId() << " hit an enemy " << enemy->getId();
                                     projectile->setActive(false);
@@ -1236,17 +1175,13 @@ namespace hikari {
                                     // Trigger enemy damage
                                     float damageAmount = 0.0f;
 
-                                    if(auto dt = damageTable.lock()) {
-                                        damageAmount = dt->getDamageFor(damageKey.damagerType);
-                                    }
+                                    damageAmount = damageTable.getDamageFor(damageKey.damagerType);
 
                                     HIKARI_LOG(debug3) << "Enemy took " << damageAmount;
 
                                     enemy->takeDamage(damageAmount);
 
-                                    if(auto sound = audioService.lock()) {
-                                        sound->playSample("Enemy (Damage)");
-                                    }
+                                    audioService.playSample("Enemy (Damage)");
                                 }
                             }
                         }
@@ -1283,44 +1218,42 @@ namespace hikari {
     void GamePlayState::checkCollisionWithTransition() { }
 
     void GamePlayState::chooseCurrentWeapon() {
-        if(auto gp = gameProgress.lock()) {
-            const auto & item = guiWeaponMenu->getMenuItemAt(guiWeaponMenu->getSelectedIndex());
-            int selectedWeaponId = 0;
+        const auto & item = guiWeaponMenu->getMenuItemAt(guiWeaponMenu->getSelectedIndex());
+        int selectedWeaponId = 0;
 
-            // So, here's a very convoluted thing that's going on:
-            // Weapons have a ID, which is assigned automatically when all of the weapons are
-            // parsed and loaded when the game starts. The weapons in the menu are stored by
-            // name in game.json, which are then looked up to get their ID. Both the name and
-            // ID are stored in the MenuItem. When a menu item is selected, we get the weapon
-            // ID from it, and then store that as the "current weapon".
+        // So, here's a very convoluted thing that's going on:
+        // Weapons have a ID, which is assigned automatically when all of the weapons are
+        // parsed and loaded when the game starts. The weapons in the menu are stored by
+        // name in game.json, which are then looked up to get their ID. Both the name and
+        // ID are stored in the MenuItem. When a menu item is selected, we get the weapon
+        // ID from it, and then store that as the "current weapon".
 
-            if(const auto & weaponMenuItem = std::dynamic_pointer_cast<gui::WeaponMenuItem>(item)) {
-                selectedWeaponId = weaponMenuItem->getWeaponId();
-            }
-
-            if(gp->getCurrentWeapon() != selectedWeaponId) {
-                // Remove any active projectiles since we've changed weapons.
-                const auto & activeProjectiles = world.getActiveProjectiles();
-
-                std::for_each(
-                    std::begin(activeProjectiles),
-                    std::end(activeProjectiles),
-                    [&](const std::shared_ptr<Projectile> & projectile) {
-                        if(projectile && projectile->getParentId() == hero->getId()) {
-                            world.queueObjectRemoval(projectile);
-                        }
-                    }
-                );
-
-                // Flush any queued object removals, otherwise they won't get
-                // processed until after the menu fades out, and it looks bad/wrong.
-                world.processRemovals();
-                hero->performMorph();
-            }
-
-            gp->setCurrentWeapon(selectedWeaponId);
-            hero->setWeaponId(gp->getCurrentWeapon());
+        if(const auto & weaponMenuItem = std::dynamic_pointer_cast<gui::WeaponMenuItem>(item)) {
+            selectedWeaponId = weaponMenuItem->getWeaponId();
         }
+
+        if(gameProgress.getCurrentWeapon() != selectedWeaponId) {
+            // Remove any active projectiles since we've changed weapons.
+            const auto & activeProjectiles = world.getActiveProjectiles();
+
+            std::for_each(
+                std::begin(activeProjectiles),
+                std::end(activeProjectiles),
+                [&](const std::shared_ptr<Projectile> & projectile) {
+                    if(projectile && projectile->getParentId() == hero->getId()) {
+                        world.queueObjectRemoval(projectile);
+                    }
+                }
+            );
+
+            // Flush any queued object removals, otherwise they won't get
+            // processed until after the menu fades out, and it looks bad/wrong.
+            world.processRemovals();
+            hero->performMorph();
+        }
+
+        gameProgress.setCurrentWeapon(selectedWeaponId);
+        hero->setWeaponId(gameProgress.getCurrentWeapon());
     }
 
     void GamePlayState::renderMap(sf::RenderTarget &target) const {
@@ -1502,9 +1435,7 @@ namespace hikari {
         auto eventData = std::static_pointer_cast<EntityDamageEventData>(evt);
 
         if(eventData->getEntityId() == hero->getId()) {
-            if(auto sound = audioService.lock()) {
-                sound->playSample("Rockman (Damage)");
-            }
+            audioService.playSample("Rockman (Damage)");
 
             // TODO: Create a system to spawn particles together like this, declaratively.
 
@@ -1544,19 +1475,15 @@ namespace hikari {
             if(isHeroAlive) {
                 isHeroAlive = false;
 
-                if(auto progress = gameProgress.lock()) {
-                    progress->setPlayerEnergy(0);
+                gameProgress.setPlayerEnergy(0);
 
-                    // Decrement lives
-                    progress->setLives(progress->getLives() - 1);
-                }
+                // Decrement lives
+                gameProgress.setLives(gameProgress.getLives() - 1);
 
                 HIKARI_LOG(debug) << "Hero died. Starting over.";
 
-                if(auto sound = audioService.lock()) {
-                    sound->stopMusic();
-                    sound->stopAllSamples();
-                }
+                audioService.stopMusic();
+                audioService.stopAllSamples();
 
                 spawnDeathExplosion(hero->getDeathType(), hero->getPosition());
             }
@@ -1577,10 +1504,8 @@ namespace hikari {
 
                         hero->setInvincibility(true);
 
-                        if(auto gp = gameProgress.lock()) {
-                            gp->setBossDefeated(gp->getCurrentBoss(), true);
-                            gp->enableWeapon(gp->getCurrentBoss() + 1, true);
-                        }
+                        gameProgress.setBossDefeated(gameProgress.getCurrentBoss(), true);
+                        gameProgress.enableWeapon(gameProgress.getCurrentBoss() + 1, true);
 
                         endBossBattle(false);
                     } else {
@@ -1628,53 +1553,45 @@ namespace hikari {
                           ", faction=" << eventData->getFaction() <<
                           ", direction=" << eventData->getDirection();
 
-        if(auto weapons = weaponTable.lock()) {
-            auto weaponWeak = weapons->getWeaponById(eventData->getWeaponId());
-            if(auto weapon = weaponWeak.lock()) {
-                // This is dirty and I don't like it, so I should design a better
-                // way to accomplish this part.
-                if(eventData->getShooterId() == hero->getId()) {
-                    if(auto gp = gameProgress.lock()) {
-                        int currentWeapon = gp->getCurrentWeapon();
-                        float weaponEnergy = gp->getWeaponEnergy(currentWeapon);
+        auto weaponWeak = weaponTable.getWeaponById(eventData->getWeaponId());
+        if(auto weapon = weaponWeak.lock()) {
+            // This is dirty and I don't like it, so I should design a better
+            // way to accomplish this part.
+            if(eventData->getShooterId() == hero->getId()) {
+                int currentWeapon = gameProgress.getCurrentWeapon();
+                float weaponEnergy = gameProgress.getWeaponEnergy(currentWeapon);
 
-                        if(weaponEnergy > 0) {
-                            Shot shot = weapon->fire(world, *eventData.get());
-                            hero->observeShot(std::move(shot));
-
-                            // Use up the weapon energy
-                            gp->setWeaponEnergy(currentWeapon, weaponEnergy - weapon->getUsageCost());
-                            HIKARI_LOG(debug4) << "Weapon energy: " << weaponEnergy << ", cost: " << weapon->getUsageCost();
-
-                            if(auto sound = audioService.lock()) {
-                                sound->playSample(weapon->getUsageSound());
-                            }
-
-                            HIKARI_LOG(debug4) << "Hero's shot count: " << hero->getActiveShotCount();
-                        }
-                    }
-                } else {
-                    // It could be an enemy...
-                    // So we need to somehow get the enemy by ID and make it
-                    // observe the shot. It would be nice to do this without
-                    // casting.
-                    // TODO: CLEAN ME / CASTING
+                if(weaponEnergy > 0) {
                     Shot shot = weapon->fire(world, *eventData.get());
-                    std::weak_ptr<GameObject> possibleEnemyPtr = world.getObjectById(eventData->getShooterId());
+                    hero->observeShot(std::move(shot));
 
-                    if(auto enemyGoPtr = possibleEnemyPtr.lock()) {
-                        if(std::shared_ptr<Enemy> enemy = std::static_pointer_cast<Enemy>(enemyGoPtr)) {
-                            enemy->observeShot(std::move(shot));
+                    // Use up the weapon energy
+                    gameProgress.setWeaponEnergy(currentWeapon, weaponEnergy - weapon->getUsageCost());
+                    HIKARI_LOG(debug4) << "Weapon energy: " << weaponEnergy << ", cost: " << weapon->getUsageCost();
 
-                            if(auto sound = audioService.lock()) {
-                                sound->playSample(weapon->getUsageSound());
-                            }
-                        }
-                    }
+                    audioService.playSample(weapon->getUsageSound());
+
+                    HIKARI_LOG(debug4) << "Hero's shot count: " << hero->getActiveShotCount();
                 }
             } else {
-                HIKARI_LOG(debug4) << "Tried to fire weapon with bad ID (" << eventData->getWeaponId() << ")";
+                // It could be an enemy...
+                // So we need to somehow get the enemy by ID and make it
+                // observe the shot. It would be nice to do this without
+                // casting.
+                // TODO: CLEAN ME / CASTING
+                Shot shot = weapon->fire(world, *eventData.get());
+                std::weak_ptr<GameObject> possibleEnemyPtr = world.getObjectById(eventData->getShooterId());
+
+                if(auto enemyGoPtr = possibleEnemyPtr.lock()) {
+                    if(std::shared_ptr<Enemy> enemy = std::static_pointer_cast<Enemy>(enemyGoPtr)) {
+                        enemy->observeShot(std::move(shot));
+
+                        audioService.playSample(weapon->getUsageSound());
+                    }
+                }
             }
+        } else {
+            HIKARI_LOG(debug4) << "Tried to fire weapon with bad ID (" << eventData->getWeaponId() << ")";
         }
     }
 
@@ -1692,19 +1609,13 @@ namespace hikari {
                     world.queueObjectAddition(clone);
                 }
 
-                if(auto sound = audioService.lock()) {
-                    sound->playSample("Splash");
-                }
+                audioService.playSample("Splash");
             }
 
             if(eventData->getStateName() == "landed") {
-                if(auto sound = audioService.lock()) {
-                    sound->playSample("Rockman (Landing)");
-                }
+                audioService.playSample("Rockman (Landing)");
             } else if(eventData->getStateName() == "teleporting") {
-                if(auto sound = audioService.lock()) {
-                    sound->playSample("Teleport");
-                }
+                audioService.playSample("Teleport");
             } else if(eventData->getStateName() == "sliding") {
                 if(std::shared_ptr<Particle> clone = world.spawnParticle("Sliding Dust")) {
                     clone->setPosition(hero->getPosition());
@@ -1716,18 +1627,14 @@ namespace hikari {
     }
 
     void GamePlayState::handleDoorEvent(const EventDataPtr & evt) {
-        if(auto sound = audioService.lock()) {
-            sound->playSample("Door Open/Close");
-        }
+        audioService.playSample("Door Open/Close");
     }
 
     void GamePlayState::handleAudioEvent(const EventDataPtr & evt) {
         auto eventData = std::static_pointer_cast<AudioEventData>(evt);
 
-        if(auto sound = audioService.lock()) {
-            if(eventData->getAudioAction() == AudioEventData::ACTION_PLAY_SAMPLE) {
-                sound->playSample(eventData->getMusicOrSampleName());
-            }
+        if(eventData->getAudioAction() == AudioEventData::ACTION_PLAY_SAMPLE) {
+            audioService.playSample(eventData->getMusicOrSampleName());
         }
     }
 
@@ -1758,34 +1665,26 @@ namespace hikari {
     }
 
     void GamePlayState::fadeOut() {
-        if(screenEffectsService) {
-            screenEffectsService->fadeOut();
-        }
+        screenEffectsService.fadeOut();
 
         taskQueue.push(std::make_shared<WaitTask>((1.0f/60.0f) * 13.0f));
     }
 
     void GamePlayState::fadeIn() {
-        if(screenEffectsService) {
-            screenEffectsService->fadeIn();
-        }
+        screenEffectsService.fadeIn();
 
         taskQueue.push(std::make_shared<WaitTask>((1.0f/60.0f) * 13.0f));
     }
 
     void GamePlayState::toggleWeaponMenu() {
-        if(auto sound = audioService.lock()) {
-            if(isViewingMenu) {
-                sound->playSample("Stage Selected");
-            } else {
-                sound->playSample("Menu Open");
-            }
+        if(isViewingMenu) {
+            audioService.playSample("Stage Selected");
+        } else {
+            audioService.playSample("Menu Open");
         }
 
         taskQueue.push(std::make_shared<FunctionTask>(0, [&](float dt) -> bool {
-            if(screenEffectsService) {
-                screenEffectsService->fadeOut();
-            }
+            screenEffectsService.fadeOut();
 
             isTransitioningMenu = true;
             return true;
@@ -1798,9 +1697,7 @@ namespace hikari {
             guiMenuPanel->setVisible(isViewingMenu);
             guiWeaponMenu->requestFocus();
 
-            if(screenEffectsService) {
-                screenEffectsService->fadeIn();
-            }
+            screenEffectsService.fadeIn();
 
             return true;
         }));
@@ -1845,16 +1742,12 @@ namespace hikari {
         renderReadyText = false;
         gamePlayState.guiHeroEnergyGauge->setVisible(false);
 
-        if(auto gp = gamePlayState.gameProgress.lock()) {
-            gamePlayState.guiHeroEnergyGauge->setValue(
-                static_cast<float>(gp->getPlayerEnergy())
-            );
-        }
+        gamePlayState.guiHeroEnergyGauge->setValue(
+            static_cast<float>(gamePlayState.gameProgress.getPlayerEnergy())
+        );
 
-        if(auto sound = gamePlayState.audioService.lock()) {
-            HIKARI_LOG(debug) << "Playing music for the level!";
-            sound->playMusic(gamePlayState.currentMap->getMusicName());
-        }
+        HIKARI_LOG(debug) << "Playing music for the level!";
+        gamePlayState.audioService.playMusic(gamePlayState.currentMap->getMusicName());
 
         if(gamePlayState.currentRoom) {
             Point2D<int> spawnPosition = gamePlayState.currentRoom->getHeroSpawnPosition();
@@ -2060,12 +1953,10 @@ namespace hikari {
             // We're going to start fighting the boss
             HIKARI_LOG(debug3) << "We just entered the boss chamber. Time to start the battle with " << gamePlayState.currentRoom->getBossEntity();
 
-            if(auto gp = gamePlayState.gameProgress.lock()) {
-                if(gp->bossIsDefeated(gp->getCurrentBoss())) {
-                    HIKARI_LOG(debug3) << "This boss is already dead! Gonna teleport out of here!";
-                } else {
-                    gamePlayState.startBossBattle();
-                }
+            if(gamePlayState.gameProgress.bossIsDefeated(gamePlayState.gameProgress.getCurrentBoss())) {
+                HIKARI_LOG(debug3) << "This boss is already dead! Gonna teleport out of here!";
+            } else {
+                gamePlayState.startBossBattle();
             }
         }
     }
@@ -2184,24 +2075,20 @@ namespace hikari {
                             // START DAMAGE RESOLVER LOGIC
                             float damageAmount = 0.0f;
 
-                            if(auto dt = gamePlayState.damageTable.lock()) {
-                                damageAmount = dt->getDamageFor(damageKey.damagerType);
-                            }
+                            damageAmount = gamePlayState.damageTable.getDamageFor(damageKey.damagerType);
                             // END DAMAGE RESOLVER LOGIC
 
                             HIKARI_LOG(debug3) << "Hero should take " << damageAmount << " damage!";
 
-                            if(auto gp = gamePlayState.gameProgress.lock()) {
-                                gp->setPlayerEnergy(
-                                    gp->getPlayerEnergy() - damageAmount
-                                );
+                            gamePlayState.gameProgress.setPlayerEnergy(
+                                gamePlayState.gameProgress.getPlayerEnergy() - damageAmount
+                            );
 
-                                HIKARI_LOG(debug4) << "My energy is " << gp->getPlayerEnergy();
+                            HIKARI_LOG(debug4) << "My energy is " << gamePlayState.gameProgress.getPlayerEnergy();
 
-                                // Only stun if you're not dead
-                                if(gp->getPlayerEnergy() > 0) {
-                                    hero->performStun();
-                                }
+                            // Only stun if you're not dead
+                            if(gamePlayState.gameProgress.getPlayerEnergy() > 0) {
+                                hero->performStun();
                             }
                         }
                     }
@@ -2265,10 +2152,8 @@ namespace hikari {
                     }
                 );
 
-                if(auto gp = gamePlayState.gameProgress.lock()) {
-                    int currentWeaponEnergy = gp->getWeaponEnergy(gp->getCurrentWeapon());
-                    gamePlayState.hero->setHasAvailableWeaponEnergy(currentWeaponEnergy > 0);
-                }
+                int currentWeaponEnergy = gamePlayState.gameProgress.getWeaponEnergy(gamePlayState.gameProgress.getCurrentWeapon());
+                gamePlayState.hero->setHasAvailableWeaponEnergy(currentWeaponEnergy > 0);
 
                 const auto & oldPos = gamePlayState.hero->getPosition().toFloor();
                 gamePlayState.oldHeroPosition->setX(oldPos.getX()).setY(oldPos.getY());
@@ -2380,9 +2265,7 @@ namespace hikari {
 
         // Update the boss' energy if there is one.
         if(gamePlayState.boss) {
-            if(auto gp = gamePlayState.gameProgress.lock()) {
-                gp->setBossEnergy(gamePlayState.boss->getHitPoints());
-            }
+            gamePlayState.gameProgress.setBossEnergy(gamePlayState.boss->getHitPoints());
         }
 
         //
@@ -2458,13 +2341,11 @@ namespace hikari {
             }
         }
 
-        if(auto gp = gamePlayState.gameProgress.lock()) {
-            int playerEnergy = gp->getPlayerEnergy();
+        int playerEnergy = gamePlayState.gameProgress.getPlayerEnergy();
 
-            if(playerEnergy <= 0) {
-                hero->kill();
-                gamePlayState.canViewMenu = false;
-            }
+        if(playerEnergy <= 0) {
+            hero->kill();
+            gamePlayState.canViewMenu = false;
         }
 
         return SubState::CONTINUE;
@@ -2770,9 +2651,7 @@ namespace hikari {
         // segment = 0;
         timer = 0.0f;
 
-        if(auto sound = gamePlayState.audioService.lock()) {
-            sound->stopMusic();
-        }
+        gamePlayState.audioService.stopMusic();
 
         gamePlayState.canViewMenu = false;
         gamePlayState.cutSceneController->stopMoving();
@@ -2859,9 +2738,7 @@ namespace hikari {
             case 0:
                 // Wait 160 frames, and then play the jams.
                 if(timer >= 2.6667f) {
-                    if(auto sound = gamePlayState.audioService.lock()) {
-                        sound->playMusic("Boss Defeated (MM3)");
-                    }
+                    gamePlayState.audioService.playMusic("Boss Defeated (MM3)");
 
                     nextSegment();
                 }
@@ -2910,10 +2787,8 @@ namespace hikari {
                 spawnEnergyRing(1.0f, (1.0f / 60.0f) * 40.0f);
 
                 // Play the first "energy collected" sample.
-                if(auto sound = gamePlayState.audioService.lock()) {
-                    sound->stopAllSamples();
-                    sound->playSample("Power Obtained");
-                }
+                gamePlayState.audioService.stopAllSamples();
+                gamePlayState.audioService.playSample("Power Obtained");
 
                 nextSegment();
                 break;
@@ -2925,10 +2800,8 @@ namespace hikari {
                     spawnEnergyRing(1.0f, (1.0f / 60.0f) * 40.0f);
 
                     // Play the second "energy collected" sample.
-                    if(auto sound = gamePlayState.audioService.lock()) {
-                        sound->stopAllSamples();
-                        sound->playSample("Power Obtained");
-                    }
+                    gamePlayState.audioService.stopAllSamples();
+                    gamePlayState.audioService.playSample("Power Obtained");
 
                     nextSegment();
                 }
@@ -2941,10 +2814,8 @@ namespace hikari {
                     spawnEnergyRing(0.5f, (1.0f / 60.0f) * 80.0f);
 
                     // Play the third "energy collected" sample.
-                    if(auto sound = gamePlayState.audioService.lock()) {
-                        sound->stopAllSamples();
-                        sound->playSample("Power Obtained");
-                    }
+                    gamePlayState.audioService.stopAllSamples();
+                    gamePlayState.audioService.playSample("Power Obtained");
 
                     nextSegment();
                 }
@@ -2958,9 +2829,7 @@ namespace hikari {
                     gamePlayState.cutSceneController->stopJumping();
 
                     // Play cool "ka-ching!" sound.
-                    if(auto sound = gamePlayState.audioService.lock()) {
-                        sound->playSample("Weapon Acquired");
-                    }
+                    gamePlayState.audioService.playSample("Weapon Acquired");
 
                     nextSegment();
                 }
@@ -2972,9 +2841,7 @@ namespace hikari {
                     if(timer >= 1.0f) {
                         gamePlayState.hero->changeAnimation("teleporting-out");
 
-                        if(auto sound = gamePlayState.audioService.lock()) {
-                            sound->playSample("Teleport");
-                        }
+                        gamePlayState.audioService.playSample("Teleport");
 
                         nextSegment();
                     }

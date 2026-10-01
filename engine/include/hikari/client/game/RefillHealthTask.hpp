@@ -22,13 +22,13 @@ namespace hikari {
         RefillType type;
         int refillCounter;
         float delayTimer;
-        std::weak_ptr<AudioService> audioService;
-        std::weak_ptr<GameProgress> gameProgress;
+        AudioService & audioService;
+        GameProgress & gameProgress;
 
     public:
         RefillHealthTask(RefillType type, int refillAmount,
-            const std::weak_ptr<AudioService> & audioService,
-            const std::weak_ptr<GameProgress> & gameProgress);
+            AudioService & audioService,
+            GameProgress & gameProgress);
 
         virtual ~RefillHealthTask();
 

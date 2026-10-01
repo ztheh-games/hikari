@@ -27,23 +27,22 @@ namespace hikari {
     }
 
     class GameController;
-    class ServiceLocator;
 
     class PasswordState : public GameState {
     private:
         std::string name;
         GameController & controller;
-        std::weak_ptr<AudioService> audioService;
-        std::shared_ptr<Input> keyboardInput;
+        AudioService & audioService;
+        Input & keyboardInput;
         std::unique_ptr<gui::Panel> passwordGrid;
         std::unique_ptr<gcn::Container> guiWrapper;
         std::unique_ptr<gcn::Label> testLabel;
-        std::weak_ptr<GuiService> guiService;
+        GuiService & guiService;
 
         bool goToNextState;
 
     public:
-        PasswordState(const std::string &name, const Json::Value &params, GameController & controller, ServiceLocator &services);
+        PasswordState(const std::string &name, const Json::Value &params, GameController & controller, GuiService & guiService, AudioService & audioService, Input & keyboardInput);
         virtual ~PasswordState();
 
         virtual void handleEvent(sf::Event &event);

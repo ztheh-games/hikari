@@ -1,7 +1,6 @@
 #ifndef HIKARI_CLIENT_AUDIOSERVICE
 #define HIKARI_CLIENT_AUDIOSERVICE
 
-#include "hikari/core/util/Service.hpp"
 #include "hikari/client/audio/NSFSoundStream.hpp"
 
 #include <memory>
@@ -15,7 +14,7 @@ namespace hikari {
 
     class SoundLibrary;
 
-    class AudioService : public Service {
+    class AudioService {
     private:
         static const unsigned int MUSIC_BUFFER_SIZE;
         static const unsigned int SAMPLE_BUFFER_SIZE;

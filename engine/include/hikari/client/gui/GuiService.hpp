@@ -1,7 +1,6 @@
 #ifndef HIKARI_CLIENT_GUI_GUISERVICE
 #define HIKARI_CLIENT_GUI_GUISERVICE
 
-#include "hikari/core/util/Service.hpp"
 #include "hikari/core/util/NonCopyable.hpp"
 
 #include <unordered_map>
@@ -34,11 +33,12 @@ namespace hikari {
 
     class ImageCache;
 
-    class GuiService : public Service, public NonCopyable {
+    class GuiService : public NonCopyable {
     public:
         static const std::string DEFAULT_FONT_NAME;
         
     private:
+        class GlobalRegistration;
         sf::RenderTarget & renderTarget;
         std::unique_ptr<gcn::Gui> gui; 
         std::unique_ptr<gcn::SFMLGraphics> graphics;
@@ -49,11 +49,12 @@ namespace hikari {
         std::unique_ptr<gcn::Container> hudContainer;
         std::unordered_map<std::string, std::shared_ptr<gcn::Image>> fontImageMap;
         std::unordered_map<std::string, std::shared_ptr<gcn::Font>> fontMap;
+        std::unique_ptr<GlobalRegistration> globals;
 
         void buildFontMap(const Json::Value & fontConfig);
 
     public:
-        explicit GuiService(const Json::Value & config, const std::weak_ptr<ImageCache> & imageCache, sf::RenderTarget & renderTarget);
+        explicit GuiService(const Json::Value & config, ImageCache & imageCache, sf::RenderTarget & renderTarget);
         virtual ~GuiService();
 
         void processEvent(sf::Event & evt);

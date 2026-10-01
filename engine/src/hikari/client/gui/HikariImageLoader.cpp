@@ -4,7 +4,7 @@
 namespace hikari {
 namespace gui {
 
-    HikariImageLoader::HikariImageLoader(const std::weak_ptr<ImageCache> & imageCache)
+    HikariImageLoader::HikariImageLoader(ImageCache & imageCache)
         : imageCache(imageCache)
     {
 
@@ -30,13 +30,7 @@ namespace gui {
     }
 
     ImageCache::Resource HikariImageLoader::loadTextureFromCache(const std::string& filename) {
-        ImageCache::Resource loadedImage;
-
-        if(auto cache = imageCache.lock()) {
-            loadedImage = cache->get(filename);
-        }
-
-        return loadedImage;
+        return imageCache.get(filename);
     }
 
 } // hikari::gui

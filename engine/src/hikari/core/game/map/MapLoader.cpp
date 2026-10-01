@@ -85,12 +85,10 @@ namespace hikari {
     const int MapLoader::DEFAULT_HERO_SPAWN_X = 0;
     const int MapLoader::DEFAULT_HERO_SPAWN_Y = 0;
 
-    MapLoader::MapLoader(const std::shared_ptr<AnimationSetCache> & animationSetCache,
-        const std::shared_ptr<ImageCache> & imageCache,
-        const std::shared_ptr<TilesetCache> &tilesetCache
+    MapLoader::MapLoader(AnimationSetCache & animationSetCache,
+        TilesetCache &tilesetCache
     )
         : animationSetCache(animationSetCache)
-        , imageCache(imageCache)
         , tilesetCache(tilesetCache) {
 
     }
@@ -112,7 +110,7 @@ namespace hikari {
         TileDataPtr tileset = nullptr;
 
         try {
-            tileset = tilesetCache->get(tilesetName);
+            tileset = tilesetCache.get(tilesetName);
         } catch(std::runtime_error & err) {
             HIKARI_LOG(fatal) << "Couldn't load a tileset while constructing a map. (" << err.what() << ")";
         }
@@ -343,8 +341,7 @@ namespace hikari {
 
         std::unique_ptr<Door> doorInstance(new Door(x + offsetX, y + offsetY, width, height));
 
-        auto animationSetPtr = animationSetCache->get("assets/animations/door.json");
-        // auto spriteTexture = imageCache->get(animationSetPtr->getImageFileName());
+        auto animationSetPtr = animationSetCache.get("assets/animations/door.json");
 
         doorInstance->setAnimationSet(animationSetPtr);
 

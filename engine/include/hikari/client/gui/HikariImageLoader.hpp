@@ -14,10 +14,10 @@ namespace gui {
 
     class HikariImageLoader : public gcn::ImageLoader {
     private:
-        std::weak_ptr<ImageCache> imageCache;
+        ImageCache & imageCache;
 
     public:
-        explicit HikariImageLoader(const std::weak_ptr<ImageCache> & imageCache);
+        explicit HikariImageLoader(ImageCache & imageCache);
         virtual ~HikariImageLoader();
         virtual gcn::Image* load(const std::string& filename, bool convertToDisplayFormat = true);
 

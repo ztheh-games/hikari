@@ -1,5 +1,5 @@
 #include "hikari/client/game/WeaponGetState.hpp"
-#include "hikari/client/game/InputService.hpp"
+#include "hikari/client/game/Input.hpp"
 #include "hikari/client/audio/AudioService.hpp"
 #include "hikari/client/game/GameProgress.hpp"
 #include "hikari/client/game/Task.hpp"
@@ -10,10 +10,8 @@
 #include "hikari/client/gui/GuiService.hpp"
 #include "hikari/client/gui/Icon.hpp"
 #include "hikari/client/gui/IconAnimator.hpp"
-#include "hikari/client/Services.hpp"
 
 #include "hikari/core/game/GameController.hpp"
-#include "hikari/core/util/ServiceLocator.hpp"
 #include "hikari/core/util/Log.hpp"
 
 #include <guichan/gui.hpp>
@@ -27,24 +25,24 @@
 
 namespace hikari {
 
-    WeaponGetState::WeaponGetState(const std::string & name, GameController & controller, const std::weak_ptr<GameConfig> & gameConfig, ServiceLocator &services)
+    WeaponGetState::WeaponGetState(const std::string & name, GameController & controller, const GameConfig & gameConfig, GuiService & guiService, AudioService & audioService, GameProgress & gameProgress, Input & keyboardInput)
         : name(name)
         , controller(controller)
         , gameConfig(gameConfig)
-        , guiService(services.locateService<GuiService>(Services::GUISERVICE))
-        , audioService(services.locateService<AudioService>(Services::AUDIO))
-        , gameProgress(services.locateService<GameProgress>(Services::GAMEPROGRESS))
-        , keyboardInput(services.locateService<InputService>(Services::INPUT))
+        , guiService(guiService)
+        , audioService(audioService)
+        , gameProgress(gameProgress)
+        , keyboardInput(keyboardInput)
         , goToNextState(false)
     {
-        buildGui(services);
+        buildGui();
     }
 
     WeaponGetState::~WeaponGetState() {
 
     }
 
-    void WeaponGetState::buildGui(ServiceLocator & services) {
+    void WeaponGetState::buildGui() {
         guiContainer.reset(new gcn::Container());
         guiContainer->setSize(256, 240);
         guiContainer->setBaseColor(0x000000);
@@ -86,13 +84,11 @@ namespace hikari {
     }
 
     void WeaponGetState::render(sf::RenderTarget &target) {
-        if(auto gui = guiService.lock()) {
-            gui->renderAsTop(guiContainer.get(), target);
-        }
+        guiService.renderAsTop(guiContainer.get(), target);
     }
 
     bool WeaponGetState::update(float dt) {
-        if(keyboardInput->wasPressed(Input::BUTTON_CANCEL)) {
+        if(keyboardInput.wasPressed(Input::BUTTON_CANCEL)) {
             controller.requestStateChange("password");
             // TODO: Check if enough time has elapsed to show the sequence before
             // skipping to stage select.
@@ -117,25 +113,17 @@ namespace hikari {
         goToNextState = false;
 
         // Determine the weapon name to display.
-        if(auto config = gameConfig.lock()) {
-            if(auto gp = gameProgress.lock()) {
-                const unsigned int currentBossIndex = gp->getCurrentBoss();
-                const auto & weaponNames = config->getHeroWeaponNames();
-                guiWeaponGetText->setCaption(weaponNames.at(currentBossIndex + 1)); // Weapons[0] is the Mega Buster
-            }
-        }
+        const unsigned int currentBossIndex = gameProgress.getCurrentBoss();
+        const auto & weaponNames = gameConfig.getHeroWeaponNames();
+        guiWeaponGetText->setCaption(weaponNames.at(currentBossIndex + 1)); // Weapons[0] is the Mega Buster
 
         // Push this state's GUI into the GUI container.
-        if(auto gui = guiService.lock()) {
-            auto & topContainer = gui->getRootContainer();
-            topContainer.add(guiContainer.get(), 0, 0);
-            guiContainer->setEnabled(true);
-            guiContainer->requestFocus();
-        }
+        auto & topContainer = guiService.getRootContainer();
+        topContainer.add(guiContainer.get(), 0, 0);
+        guiContainer->setEnabled(true);
+        guiContainer->requestFocus();
 
-        if(auto audio = audioService.lock()) {
-            audio->playMusic("Weapon Get (MM3)");
-        }
+        audioService.playMusic("Weapon Get (MM3)");
 
         // Hide the text.
         guiYouGotText->setVisible(false);
@@ -236,11 +224,9 @@ namespace hikari {
     }
 
     void WeaponGetState::onExit() {
-        if(auto gui = guiService.lock()) {
-            auto & topContainer = gui->getRootContainer();
-            topContainer.remove(guiContainer.get());
-            guiContainer->setEnabled(false);
-        }
+        auto & topContainer = guiService.getRootContainer();
+        topContainer.remove(guiContainer.get());
+        guiContainer->setEnabled(false);
 
         // Clear any tasks that could be left in the queue.
         while(!taskQueue.empty()) {

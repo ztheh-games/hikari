@@ -1,7 +1,6 @@
 #ifndef HIKARI_CLIENT_GAME_OBJECTS_FACTORYHELPERS
 #define HIKARI_CLIENT_GAME_OBJECTS_FACTORYHELPERS
 
-#include <memory>
 #include <string>
 
 namespace hikari {
@@ -9,7 +8,9 @@ namespace hikari {
     //
     // Forward declarations
     //
-    class ServiceLocator;
+    class ImageCache;
+    class AnimationSetCache;
+    class SquirrelService;
     class EnemyFactory;
     class ItemFactory;
     class ProjectileFactory;
@@ -27,12 +28,13 @@ namespace FactoryHelpers {
      * 
      * @param descriptorFilePath the path to the descriptor file
      * @param factory            the factory to populate
-     * @param services           the service locator
      */
     void populateCollectableItemFactory(
         const std::string & descriptorFilePath,
-        const std::weak_ptr<hikari::ItemFactory> & factory,
-        ServiceLocator & services
+        ItemFactory & factory,
+        ImageCache & imageCache,
+        AnimationSetCache & animationSetCache,
+        SquirrelService & squirrel
     );
 
     /**
@@ -45,12 +47,13 @@ namespace FactoryHelpers {
      *
      * @param descriptorFilePath the path to the descriptor file
      * @param factory            the factory to populate
-     * @param services           the service locator
      */
     void populateEnemyFactory(
         const std::string & descriptorFilePath,
-        const std::weak_ptr<hikari::EnemyFactory> & factory,
-        ServiceLocator & services
+        EnemyFactory & factory,
+        ImageCache & imageCache,
+        AnimationSetCache & animationSetCache,
+        SquirrelService & squirrel
     );
 
     /**
@@ -63,12 +66,12 @@ namespace FactoryHelpers {
      *
      * @param descriptorFilePath the path to the descriptor file
      * @param factory            the factory to populate
-     * @param services           the service locator
      */
     void populateParticleFactory(
         const std::string & descriptorFilePath,
-        const std::weak_ptr<hikari::ParticleFactory> & factory,
-        ServiceLocator & services
+        ParticleFactory & factory,
+        ImageCache & imageCache,
+        AnimationSetCache & animationSetCache
     );
 
     /**
@@ -81,12 +84,12 @@ namespace FactoryHelpers {
      *
      * @param descriptorFilePath the path to the descriptor file
      * @param factory            the factory to populate
-     * @param services           the service locator
      */
     void populateProjectileFactory(
         const std::string & descriptorFilePath,
-        const std::weak_ptr<hikari::ProjectileFactory> & factory,
-        ServiceLocator & services
+        ProjectileFactory & factory,
+        ImageCache & imageCache,
+        AnimationSetCache & animationSetCache
     );
 
     /**
@@ -95,12 +98,10 @@ namespace FactoryHelpers {
      *
      * @param descriptorFilePath the path to the descriptor file
      * @param weaponTable        a weapon table to populate
-     * @param services           the service locator
      */
     void populateWeaponTable(
         const std::string & descriptorFilePath,
-        const std::weak_ptr<hikari::WeaponTable> & weaponTable,
-        ServiceLocator & services
+        WeaponTable & weaponTable
     );
 
 } // hikari::FactoryHelpers

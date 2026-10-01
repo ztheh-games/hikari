@@ -3,9 +3,8 @@
 
 namespace hikari {
 
-    CutSceneHeroActionController::CutSceneHeroActionController(const std::shared_ptr<Hero> & heroPtr)
-        : hero(heroPtr)
-        , moveLeftFlag(false)
+    CutSceneHeroActionController::CutSceneHeroActionController()
+        : moveLeftFlag(false)
         , moveRightFlag(false)
         , jumpFlag(false)
         , superJumpFlag(false)

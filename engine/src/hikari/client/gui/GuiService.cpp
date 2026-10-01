@@ -1,7 +1,6 @@
 #include "hikari/client/gui/GuiService.hpp"
 #include "hikari/client/gui/HikariImageLoader.hpp"
 #include "hikari/client/gui/InputHelper.hpp"
-#include "hikari/client/Services.hpp"
 #include "hikari/core/util/FileSystem.hpp"
 #include "hikari/core/util/ImageCache.hpp"
 #include "hikari/core/util/Log.hpp"
@@ -19,11 +18,22 @@
 
 namespace hikari {
 
+    class GuiService::GlobalRegistration {
+    public:
+        explicit GlobalRegistration(gcn::ImageLoader & imageLoader) {
+            gcn::Image::setImageLoader(&imageLoader);
+        }
+
+        ~GlobalRegistration() {
+            gcn::Widget::setGlobalFont(nullptr);
+            gcn::Image::setImageLoader(nullptr);
+        }
+    };
+
     const std::string GuiService::DEFAULT_FONT_NAME = "default";
 
-    GuiService::GuiService(const Json::Value & config, const std::weak_ptr<ImageCache> & imageCache, sf::RenderTarget & renderTarget)
-        : Service()
-        , renderTarget(renderTarget)
+    GuiService::GuiService(const Json::Value & config, ImageCache & imageCache, sf::RenderTarget & renderTarget)
+        : renderTarget(renderTarget)
         , gui(new gcn::Gui())
         , graphics(new gcn::SFMLGraphics(renderTarget))
         , input(new gcn::SFMLInput())
@@ -36,7 +46,7 @@ namespace hikari {
     {
         // Set up the global image loader (a proxy to the image caching service)
         imageLoader.reset(new gui::HikariImageLoader(imageCache));
-        gcn::Image::setImageLoader(imageLoader.get());
+        globals = std::make_unique<GlobalRegistration>(*imageLoader);
 
         buildFontMap(config["gui"]["fonts"]);
 
@@ -89,7 +99,7 @@ namespace hikari {
     }
 
     GuiService::~GuiService() {
-
+        gui->setTop(nullptr);
     }
 
     void GuiService::buildFontMap(const Json::Value & fontConfig) {

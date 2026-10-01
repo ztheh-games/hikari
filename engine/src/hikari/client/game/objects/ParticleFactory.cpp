@@ -8,11 +8,8 @@
 
 namespace hikari {
 
-    ParticleFactory::ParticleFactory(const std::weak_ptr<AnimationSetCache>& animationSetCache, const std::weak_ptr<ImageCache>& imageCache)
-        : Service()
-        , animationSetCache(animationSetCache)
-        , imageCache(imageCache)
-        , prototypeRegistry()
+    ParticleFactory::ParticleFactory()
+        : prototypeRegistry()
     {
          
     }

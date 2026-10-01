@@ -1,7 +1,6 @@
 #ifndef HIKARI_CLIENT_SCREENEFFECTSSERVICE
 #define HIKARI_CLIENT_SCREENEFFECTSSERVICE
 
-#include "hikari/core/util/Service.hpp"
 #include "hikari/core/util/NonCopyable.hpp"
 #include "hikari/core/util/SfmlResources.hpp"
 
@@ -22,8 +21,6 @@ namespace sf {
 
 namespace hikari {
 
-    class EventBusService;
-
     struct ScreenEffect {
         sf::Sprite * inputSprite;
 
@@ -36,20 +33,15 @@ namespace hikari {
         }
     };
 
-    class ScreenEffectsService : public Service, public NonCopyable {
+    class ScreenEffectsService : public NonCopyable {
     private:
-        std::weak_ptr<EventBusService> eventBus;
+        sf::Shader fadeShader;
         sf::RenderTexture backBuffer;
         SfmlResources::DefaultSprite inputSprite;
         std::vector<std::shared_ptr<ScreenEffect>> effects;
 
     public:
-        static std::unique_ptr<sf::Shader> FADE_OUT_SHADER;
-        static std::unique_ptr<sf::Shader> FADE_IN_SHADER;
-        static void preloadShaders();
-        static void destroyShaders();
-
-        explicit ScreenEffectsService(const std::weak_ptr<EventBusService> & eventBus, int bufferWidth, int bufferHeight);
+        ScreenEffectsService(int bufferWidth, int bufferHeight);
         virtual ~ScreenEffectsService();
 
         void setInputTexture(const sf::RenderTexture & texture);
@@ -66,18 +58,15 @@ namespace hikari {
     struct FadeOutShaderScreenEffect : public ScreenEffect {
         float timer;
         float fadeDuration;
-        sf::Shader * pixelShader; // non-owning
+        sf::Shader & pixelShader;
 
-        FadeOutShaderScreenEffect(float fadeDuration = 1.0f)
+        FadeOutShaderScreenEffect(sf::Shader & shader, float fadeDuration = 1.0f)
             : timer(0)
             , fadeDuration(fadeDuration)
+            , pixelShader(shader)
         {
-            pixelShader = ScreenEffectsService::FADE_IN_SHADER.get();
-
-            if(pixelShader) {
-                pixelShader->setUniform("texture", sf::Shader::CurrentTexture);
-                pixelShader->setUniform("fadePercent", (timer / fadeDuration) * 100.0f);
-            }
+            pixelShader.setUniform("texture", sf::Shader::CurrentTexture);
+            pixelShader.setUniform("fadePercent", (timer / fadeDuration) * 100.0f);
         }
 
         virtual void update(float dt) {
@@ -85,26 +74,23 @@ namespace hikari {
         }
 
         virtual void render(sf::RenderTarget & target) {
-            pixelShader->setUniform("fadePercent", (timer / fadeDuration) * 100.0f);
-            target.draw(*inputSprite, pixelShader);
+            pixelShader.setUniform("fadePercent", (timer / fadeDuration) * 100.0f);
+            target.draw(*inputSprite, &pixelShader);
         }
     };
 
     struct FadeInShaderScreenEffect : public ScreenEffect {
         float timer;
         float fadeDuration;
-        sf::Shader * pixelShader; // non-owning
+        sf::Shader & pixelShader;
 
-        FadeInShaderScreenEffect(float fadeDuration = 1.0f)
+        FadeInShaderScreenEffect(sf::Shader & shader, float fadeDuration = 1.0f)
             : timer(fadeDuration)
             , fadeDuration(fadeDuration)
+            , pixelShader(shader)
         {
-            pixelShader = ScreenEffectsService::FADE_IN_SHADER.get();
-
-            if(pixelShader) {
-                pixelShader->setUniform("texture", sf::Shader::CurrentTexture);
-                pixelShader->setUniform("fadePercent", (timer / fadeDuration) * 100.0f);
-            }
+            pixelShader.setUniform("texture", sf::Shader::CurrentTexture);
+            pixelShader.setUniform("fadePercent", (timer / fadeDuration) * 100.0f);
         }
 
         virtual void update(float dt) {
@@ -116,8 +102,8 @@ namespace hikari {
         }
 
         virtual void render(sf::RenderTarget & target) {
-            pixelShader->setUniform("fadePercent", (timer / fadeDuration) * 100.0f);
-            target.draw(*inputSprite, pixelShader);
+            pixelShader.setUniform("fadePercent", (timer / fadeDuration) * 100.0f);
+            target.draw(*inputSprite, &pixelShader);
         }
     };
 

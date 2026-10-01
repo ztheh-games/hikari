@@ -3,7 +3,6 @@
 
 #include "hikari/core/Platform.hpp"
 #include "hikari/core/geom/Rectangle2D.hpp"
-#include "hikari/core/util/Service.hpp"
 #include "hikari/core/util/TilesetCache.hpp"
 
 #include <memory>
@@ -28,7 +27,7 @@ namespace hikari {
     typedef std::shared_ptr<Spawner> SpawnerPtr;
     typedef std::shared_ptr<Force> ForcePtr;
 
-    class HIKARI_API MapLoader : public Service {
+    class HIKARI_API MapLoader {
     private:
         static const char* PROP_TILESET;
         static const char* PROP_ROOMS;
@@ -94,9 +93,8 @@ namespace hikari {
             SPAWN_ITEM  = 2
         };
 
-        std::shared_ptr<AnimationSetCache> animationSetCache;
-        std::shared_ptr<ImageCache> imageCache;
-        std::shared_ptr<TilesetCache> tilesetCache;
+        AnimationSetCache & animationSetCache;
+        TilesetCache & tilesetCache;
 
         MapPtr constructMap(const Json::Value &json) const;
         RoomPtr constructRoom(const Json::Value &json, int gridSize) const;
@@ -112,9 +110,8 @@ namespace hikari {
         bool validateRoomStructure(const Json::Value &json) const;
 
     public:
-        MapLoader(const std::shared_ptr<AnimationSetCache> & animationSetCache,
-            const std::shared_ptr<ImageCache> & imageCache,
-            const std::shared_ptr<TilesetCache> &tilesetCache
+        MapLoader(AnimationSetCache & animationSetCache,
+            TilesetCache &tilesetCache
         );
         virtual ~MapLoader();
         MapPtr loadFromJson(const Json::Value &json) const;

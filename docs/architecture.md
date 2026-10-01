@@ -9,7 +9,8 @@ architecture.
 ## System at a glance
 
 Hikari is a data-driven C++17 desktop game. CMake builds the engine, game, and
-most third-party source into one `hikari` executable. At runtime, a `Client`
+most third-party source into an internal static library linked by the `hikari`
+executable and runtime tests. At runtime, a `Client`
 composition root creates platform resources and application services, loads
 JSON and Squirrel content through a virtual filesystem, registers the game's
 screens with a state controller, and runs a fixed-step game loop.
@@ -20,14 +21,16 @@ flowchart LR
 
     subgraph Runtime["hikari executable"]
         Client[Client composition root]
+        Owners[ClientRuntime ownership]
         Controller[GameController]
         States[Game states]
         Gameplay[GamePlayState]
-        Services[Shared services]
+        Services[Application services]
         Core[Core game, map, math, and utility types]
 
-        Client --> Controller
-        Client --> Services
+        Client --> Owners
+        Owners --> Controller
+        Owners --> Services
         Controller --> States
         States --> Gameplay
         States --> Services
@@ -58,16 +61,18 @@ strictly isolated modules:
 | [`engine/include/hikari`](../engine/include/hikari) | Public declarations mirroring the `client` and `core` source trees |
 | [`content`](../content) | Runtime configuration and assets: maps, templates, animation definitions, scripts, images, shaders, and sound data |
 | [`tools/map-converter`](../tools/map-converter) | Authoring-time conversion from Tiled TMX maps to Hikari's JSON map format |
-| [`tests`](../tests) | Catch-based unit tests, currently focused on geometry primitives and the event bus |
-| [`extlibs`](../extlibs) | Libraries compiled directly into the executable, including Squirrel, Sqrat, JsonCpp, Guichan, and Game Music Emu |
+| [`tests`](../tests) | Catch-based core tests and runtime lifetime, injection, and production-state regression tests |
+| [`extlibs`](../extlibs) | Libraries compiled into the runtime static library, including Squirrel, Sqrat, JsonCpp, Guichan, and Game Music Emu |
 
 ## Runtime composition and lifecycle
 
 [`Main.cpp`](../engine/src/hikari/client/Main.cpp) constructs a
 [`Client`](../engine/include/hikari/client/Client.hpp) and calls `run()`.
 `Client` owns the top-level resources for the process: the SFML window and
-logical render target, the `GameController`, shared service registry, global
-input, global event bus, configuration, and the process quit flag.
+logical render target, configuration, and the process quit flag.
+[`ClientRuntime`](../engine/include/hikari/client/ClientRuntime.hpp) owns the
+controller and typed application services. It is used only by the composition
+root; states and loaders receive their individual dependencies by reference.
 
 Startup follows this order:
 
@@ -81,23 +86,28 @@ Startup follows this order:
 3. `run()` creates the SFML window and a fixed 256x240 `RenderTexture`. The
    window may scale that texture, but game rendering remains at the logical
    resolution.
-4. `initServices()` constructs the caches, loaders, factories, input, GUI,
-   audio, scripting, progress, event, and screen-effect services and registers
-   them in the
-   [`ServiceLocator`](../engine/include/hikari/core/util/ServiceLocator.hpp).
+4. `initServices()` constructs `ClientRuntime`, which owns the caches, loaders,
+   prototype factories, input, GUI, audio, scripting, progress, event, and
+   screen-effect services. Shader initialization belongs to the screen-effect
+   instance and happens after the rendering environment exists.
 5. `initGame()` loads palettes, executes startup scripts, converts JSON object
    templates into factory prototypes, loads damage values, creates the
    top-level game states, and selects the configured initial state.
 6. `loop()` runs until a window close or global quit request sets the quit
-   flag. On exit, shared graphics resources are destroyed and PhysicsFS is
-   deinitialized.
+   flag. RAII cleanup runs on normal exit and failed startup: scripting proxies
+   and the global collision-resolver reference are cleared, states and gameplay
+   objects are destroyed, then prototype factories, screen effects and GUI, the
+   VM, remaining services and caches, shared graphics resources, render targets,
+   window, and finally PhysicsFS.
+   Guichan's global font and image-loader registrations are cleared by the GUI
+   owner, including when its constructor fails.
 
 ```mermaid
 sequenceDiagram
     participant Main
     participant Client
     participant VFS as PhysicsFS/FileSystem
-    participant Services as ServiceLocator + services
+    participant Services as ClientRuntime + services
     participant Scripts as Squirrel VM
     participant States as GameController
 
@@ -106,7 +116,7 @@ sequenceDiagram
     Client->>VFS: load conf.json and game.json
     Main->>Client: run()
     Client->>Client: create window and 256x240 render target
-    Client->>Services: construct and register services
+    Client->>Services: construct typed services and wire references
     Client->>Scripts: bind native API and run environment scripts
     Client->>Services: load palettes, templates, weapons, and damage data
     Client->>States: create and register game states
@@ -267,24 +277,28 @@ Only one room is current for gameplay ownership and collision at a time.
 room and active obstacles. The camera selects the visible world region and is
 also used to wake spawners and retire off-screen objects.
 
-## Shared services and communication
+## Application services and communication
 
-`Client` is the service composition root. Services are stored by string name
-and recovered by requested type through `ServiceLocator`; consumers generally
-retain weak pointers to services they do not own.
+`Client` is the composition root. `ClientRuntime` declares service owners before
+their consumers so reverse member destruction preserves dependency lifetimes.
+Shared allocations are retained for compatibility with scripting proxies and
+existing resource ownership, but required service dependencies in states,
+tasks, loaders, and the world are non-owning references, not weak-pointer lookups.
+The larger gameplay constructor uses a reference-only `GamePlayDependencies`
+aggregate containing only its dependencies.
 
 | Service group | Responsibilities |
 |---|---|
 | Assets | `ImageCache`, `AnimationSetCache`, `MapLoader`, plus their tileset and animation loaders |
-| Object creation | `ItemFactory`, `EnemyFactory`, `ProjectileFactory`, and `ParticleFactory` |
+| Object creation | Dependency-free prototype registries: `ItemFactory`, `EnemyFactory`, `ProjectileFactory`, and `ParticleFactory`; `FactoryHelpers` receives the caches and scripting dependencies used during loading |
 | Game data | `GameProgress`, `WeaponTable`, and `DamageTable` |
-| Interaction | `InputService`, `GuiService`, and `ScreenEffectsService` |
-| Integration | `AudioService`, `SquirrelService`, and `EventBusService` |
+| Interaction | `KeyboardInput` exposed directly as `Input`, `GuiService`, and `ScreenEffectsService` |
+| Integration | `AudioService`, `SquirrelService`, and `EventBusImpl` exposed directly as `EventBus` |
 
 There are two event scopes:
 
-- The **global event bus** is created by `Client`, exposed through
-  `EventBusService`, and handles process-wide events such as a quit request.
+- The **global event bus** is owned by `ClientRuntime`, injected directly, and
+  handles process-wide events such as a quit request.
 - `GamePlayState` creates a **gameplay-local event bus** for weapon fire,
   damage, death, entity-state changes, doors, audio requests, and object
   removal.
@@ -349,7 +363,9 @@ Startup scripts listed in `game.json` establish the script environment and
 load behavior/effect classes. JSON templates name those classes:
 `ScriptedEnemyBrain` delegates enemy behavior to Squirrel, and
 `ScriptedEffect` delegates item effects. Native proxy classes provide scripts
-with access to selected C++ services without exposing the service locator.
+with access to selected C++ services. Proxies remain static weak bindings, but
+the runtime explicitly clears them before destroying their targets. VM-backed
+brains, effects, and prototypes must be destroyed before the scripting runtime.
 
 ## Rendering, GUI, and audio
 
@@ -376,18 +392,20 @@ The root [`CMakeLists.txt`](../CMakeLists.txt) targets C++17 and adds the
 engine and test directories. By default, CMake fetches pinned SFML and
 PhysicsFS versions; system packages can be selected instead.
 
-[`engine/CMakeLists.txt`](../engine/CMakeLists.txt) compiles all Hikari sources
-and vendored library sources into one executable, links SFML and PhysicsFS,
-and copies the complete `content` directory beside the executable. There is no
-separate engine library target, plugin binary, or runtime module boundary.
+[`engine/CMakeLists.txt`](../engine/CMakeLists.txt) compiles Hikari and vendored
+sources into the internal `hikari-runtime` static library, linked by the
+`hikari` executable and runtime tests. It links SFML and PhysicsFS and copies
+the complete `content` directory beside the executable. The library is a test
+reuse boundary, not a plugin or a separation of the `core` and `client` layers.
 
 The vendored source graph includes JsonCpp, Squirrel/Sqrat, Guichan and its
 SFML adapters, PhysicsFS stream adapters, and Game Music Emu. The
-[`tests` target](../tests/CMakeLists.txt) is a separate executable that
-recompiles only the production event-bus sources needed by its tests. Current
-tests cover math/geometry types and `EventBusImpl`; state, service, loader,
-content, scripting, rendering, and gameplay integration are outside that
-automated boundary.
+[`tests` target](../tests/CMakeLists.txt) covers math/geometry, movement, and
+`EventBusImpl` using a small production-source subset. `runtime-tests` links the
+production runtime and exercises filesystem cleanup, ordered service teardown,
+script-backed prototypes, failed startup, repeated construction, factory
+injection, and refill tasks. Runtime tests use repository content and require
+an SFML graphics context.
 
 ## Current architectural pressure points
 
@@ -399,13 +417,11 @@ they do not prescribe a replacement design.
   while `GamePlayState` combines stage flow, nested state transitions, world
   simulation, collision coordination, spawning, event handling, tasks, GUI,
   progress, and rendering.
-- **Runtime-checked dependency lookup.** Services are registered under string
-  keys and resolved with dynamic casts. Missing names and mismatched requested
-  types are detected at runtime.
 - **Global/static wiring.** Several cross-cutting dependencies and resources
   are installed through static setters or shared static state, including
-  animation image access, movement collision/gravity settings, palette
-  resources, transition textures, shaders, and scripting proxies.
+  movement collision/gravity settings, palette resources, transition textures,
+  and scripting proxies. Animation image access and screen-effect shaders are
+  instance-owned; remaining global registrations have explicit teardown.
 - **Porous `core`/`client` boundary.** The directory split suggests reusable
   core and game-specific client layers, but core map loading constructs
   client-side spawners and block-sequence descriptors. The current build does
@@ -419,9 +435,10 @@ they do not prescribe a replacement design.
 - **Distributed content contracts.** JSON field names, defaults, and
   validation are spread across configuration classes, loaders, and factory
   helpers rather than represented by one schema boundary.
-- **Monolithic build and narrow tests.** Production code and most vendored
-  dependencies form one executable target, while automated tests exercise a
-  small subset of core and event behavior.
+- **Broad runtime and limited gameplay coverage.** Production code and most
+  vendored dependencies remain one runtime library. Lifetime and injection
+  tests supplement the core tests, but detailed gameplay and visual behavior
+  still need runtime smoke checks.
 
 These constraints are the main context to preserve when evaluating future
 module boundaries, test seams, content evolution, or gameplay extensions.

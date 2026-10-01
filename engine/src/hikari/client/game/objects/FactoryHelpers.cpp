@@ -1,4 +1,3 @@
-#include "hikari/client/Services.hpp"
 #include "hikari/client/game/objects/FactoryHelpers.hpp"
 #include "hikari/client/game/objects/EnemyFactory.hpp"
 #include "hikari/client/game/objects/ItemFactory.hpp"
@@ -30,7 +29,6 @@
 #include "hikari/core/util/AnimationSetCache.hpp"
 #include "hikari/core/util/FileSystem.hpp"
 #include "hikari/core/util/ImageCache.hpp"
-#include "hikari/core/util/ServiceLocator.hpp"
 #include "hikari/core/util/Log.hpp"
 #include "hikari/core/util/exception/HikariException.hpp"
 
@@ -44,479 +42,389 @@ namespace FactoryHelpers {
 
     void populateCollectableItemFactory(
         const std::string & descriptorFilePath,
-        const std::weak_ptr<hikari::ItemFactory> & factory,
-        ServiceLocator & services
+        ItemFactory & factory,
+        ImageCache & imageCache,
+        AnimationSetCache & animationSetCache,
+        SquirrelService & squirrel
     ) {
-        auto imageCachePtr        = services.locateService<ImageCache>(Services::IMAGECACHE);
-        auto squirrelPtr          = services.locateService<SquirrelService>(Services::SCRIPTING);
-        auto animationSetCachePtr = services.locateService<AnimationSetCache>(Services::ANIMATIONSETCACHE);
+        HIKARI_LOG(debug) << "Populating item factory... (" << descriptorFilePath << ")";
 
-        if(auto imageCache = imageCachePtr.lock()) {
-            if(auto squirrel = squirrelPtr.lock()) {
-                if(auto animationSetCache = animationSetCachePtr.lock()) {
-                    if(auto factoryPtr = factory.lock()) {
+        auto fileContents = FileSystem::openFileRead(descriptorFilePath);
+        Json::Value root;
+        Json::Reader reader;
 
-                        HIKARI_LOG(debug) << "Populating item factory... (" << descriptorFilePath << ")";
+        if(reader.parse(*fileContents, root, false)) {
+            auto templateCount = root.size();
 
-                        auto fileContents = FileSystem::openFileRead(descriptorFilePath);
-                        Json::Value root;
-                        Json::Reader reader;
+            for(decltype(templateCount) i = 0; i < templateCount; ++i) {
+                const auto & templateObject = root[i];
 
-                        if(reader.parse(*fileContents, root, false)) {
-                            auto templateCount = root.size();
+                const auto name              = templateObject["name"].asString();
+                const auto damageId          = templateObject.get("damageId", 0).asInt();
+                const auto effect            = templateObject["effect"].asString();
+                const auto effectConfig      = templateObject["effectConfig"];
+                const auto animationSet      = templateObject["animationSet"].asString();
+                const auto animationName     = templateObject["animationName"].asString();
+                const auto boundingBoxObject = templateObject["boundingBox"];
+                const auto ageless           = templateObject["ageless"].asBool();
+                const auto maximumAge        = templateObject["maximumAge"].asDouble();
 
-                            for(decltype(templateCount) i = 0; i < templateCount; ++i) {
-                                const auto & templateObject = root[i];
+                hikari::BoundingBoxF boundingBox(
+                    0.0f,
+                    0.0f,
+                    static_cast<float>(boundingBoxObject["width"].asDouble()),
+                    static_cast<float>(boundingBoxObject["height"].asDouble())
+                );
 
-                                const auto name              = templateObject["name"].asString();
-                                const auto damageId          = templateObject.get("damageId", 0).asInt();
-                                const auto effect            = templateObject["effect"].asString();
-                                const auto effectConfig      = templateObject["effectConfig"];
-                                const auto animationSet      = templateObject["animationSet"].asString();
-                                const auto animationName     = templateObject["animationName"].asString();
-                                const auto boundingBoxObject = templateObject["boundingBox"];
-                                const auto ageless           = templateObject["ageless"].asBool();
-                                const auto maximumAge        = templateObject["maximumAge"].asDouble();
+                boundingBox.setOrigin(
+                    static_cast<float>(boundingBoxObject["originX"].asDouble()),
+                    static_cast<float>(boundingBoxObject["originY"].asDouble())
+                );
 
-                                hikari::BoundingBoxF boundingBox(
-                                    0.0f,
-                                    0.0f,
-                                    static_cast<float>(boundingBoxObject["width"].asDouble()),
-                                    static_cast<float>(boundingBoxObject["height"].asDouble())
-                                );
+                std::shared_ptr<Effect> effectInstance(nullptr);
 
-                                boundingBox.setOrigin(
-                                    static_cast<float>(boundingBoxObject["originX"].asDouble()),
-                                    static_cast<float>(boundingBoxObject["originY"].asDouble())
-                                );
-
-                                std::shared_ptr<Effect> effectInstance(nullptr);
-
-                                if(effect == "" || effect == "NothingEffect") {
-                                    effectInstance.reset(new NothingEffect());
-                                } else {
-                                    try {
-                                        Sqrat::Table configTable(squirrel->getVmInstance());
-
-                                        if(!effectConfig.isNull()) {
-                                            configTable = SquirrelUtils::jsonToSquirrel(squirrel->getVmInstance(), effectConfig);
-                                        }
-
-                                        effectInstance.reset(new ScriptedEffect(*squirrel, effect, configTable));
-                                    } catch(std::runtime_error & ex) {
-                                        HIKARI_LOG(error) << "Couldn't create scripted effect of type " << effect << ". Falling back to NothingEffect. The exception was: " << ex.what();
-                                        effectInstance.reset(new NothingEffect());
-                                    }
-                                }
-
-                                auto item = std::make_shared<CollectableItem>(GameObject::generateObjectId(), nullptr, effectInstance);
-
-                                auto animationSetPtr = animationSetCache->get(animationSet);
-                                auto spriteTexture = imageCache->get(animationSetPtr->getImageFileName());
-                                item->setAnimationSet(animationSetPtr);
-                                item->changeAnimation(animationName);
-                                item->setBoundingBox(boundingBox);
-                                item->setAgeless(ageless);
-                                item->setMaximumAge(static_cast<float>(maximumAge));
-                                item->setDamageId(damageId);
-
-                                // Check if using a palette is necessary
-                                if(templateObject.isMember("paletteIndex")) {
-                                    const auto paletteIndex = templateObject["paletteIndex"].asInt();
-
-                                    if(paletteIndex == -1) {
-                                        item->setUsePalette(true);
-                                        item->setUseSharedPalette(true);
-                                    } else {
-                                        item->setUsePalette(true);
-                                        item->setPaletteIndex(paletteIndex);
-                                    }
-                                }
-
-                                factoryPtr->registerPrototype(name, item);
-                            }
-                        }
-                    } else {
-                        // ItemFactory is borked!
-                        throw HikariException("Cannot populate CollectableItemFactory because ItemFactory is null.");
-                    }
+                if(effect == "" || effect == "NothingEffect") {
+                    effectInstance.reset(new NothingEffect());
                 } else {
-                    // AnimationSetCache is borked!
-                    throw HikariException("Cannot populate CollectableItemFactory because AnimationSetCache is null.");
+                    try {
+                        Sqrat::Table configTable(squirrel.getVmInstance());
+
+                        if(!effectConfig.isNull()) {
+                            configTable = SquirrelUtils::jsonToSquirrel(squirrel.getVmInstance(), effectConfig);
+                        }
+
+                        effectInstance.reset(new ScriptedEffect(squirrel, effect, configTable));
+                    } catch(std::runtime_error & ex) {
+                        HIKARI_LOG(error) << "Couldn't create scripted effect of type " << effect << ". Falling back to NothingEffect. The exception was: " << ex.what();
+                        effectInstance.reset(new NothingEffect());
+                    }
                 }
-            } else {
-                // SquirrelService is borked!
-                throw HikariException("Cannot populate CollectableItemFactory because SquirrelService is null.");
+
+                auto item = std::make_shared<CollectableItem>(GameObject::generateObjectId(), nullptr, effectInstance);
+
+                auto animationSetPtr = animationSetCache.get(animationSet);
+                auto spriteTexture = imageCache.get(animationSetPtr->getImageFileName());
+                item->setAnimationSet(animationSetPtr);
+                item->changeAnimation(animationName);
+                item->setBoundingBox(boundingBox);
+                item->setAgeless(ageless);
+                item->setMaximumAge(static_cast<float>(maximumAge));
+                item->setDamageId(damageId);
+
+                // Check if using a palette is necessary
+                if(templateObject.isMember("paletteIndex")) {
+                    const auto paletteIndex = templateObject["paletteIndex"].asInt();
+
+                    if(paletteIndex == -1) {
+                        item->setUsePalette(true);
+                        item->setUseSharedPalette(true);
+                    } else {
+                        item->setUsePalette(true);
+                        item->setPaletteIndex(paletteIndex);
+                    }
+                }
+
+                factory.registerPrototype(name, item);
             }
-        } else {
-            // ImageCache is borked!
-            throw HikariException("Cannot populate CollectableItemFactory because ImageCache is null.");
         }
     }
 
     void populateEnemyFactory(
         const std::string & descriptorFilePath,
-        const std::weak_ptr<hikari::EnemyFactory> & factory,
-        ServiceLocator & services
+        EnemyFactory & factory,
+        ImageCache & imageCache,
+        AnimationSetCache & animationSetCache,
+        SquirrelService & squirrel
     ) {
-        auto imageCachePtr        = services.locateService<ImageCache>(Services::IMAGECACHE);
-        auto squirrelPtr          = services.locateService<SquirrelService>(Services::SCRIPTING);
-        auto animationSetCachePtr = services.locateService<AnimationSetCache>(Services::ANIMATIONSETCACHE);
+        HIKARI_LOG(debug) << "Populating enemy factory...";
 
-        if(auto imageCache = imageCachePtr.lock()) {
-            if(auto squirrel = squirrelPtr.lock()) {
-                if(auto animationSetCache = animationSetCachePtr.lock()) {
-                    if(auto factoryPtr = factory.lock()) {
+        if(FileSystem::exists(descriptorFilePath)) {
+            auto fileContents = FileSystem::openFileRead(descriptorFilePath);
+            Json::Value root;
+            Json::Reader reader;
 
-                        HIKARI_LOG(debug) << "Populating enemy factory...";
+            if(reader.parse(*fileContents, root, false)) {
+                auto templateCount = root.size();
 
-                        if(FileSystem::exists(descriptorFilePath)) {
-                            auto fileContents = FileSystem::openFileRead(descriptorFilePath);
-                            Json::Value root;
-                            Json::Reader reader;
+                if(templateCount > 0) {
+                    for(decltype(templateCount) i = 0; i < templateCount; ++i) {
+                        const auto & templateObject = root[i];
 
-                            if(reader.parse(*fileContents, root, false)) {
-                                auto templateCount = root.size();
+                        const auto name              = templateObject["name"].asString();
+                        const auto damageId          = templateObject.get("damageId", 0).asInt();
+                        const auto hitPoints         = static_cast<float>(templateObject.get("hitPoints", 0.0).asDouble());
+                        const auto behavior          = templateObject["behavior"];
+                        const auto animationSet      = templateObject["animationSet"].asString();
+                        const auto boundingBoxObject = templateObject["boundingBox"];
+                        const auto hitBoxesObject    = templateObject["hitBoxes"];
+                        const auto statesObject      = templateObject["states"];
+                        const auto characteristicsObject = templateObject["characteristics"];
+                        const auto actionSpotObject  = templateObject["actionSpot"];
+                        const auto deathType         = templateObject.get("deathType", "Nothing").asString();
+                        const auto bonusTableIndex   = templateObject.get("bonusTableIndex", 0).asInt();
 
-                                if(templateCount > 0) {
-                                    for(decltype(templateCount) i = 0; i < templateCount; ++i) {
-                                        const auto & templateObject = root[i];
+                        hikari::BoundingBoxF boundingBox(
+                            0.0f,
+                            0.0f,
+                            static_cast<float>(boundingBoxObject["width"].asDouble()),
+                            static_cast<float>(boundingBoxObject["height"].asDouble())
+                        );
 
-                                        const auto name              = templateObject["name"].asString();
-                                        const auto damageId          = templateObject.get("damageId", 0).asInt();
-                                        const auto hitPoints         = static_cast<float>(templateObject.get("hitPoints", 0.0).asDouble());
-                                        const auto behavior          = templateObject["behavior"];
-                                        const auto animationSet      = templateObject["animationSet"].asString();
-                                        const auto boundingBoxObject = templateObject["boundingBox"];
-                                        const auto hitBoxesObject    = templateObject["hitBoxes"];
-                                        const auto statesObject      = templateObject["states"];
-                                        const auto characteristicsObject = templateObject["characteristics"];
-                                        const auto actionSpotObject  = templateObject["actionSpot"];
-                                        const auto deathType         = templateObject.get("deathType", "Nothing").asString();
-                                        const auto bonusTableIndex   = templateObject.get("bonusTableIndex", 0).asInt();
+                        boundingBox.setOrigin(
+                            static_cast<float>(boundingBoxObject["originX"].asDouble()),
+                            static_cast<float>(boundingBoxObject["originY"].asDouble())
+                        );
 
-                                        hikari::BoundingBoxF boundingBox(
-                                            0.0f,
-                                            0.0f,
-                                            static_cast<float>(boundingBoxObject["width"].asDouble()),
-                                            static_cast<float>(boundingBoxObject["height"].asDouble())
-                                        );
+                        std::vector<HitBox> hitBoxes;
 
-                                        boundingBox.setOrigin(
-                                            static_cast<float>(boundingBoxObject["originX"].asDouble()),
-                                            static_cast<float>(boundingBoxObject["originY"].asDouble())
-                                        );
+                        if(!hitBoxesObject.isNull()) {
+                            auto length = hitBoxesObject.size();
 
-                                        std::vector<HitBox> hitBoxes;
+                            for(std::size_t i = 0; i < length; ++i) {
+                                const auto boxJson = hitBoxesObject[i];
 
-                                        if(!hitBoxesObject.isNull()) {
-                                            auto length = hitBoxesObject.size();
+                                // Create hitbox and push to vector
+                                const float width = boxJson["width"].asFloat();
+                                const float height = boxJson["height"].asFloat();
+                                const float x = boxJson["x"].asFloat();
+                                const float y = boxJson["y"].asFloat();
+                                const float originX = boxJson.get("originX", 0.0f).asFloat();
+                                const float originY = boxJson.get("originY", 0.0f).asFloat();
+                                const bool isShield = boxJson.get("isShield", false).asBool();
 
-                                            for(std::size_t i = 0; i < length; ++i) {
-                                                const auto boxJson = hitBoxesObject[i];
+                                HitBox hitBox(BoundingBox<float>(x, y, width, height), isShield);
+                                hitBox.bounds.setOrigin(originX, originY);
 
-                                                // Create hitbox and push to vector
-                                                const float width = boxJson["width"].asFloat();
-                                                const float height = boxJson["height"].asFloat();
-                                                const float x = boxJson["x"].asFloat();
-                                                const float y = boxJson["y"].asFloat();
-                                                const float originX = boxJson.get("originX", 0.0f).asFloat();
-                                                const float originY = boxJson.get("originY", 0.0f).asFloat();
-                                                const bool isShield = boxJson.get("isShield", false).asBool();
-
-                                                HitBox hitBox(BoundingBox<float>(x, y, width, height), isShield);
-                                                hitBox.bounds.setOrigin(originX, originY);
-
-                                                hitBoxes.push_back(hitBox);
-                                            }
-                                        }
-
-                                        std::shared_ptr<EnemyBrain> brain(nullptr);
-
-                                        const auto behaviorType = behavior["type"].asString();
-
-                                        if(behaviorType == "scripted") {
-                                            const auto behaviorName = behavior["name"].asString();
-                                            const auto enemyConfig = behavior["config"];
-
-                                            Sqrat::Table configTable(squirrel->getVmInstance());
-
-                                            if(!enemyConfig.isNull()) {
-                                                configTable = SquirrelUtils::jsonToSquirrel(squirrel->getVmInstance(), enemyConfig);
-                                            }
-
-                                            brain = std::make_shared<ScriptedEnemyBrain>(*squirrel, behaviorName, configTable);
-                                        } else {
-                                            // Some other built-in behavior; currently not supported.
-                                        }
-
-                                        Vector2<float> actionSpot;
-
-                                        if(!actionSpotObject.isNull()) {
-                                            actionSpot.setX(actionSpotObject.get("x", 0.0f).asFloat())
-                                                .setY(actionSpotObject.get("y", 0.0f).asFloat());
-                                        }
-
-                                        auto animationSetPtr = animationSetCache->get(animationSet);
-                                        auto spriteTexture = imageCache->get(animationSetPtr->getImageFileName());
-
-                                        auto instance = std::make_shared<Enemy>(GameObject::generateObjectId(), nullptr);
-                                        instance->setAnimationSet(animationSetPtr);
-                                        instance->setBoundingBox(boundingBox);
-                                        instance->setActionSpot(actionSpot);
-                                        instance->setDirection(Directions::Right);
-                                        instance->setBonusTableIndex(bonusTableIndex);
-                                        instance->changeAnimation("idle");
-
-                                        for(std::size_t i = 0; i < hitBoxes.size(); ++i) {
-                                            // Loop through each box and add hitbox to enemy.
-                                            instance->addHitBox(hitBoxes[i]);
-                                        }
-
-                                        if(deathType == "Hero") {
-                                            instance->setDeathType(EntityDeathType::Hero);
-                                        }
-
-                                        if(!characteristicsObject.isNull()) {
-                                            const bool gravitated = characteristicsObject["gravitated"].asBool();
-                                            const bool phasing = characteristicsObject["phasing"].asBool();
-
-                                            instance->setGravitated(gravitated);
-                                            instance->setPhasing(phasing);
-                                        }
-
-                                        instance->setBrain(brain);
-                                        instance->setDamageId(damageId);
-                                        instance->setHitPoints(hitPoints);
-                                        instance->setActive(true);
-
-                                        // Check if using a palette is necessary
-                                        if(templateObject.isMember("paletteIndex")) {
-                                            const auto paletteIndex = templateObject["paletteIndex"].asInt();
-
-                                            if(paletteIndex == -1) {
-                                                instance->setUsePalette(true);
-                                                instance->setUseSharedPalette(true);
-                                            } else {
-                                                instance->setUsePalette(true);
-                                                instance->setPaletteIndex(paletteIndex);
-                                            }
-                                        }
-
-                                        factoryPtr->registerPrototype(name, instance);
-                                        HIKARI_LOG(debug2) << "Registered prototype for \"" << name << "\" enemy.";
-                                    }
-                                } else {
-                                    HIKARI_LOG(debug3) << "No enemy templates found.";
-                                }
+                                hitBoxes.push_back(hitBox);
                             }
-                        } else {
-                            HIKARI_LOG(debug3) << "Can't find enemy descriptor file: \"" << descriptorFilePath << "\"";
                         }
-                    } else {
-                        // ItemFactory is borked!
-                        throw HikariException("Cannot populate CollectableItemFactory because ItemFactory is null.");
+
+                        std::shared_ptr<EnemyBrain> brain(nullptr);
+
+                        const auto behaviorType = behavior["type"].asString();
+
+                        if(behaviorType == "scripted") {
+                            const auto behaviorName = behavior["name"].asString();
+                            const auto enemyConfig = behavior["config"];
+
+                            Sqrat::Table configTable(squirrel.getVmInstance());
+
+                            if(!enemyConfig.isNull()) {
+                                configTable = SquirrelUtils::jsonToSquirrel(squirrel.getVmInstance(), enemyConfig);
+                            }
+
+                            brain = std::make_shared<ScriptedEnemyBrain>(squirrel, behaviorName, configTable);
+                        } else {
+                            // Some other built-in behavior; currently not supported.
+                        }
+
+                        Vector2<float> actionSpot;
+
+                        if(!actionSpotObject.isNull()) {
+                            actionSpot.setX(actionSpotObject.get("x", 0.0f).asFloat())
+                                .setY(actionSpotObject.get("y", 0.0f).asFloat());
+                        }
+
+                        auto animationSetPtr = animationSetCache.get(animationSet);
+                        auto spriteTexture = imageCache.get(animationSetPtr->getImageFileName());
+
+                        auto instance = std::make_shared<Enemy>(GameObject::generateObjectId(), nullptr);
+                        instance->setAnimationSet(animationSetPtr);
+                        instance->setBoundingBox(boundingBox);
+                        instance->setActionSpot(actionSpot);
+                        instance->setDirection(Directions::Right);
+                        instance->setBonusTableIndex(bonusTableIndex);
+                        instance->changeAnimation("idle");
+
+                        for(std::size_t i = 0; i < hitBoxes.size(); ++i) {
+                            // Loop through each box and add hitbox to enemy.
+                            instance->addHitBox(hitBoxes[i]);
+                        }
+
+                        if(deathType == "Hero") {
+                            instance->setDeathType(EntityDeathType::Hero);
+                        }
+
+                        if(!characteristicsObject.isNull()) {
+                            const bool gravitated = characteristicsObject["gravitated"].asBool();
+                            const bool phasing = characteristicsObject["phasing"].asBool();
+
+                            instance->setGravitated(gravitated);
+                            instance->setPhasing(phasing);
+                        }
+
+                        instance->setBrain(brain);
+                        instance->setDamageId(damageId);
+                        instance->setHitPoints(hitPoints);
+                        instance->setActive(true);
+
+                        // Check if using a palette is necessary
+                        if(templateObject.isMember("paletteIndex")) {
+                            const auto paletteIndex = templateObject["paletteIndex"].asInt();
+
+                            if(paletteIndex == -1) {
+                                instance->setUsePalette(true);
+                                instance->setUseSharedPalette(true);
+                            } else {
+                                instance->setUsePalette(true);
+                                instance->setPaletteIndex(paletteIndex);
+                            }
+                        }
+
+                        factory.registerPrototype(name, instance);
+                        HIKARI_LOG(debug2) << "Registered prototype for \"" << name << "\" enemy.";
                     }
                 } else {
-                    // AnimationSetCache is borked!
-                    throw HikariException("Cannot populate CollectableItemFactory because AnimationSetCache is null.");
+                    HIKARI_LOG(debug3) << "No enemy templates found.";
                 }
-            } else {
-                // SquirrelService is borked!
-                throw HikariException("Cannot populate CollectableItemFactory because SquirrelService is null.");
             }
         } else {
-            // ImageCache is borked!
-            throw HikariException("Cannot populate CollectableItemFactory because ImageCache is null.");
+            HIKARI_LOG(debug3) << "Can't find enemy descriptor file: \"" << descriptorFilePath << "\"";
         }
     }
 
     void populateParticleFactory(
         const std::string & descriptorFilePath,
-        const std::weak_ptr<hikari::ParticleFactory> & factory,
-        ServiceLocator & services
+        ParticleFactory & factory,
+        ImageCache & imageCache,
+        AnimationSetCache & animationSetCache
     ) {
-        auto imageCachePtr        = services.locateService<ImageCache>(Services::IMAGECACHE);
-        auto animationSetCachePtr = services.locateService<AnimationSetCache>(Services::ANIMATIONSETCACHE);
+        HIKARI_LOG(debug) << "Populating particles factory...";
 
-        if(auto imageCache = imageCachePtr.lock()) {
-            if(auto animationSetCache = animationSetCachePtr.lock()) {
-                if(auto factoryPtr = factory.lock()) {
+        auto fileContents = FileSystem::openFileRead(descriptorFilePath);
+        Json::Value root;
+        Json::Reader reader;
 
-                    HIKARI_LOG(debug) << "Populating particles factory...";
+        if(reader.parse(*fileContents, root, false)) {
+            auto templateCount = root.size();
 
-                    auto fileContents = FileSystem::openFileRead(descriptorFilePath);
-                    Json::Value root;
-                    Json::Reader reader;
+            for(decltype(templateCount) i = 0; i < templateCount; ++i) {
+                const auto & templateObject = root[i];
 
-                    if(reader.parse(*fileContents, root, false)) {
-                        auto templateCount = root.size();
+                const auto name              = templateObject["name"].asString();
+                const auto animationSet      = templateObject["animationSet"].asString();
+                const auto animationName     = templateObject["animationName"].asString();
+                const auto boundingBoxObject = templateObject["boundingBox"];
+                const auto maximumAge        = templateObject["maximumAge"].asDouble();
 
-                        for(decltype(templateCount) i = 0; i < templateCount; ++i) {
-                            const auto & templateObject = root[i];
+                hikari::BoundingBoxF boundingBox(
+                    0.0f,
+                    0.0f,
+                    static_cast<float>(boundingBoxObject["width"].asDouble()),
+                    static_cast<float>(boundingBoxObject["height"].asDouble())
+                );
 
-                            const auto name              = templateObject["name"].asString();
-                            const auto animationSet      = templateObject["animationSet"].asString();
-                            const auto animationName     = templateObject["animationName"].asString();
-                            const auto boundingBoxObject = templateObject["boundingBox"];
-                            const auto maximumAge        = templateObject["maximumAge"].asDouble();
+                boundingBox.setOrigin(
+                    static_cast<float>(boundingBoxObject["originX"].asDouble()),
+                    static_cast<float>(boundingBoxObject["originY"].asDouble())
+                );
 
-                            hikari::BoundingBoxF boundingBox(
-                                0.0f,
-                                0.0f,
-                                static_cast<float>(boundingBoxObject["width"].asDouble()),
-                                static_cast<float>(boundingBoxObject["height"].asDouble())
-                            );
+                auto instance = std::make_shared<Particle>(static_cast<float>(maximumAge));
 
-                            boundingBox.setOrigin(
-                                static_cast<float>(boundingBoxObject["originX"].asDouble()),
-                                static_cast<float>(boundingBoxObject["originY"].asDouble())
-                            );
+                auto animationSetPtr = animationSetCache.get(animationSet);
+                auto spriteTexture = imageCache.get(animationSetPtr->getImageFileName());
 
-                            auto instance = std::make_shared<Particle>(static_cast<float>(maximumAge));
+                instance->setAnimationSet(animationSetPtr);
+                instance->setSpriteTexture(spriteTexture);
+                instance->setBoundingBox(boundingBox);
+                instance->setCurrentAnimation(animationName);
 
-                            auto animationSetPtr = animationSetCache->get(animationSet);
-                            auto spriteTexture = imageCache->get(animationSetPtr->getImageFileName());
-
-                            instance->setAnimationSet(animationSetPtr);
-                            instance->setSpriteTexture(spriteTexture);
-                            instance->setBoundingBox(boundingBox);
-                            instance->setCurrentAnimation(animationName);
-
-                            factoryPtr->registerPrototype(name, instance);
-                        }
-                    }
-
-                } else {
-                    // ItemFactory is borked!
-                    throw HikariException("Cannot populate ParticleFactory because ParticleFactory is null.");
-                }
-            } else {
-                // AnimationSetCache is borked!
-                throw HikariException("Cannot populate ParticleFactory because AnimationSetCache is null.");
+                factory.registerPrototype(name, instance);
             }
-        } else {
-            // ImageCache is borked!
-            throw HikariException("Cannot populate ParticleFactory because ImageCache is null.");
         }
     }
 
     void populateProjectileFactory(
         const std::string & descriptorFilePath,
-        const std::weak_ptr<hikari::ProjectileFactory> & factory,
-        ServiceLocator & services
+        ProjectileFactory & factory,
+        ImageCache & imageCache,
+        AnimationSetCache & animationSetCache
     ) {
-        auto imageCachePtr        = services.locateService<ImageCache>(Services::IMAGECACHE);
-        auto squirrelPtr          = services.locateService<SquirrelService>(Services::SCRIPTING);
-        auto animationSetCachePtr = services.locateService<AnimationSetCache>(Services::ANIMATIONSETCACHE);
+        HIKARI_LOG(debug) << "Populating projectile factory...";
 
-        if(auto imageCache = imageCachePtr.lock()) {
-            if(auto squirrel = squirrelPtr.lock()) {
-                if(auto animationSetCache = animationSetCachePtr.lock()) {
-                    if(auto factoryPtr = factory.lock()) {
+        if(FileSystem::exists(descriptorFilePath)) {
+            auto fileContents = FileSystem::openFileRead(descriptorFilePath);
+            Json::Value root;
+            Json::Reader reader;
 
-                        HIKARI_LOG(debug) << "Populating projectile factory...";
+            if(reader.parse(*fileContents, root, false)) {
+                auto templateCount = root.size();
 
-                        if(FileSystem::exists(descriptorFilePath)) {
-                            auto fileContents = FileSystem::openFileRead(descriptorFilePath);
-                            Json::Value root;
-                            Json::Reader reader;
+                if(templateCount > 0) {
+                    HIKARI_LOG(debug3) << "Found " << templateCount << " projectile template(s).";
 
-                            if(reader.parse(*fileContents, root, false)) {
-                                auto templateCount = root.size();
+                    for(decltype(templateCount) i = 0; i < templateCount; ++i) {
+                        const auto & templateObject = root[i];
 
-                                if(templateCount > 0) {
-                                    HIKARI_LOG(debug3) << "Found " << templateCount << " projectile template(s).";
+                        const auto name              = templateObject["name"].asString();
+                        const auto damageId          = templateObject.get("damageId", 0).asInt();
+                        const auto isGravitated      = templateObject.get("gravitated", false).asBool();
+                        const auto isPhasing         = templateObject.get("phasing", true).asBool();
+                        const auto animationSet      = templateObject["animationSet"].asString();
+                        const auto animationName     = templateObject["animationName"].asString();
+                        const auto boundingBoxObject = templateObject["boundingBox"];
+                        const auto ageless           = templateObject.get("ageless", true).asBool();
+                        const auto maximumAge        = static_cast<float>(templateObject.get("maximumAge", 0.0f).asDouble());
+                        const auto reflectionType    = templateObject.get("reflectionType", "none").asString();
+                        const auto deathType         = templateObject.get("deathType", "Nothing").asString();
 
-                                    for(decltype(templateCount) i = 0; i < templateCount; ++i) {
-                                        const auto & templateObject = root[i];
+                        hikari::BoundingBoxF boundingBox(
+                            0.0f,
+                            0.0f,
+                            static_cast<float>(boundingBoxObject["width"].asDouble()),
+                            static_cast<float>(boundingBoxObject["height"].asDouble())
+                        );
 
-                                        const auto name              = templateObject["name"].asString();
-                                        const auto damageId          = templateObject.get("damageId", 0).asInt();
-                                        const auto isGravitated      = templateObject.get("gravitated", false).asBool();
-                                        const auto isPhasing         = templateObject.get("phasing", true).asBool();
-                                        const auto animationSet      = templateObject["animationSet"].asString();
-                                        const auto animationName     = templateObject["animationName"].asString();
-                                        const auto boundingBoxObject = templateObject["boundingBox"];
-                                        const auto ageless           = templateObject.get("ageless", true).asBool();
-                                        const auto maximumAge        = static_cast<float>(templateObject.get("maximumAge", 0.0f).asDouble());
-                                        const auto reflectionType    = templateObject.get("reflectionType", "none").asString();
-                                        const auto deathType         = templateObject.get("deathType", "Nothing").asString();
+                        boundingBox.setOrigin(
+                            static_cast<float>(boundingBoxObject["originX"].asDouble()),
+                            static_cast<float>(boundingBoxObject["originY"].asDouble())
+                        );
 
-                                        hikari::BoundingBoxF boundingBox(
-                                            0.0f,
-                                            0.0f,
-                                            static_cast<float>(boundingBoxObject["width"].asDouble()),
-                                            static_cast<float>(boundingBoxObject["height"].asDouble())
-                                        );
+                        auto instance = std::make_shared<hikari::Projectile>();
+                        auto animationSetPtr = animationSetCache.get(animationSet);
+                        auto spriteTexture = imageCache.get(animationSetPtr->getImageFileName());
+                        instance->setAnimationSet(animationSetPtr);
+                        instance->setGravitated(isGravitated);
+                        instance->setPhasing(isPhasing);
+                        instance->changeAnimation(animationName);
+                        instance->setBoundingBox(boundingBox);
+                        instance->setDamageId(damageId);
+                        instance->setAgeless(ageless);
+                        instance->setMaximumAge(maximumAge);
 
-                                        boundingBox.setOrigin(
-                                            static_cast<float>(boundingBoxObject["originX"].asDouble()),
-                                            static_cast<float>(boundingBoxObject["originY"].asDouble())
-                                        );
+                        if(reflectionType == "none") {
+                            // Default; do nothing
+                        } else if(reflectionType == "x") {
+                            instance->setReflectionType(Projectile::REFLECT_X);
 
-                                        auto instance = std::make_shared<hikari::Projectile>();
-                                        auto animationSetPtr = animationSetCache->get(animationSet);
-                                        auto spriteTexture = imageCache->get(animationSetPtr->getImageFileName());
-                                        instance->setAnimationSet(animationSetPtr);
-                                        instance->setGravitated(isGravitated);
-                                        instance->setPhasing(isPhasing);
-                                        instance->changeAnimation(animationName);
-                                        instance->setBoundingBox(boundingBox);
-                                        instance->setDamageId(damageId);
-                                        instance->setAgeless(ageless);
-                                        instance->setMaximumAge(maximumAge);
-
-                                        if(reflectionType == "none") {
-                                            // Default; do nothing
-                                        } else if(reflectionType == "x") {
-                                            instance->setReflectionType(Projectile::REFLECT_X);
-
-                                        } else if(reflectionType == "y") {
-                                            instance->setReflectionType(Projectile::REFLECT_Y);
-                                        } else if(reflectionType == "xy") {
-                                            instance->setReflectionType(Projectile::REFLECT_XY);
-                                        }
-
-                                        if(deathType == "Nothing") {
-                                            // Default; do nothing
-                                        } else if(deathType == "Small") {
-                                            instance->setDeathType(EntityDeathType::Small);
-                                        } else if(deathType == "Hero") {
-                                            instance->setDeathType(EntityDeathType::Hero);
-                                        }
-
-                                        factoryPtr->registerPrototype(name, instance);
-                                    }
-                                } else {
-                                    HIKARI_LOG(debug3) << "No projectile templates found.";
-                                }
-                            }
-                        } else {
-                            HIKARI_LOG(debug3) << "Can't find projectile descriptor file: \"" << descriptorFilePath << "\"";
+                        } else if(reflectionType == "y") {
+                            instance->setReflectionType(Projectile::REFLECT_Y);
+                        } else if(reflectionType == "xy") {
+                            instance->setReflectionType(Projectile::REFLECT_XY);
                         }
-                    } else {
-                        // ItemFactory is borked!
-                        throw HikariException("Cannot populate ProjectileFactory because ProjectileFactory is null.");
+
+                        if(deathType == "Nothing") {
+                            // Default; do nothing
+                        } else if(deathType == "Small") {
+                            instance->setDeathType(EntityDeathType::Small);
+                        } else if(deathType == "Hero") {
+                            instance->setDeathType(EntityDeathType::Hero);
+                        }
+
+                        factory.registerPrototype(name, instance);
                     }
                 } else {
-                    // AnimationSetCache is borked!
-                    throw HikariException("Cannot populate ProjectileFactory because AnimationSetCache is null.");
+                    HIKARI_LOG(debug3) << "No projectile templates found.";
                 }
-            } else {
-                // SquirrelService is borked!
-                throw HikariException("Cannot populate ProjectileFactory because SquirrelService is null.");
             }
         } else {
-            // ImageCache is borked!
-            throw HikariException("Cannot populate ProjectileFactory because ImageCache is null.");
+            HIKARI_LOG(debug3) << "Can't find projectile descriptor file: \"" << descriptorFilePath << "\"";
         }
     }
 
     void populateWeaponTable(
         const std::string & descriptorFilePath,
-        const std::weak_ptr<hikari::WeaponTable> & weaponTable,
-        ServiceLocator & services
+        WeaponTable & weaponTable
     ) {
         //std::string fileName = "assets/weapons/weapons.json";
 
@@ -562,47 +470,45 @@ namespace FactoryHelpers {
         };
 
         if(FileSystem::exists(descriptorFilePath)) {
-            if(auto table = weaponTable.lock()) {
-                auto fs = FileSystem::openFileRead(descriptorFilePath);
-                Json::Reader reader;
-                Json::Value root;
-                bool success = reader.parse(*fs, root, false);
+            auto fs = FileSystem::openFileRead(descriptorFilePath);
+            Json::Reader reader;
+            Json::Value root;
+            bool success = reader.parse(*fs, root, false);
 
-                if(!success) {
-                    HIKARI_LOG(info) << "Weapons couldn't be loaded!";
-                } else {
-                    HIKARI_LOG(debug) << "Loading weapon definitions...";
+            if(!success) {
+                HIKARI_LOG(info) << "Weapons couldn't be loaded!";
+            } else {
+                HIKARI_LOG(debug) << "Loading weapon definitions...";
 
-                    auto templateCount = root.size();
+                auto templateCount = root.size();
 
-                    if(templateCount > 0) {
-                        for(decltype(templateCount) i = 0; i < templateCount; ++i) {
-                            const auto & templateObject = root[i];
+                if(templateCount > 0) {
+                    for(decltype(templateCount) i = 0; i < templateCount; ++i) {
+                        const auto & templateObject = root[i];
 
-                            const auto name           = templateObject["name"].asString();
-                            const auto label          = templateObject.get("label", "U.WEAPON").asString();
-                            const auto damageId       = templateObject.get("damageId", 0).asInt();
-                            const auto paletteId      = templateObject.get("paletteId", -1).asInt();
-                            const auto projectileType = templateObject["projectileType"].asString();
-                            const auto limit          = templateObject["limit"].asInt();
-                            const auto usageCost      = static_cast<float>(templateObject["usageCost"].asDouble());
-                            const auto usageSound     = templateObject["usageSound"].asString();
-                            const auto usageActions   = templateObject["usageActions"];
+                        const auto name           = templateObject["name"].asString();
+                        const auto label          = templateObject.get("label", "U.WEAPON").asString();
+                        const auto damageId       = templateObject.get("damageId", 0).asInt();
+                        const auto paletteId      = templateObject.get("paletteId", -1).asInt();
+                        const auto projectileType = templateObject["projectileType"].asString();
+                        const auto limit          = templateObject["limit"].asInt();
+                        const auto usageCost      = static_cast<float>(templateObject["usageCost"].asDouble());
+                        const auto usageSound     = templateObject["usageSound"].asString();
+                        const auto usageActions   = templateObject["usageActions"];
 
-                            auto weaponInstance = std::make_shared<Weapon>(name, limit, damageId, paletteId, usageCost);
-                            auto weaponActions = std::vector<std::shared_ptr<WeaponAction>>();
+                        auto weaponInstance = std::make_shared<Weapon>(name, limit, damageId, paletteId, usageCost);
+                        auto weaponActions = std::vector<std::shared_ptr<WeaponAction>>();
 
-                            auto actionCount = usageActions.size();
+                        auto actionCount = usageActions.size();
 
-                            for(decltype(actionCount) actionIndex = 0; actionIndex < actionCount; ++actionIndex) {
-                                weaponActions.push_back(parseWeaponAction(usageActions[actionIndex]));
-                            }
-
-                            weaponInstance->setActions(weaponActions);
-                            weaponInstance->setLabel(label);
-                            weaponInstance->setSound(usageSound);
-                            table->addWeapon(weaponInstance);
+                        for(decltype(actionCount) actionIndex = 0; actionIndex < actionCount; ++actionIndex) {
+                            weaponActions.push_back(parseWeaponAction(usageActions[actionIndex]));
                         }
+
+                        weaponInstance->setActions(weaponActions);
+                        weaponInstance->setLabel(label);
+                        weaponInstance->setSound(usageSound);
+                        weaponTable.addWeapon(weaponInstance);
                     }
                 }
             }

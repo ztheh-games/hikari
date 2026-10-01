@@ -1,7 +1,6 @@
 #ifndef HIKARI_CLIENT_GAME_WEAPONTABLE
 #define HIKARI_CLIENT_GAME_WEAPONTABLE
 
-#include "hikari/core/util/Service.hpp"
 
 #include <memory>
 #include <string>
@@ -11,7 +10,7 @@ namespace hikari {
 
   class Weapon;
 
-  class WeaponTable : public Service {
+  class WeaponTable {
   private:
     std::vector<std::shared_ptr<Weapon>> weapons;
 

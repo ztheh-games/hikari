@@ -1,14 +1,11 @@
 #include "hikari/client/game/OptionsState.hpp"
-#include "hikari/client/game/InputService.hpp"
 #include "hikari/client/game/Input.hpp"
 #include "hikari/client/audio/AudioService.hpp"
 #include "hikari/client/gui/GuiService.hpp"
 #include "hikari/client/gui/Menu.hpp"
 #include "hikari/client/gui/MenuItem.hpp"
-#include "hikari/client/Services.hpp"
 
 #include "hikari/core/game/GameController.hpp"
-#include "hikari/core/util/ServiceLocator.hpp"
 #include "hikari/core/util/Log.hpp"
 
 #include <guichan/widgets/container.hpp>
@@ -28,12 +25,11 @@ namespace hikari {
     const std::string OptionsState::MUSIC_LABEL_TEXT = "MUSIC";
     const std::string OptionsState::SAMPLE_LABEL_TEXT = "SAMPLE";
 
-    OptionsState::OptionsState(const std::string &name, const Json::Value &params, GameController & controller, ServiceLocator &services)
+    OptionsState::OptionsState(const std::string &name, const Json::Value &params, GameController & controller, GuiService & guiService)
         : GameState()
         , name(name)
         , controller(controller)
-        , guiService(services.locateService<GuiService>(Services::GUISERVICE))
-        , input(services.locateService<InputService>(Services::INPUT))
+        , guiService(guiService)
         , guiContainer(new gcn::Container())
         , guiLabel(new gcn::Label())
         , audioLabel(new gcn::Label())
@@ -133,9 +129,7 @@ namespace hikari {
     }
 
     void OptionsState::render(sf::RenderTarget &target) {
-        if(auto gui = guiService.lock()) {
-            gui->renderAsTop(guiContainer.get(), target);
-        }
+        guiService.renderAsTop(guiContainer.get(), target);
     }
 
     bool OptionsState::update(float dt) {
@@ -145,28 +139,24 @@ namespace hikari {
 
     void OptionsState::onEnter() {
         // Attach our GUI
-        if(auto gui = guiService.lock()) {
-            auto & topContainer = gui->getRootContainer();
+        auto & topContainer = guiService.getRootContainer();
 
-            topContainer.add(guiContainer.get(), 0, 0);
-            guiContainer->setEnabled(true);
-            guiContainer->requestFocus();
-            guiMenu->setEnabled(true);
-            guiMenu->requestFocus();
-        }
+        topContainer.add(guiContainer.get(), 0, 0);
+        guiContainer->setEnabled(true);
+        guiContainer->requestFocus();
+        guiMenu->setEnabled(true);
+        guiMenu->requestFocus();
         
         goToNextState = false;
     }
 
     void OptionsState::onExit() {
         // Remove our GUI
-        if(auto gui = guiService.lock()) {
-            auto & topContainer = gui->getRootContainer();
+        auto & topContainer = guiService.getRootContainer();
 
-            topContainer.remove(guiContainer.get());
-            guiMenu->setEnabled(false);
-            guiContainer->setEnabled(false);
-        }
+        topContainer.remove(guiContainer.get());
+        guiMenu->setEnabled(false);
+        guiContainer->setEnabled(false);
     }
 
     const std::string & OptionsState::getName() const {
