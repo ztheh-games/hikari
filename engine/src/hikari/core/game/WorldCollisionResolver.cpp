@@ -1,5 +1,6 @@
 #include "hikari/core/game/WorldCollisionResolver.hpp"
 #include "hikari/core/game/CollisionInfo.hpp"
+#include "hikari/core/game/CollisionSelection.hpp"
 #include "hikari/core/game/Direction.hpp"
 #include "hikari/core/game/map/Room.hpp"
 #include "hikari/core/game/map/Tileset.hpp"
@@ -122,6 +123,7 @@ namespace hikari {
                     static_cast<float>(xMax - xMin),
                     1.0f
                 );
+                std::shared_ptr<Entity> selectedObstacle;
 
                 for(std::size_t i = 0; i < obstacleCount; ++i) {
                     if(obstacles[i]->getId() == ignoredObstacleId) {
@@ -130,19 +132,34 @@ namespace hikari {
 
                     const auto & obstacleBounds = obstacles[i]->getBoundingBox();
 
-                    if(sweepBox.intersects(obstacleBounds)) {
-                        collisionInfo.isCollisionY = true;
-                        collisionInfo.tileX = 0;
-                        collisionInfo.tileY = 0;
-                        collisionInfo.tileType = 0;
-                        collisionInfo.directionY = directionY;
-                        collisionInfo.obstacleId = obstacles[i]->getId();
+                    if(sweepBox.intersects(obstacleBounds) &&
+                        (!selectedObstacle ||
+                            CollisionSelection::isPreferredVerticalObstacle(
+                                directionY,
+                                obstacleBounds,
+                                obstacles[i]->getId(),
+                                selectedObstacle->getBoundingBox(),
+                                selectedObstacle->getId()
+                            )
+                        )
+                    ) {
+                        selectedObstacle = obstacles[i];
+                    }
+                }
 
-                        if(directionY == Directions::Up) {
-                            collisionInfo.correctedY = static_cast<int>(obstacleBounds.getBottom() + 1);
-                        } else if(directionY == Directions::Down) {
-                            collisionInfo.correctedY = static_cast<int>(obstacleBounds.getTop());
-                        }
+                if(selectedObstacle) {
+                    const auto & obstacleBounds = selectedObstacle->getBoundingBox();
+                    collisionInfo.isCollisionY = true;
+                    collisionInfo.tileX = 0;
+                    collisionInfo.tileY = 0;
+                    collisionInfo.tileType = 0;
+                    collisionInfo.directionY = directionY;
+                    collisionInfo.obstacleId = selectedObstacle->getId();
+
+                    if(directionY == Directions::Up) {
+                        collisionInfo.correctedY = static_cast<int>(obstacleBounds.getBottom() + 1);
+                    } else if(directionY == Directions::Down) {
+                        collisionInfo.correctedY = static_cast<int>(obstacleBounds.getTop());
                     }
                 }
 
