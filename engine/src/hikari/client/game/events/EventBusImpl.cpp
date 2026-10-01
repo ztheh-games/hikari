@@ -2,7 +2,9 @@
 #include "hikari/client/game/events/EventData.hpp"
 #include "hikari/core/util/Log.hpp"
 
+#include <algorithm>
 #include <iterator>
+#include <utility>
 
 namespace hikari {
 
@@ -62,7 +64,8 @@ namespace hikari {
             const EventListenerList & eventListenerList = findIt->second;
 
             for(auto it = eventListenerList.cbegin(); it != eventListenerList.cend(); ++it) {
-                auto listener = (*it);
+                // Copy so the delegate survives if it removes itself while running.
+                const EventListenerDelegate listener = (*it);
 
                 listener(event);
 
@@ -98,20 +101,20 @@ namespace hikari {
         if(findIt != std::end(eventListeners)) {
             EventQueue & eventQueue = eventQueues[activeQueueIndex];
 
-            auto it = std::begin(eventQueue);
+            const auto isOfType = [&type](const EventDataPtr & event) {
+                return event->getEventType() == type;
+            };
 
-            while(it != std::end(eventQueue)) {
-                // Keep next iterator since erasing will invalidate the current iterator
-                auto thisIt = it;
-                ++it;
+            if(allOfType) {
+                const auto newEnd = std::remove_if(std::begin(eventQueue), std::end(eventQueue), isOfType);
+                success = newEnd != std::end(eventQueue);
+                eventQueue.erase(newEnd, std::end(eventQueue));
+            } else {
+                const auto it = std::find_if(std::begin(eventQueue), std::end(eventQueue), isOfType);
 
-                if((*thisIt)->getEventType() == type) {
-                    eventQueue.erase(thisIt);
+                if(it != std::end(eventQueue)) {
+                    eventQueue.erase(it);
                     success = true;
-
-                    if(!allOfType) {
-                        break;
-                    }
                 }
             }
         }
@@ -128,7 +131,7 @@ namespace hikari {
 
         // Process queued events
         while(!eventQueues[queueToProcessIndex].empty()) {
-            EventDataPtr event = eventQueues[queueToProcessIndex].front();
+            EventDataPtr event = std::move(eventQueues[queueToProcessIndex].front());
             eventQueues[queueToProcessIndex].pop_front();
 
             const EventType & eventType = event->getEventType();
@@ -141,7 +144,7 @@ namespace hikari {
 
                 // Call each listener
                 for(auto it = std::begin(listeners); it != std::end(listeners); ++it) {
-                    EventListenerDelegate listener = (*it);
+                    const EventListenerDelegate listener = (*it);
                     listener(event);
                 }
             }
@@ -156,9 +159,9 @@ namespace hikari {
 
         if(!queueFlushed) {
             while(!eventQueues[queueToProcessIndex].empty()) {
-                auto event = eventQueues[queueToProcessIndex].back();
+                auto event = std::move(eventQueues[queueToProcessIndex].back());
                 eventQueues[queueToProcessIndex].pop_back();
-                eventQueues[activeQueueIndex].push_front(event);
+                eventQueues[activeQueueIndex].push_front(std::move(event));
             }
         }
 

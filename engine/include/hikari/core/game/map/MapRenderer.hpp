@@ -50,10 +50,10 @@ namespace hikari {
         MapRenderer(const RoomPtr &room, const TileDataPtr &tileData);
 
         void setRoom(const RoomPtr &room);
-        RoomPtr getRoom() const;
+        const RoomPtr & getRoom() const;
 
         void setTileData(const TileDataPtr &tileData);
-        TileDataPtr getTileData() const;
+        const TileDataPtr & getTileData() const;
 
         void setCullRegion(const Rectangle2D<int> &cullRegion);
 

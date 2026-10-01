@@ -27,7 +27,7 @@ namespace hikari {
     protected:
         float getTimeElapsed() const;
         unsigned int getCurrentFrameIndex() const;
-        std::shared_ptr<Animation> getAnimation() const;
+        const std::shared_ptr<Animation> & getAnimation() const;
 
     public:
         Animator();

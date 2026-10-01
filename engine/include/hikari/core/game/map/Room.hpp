@@ -40,7 +40,7 @@ namespace hikari {
         std::vector<std::shared_ptr<Spawner>> spawners;
         std::vector<std::shared_ptr<Force>> forces;
         std::vector<BlockSequenceDescriptor> blockSequences;
-        std::list<BoundingBox<float>> ladders;
+        std::vector<BoundingBox<float>> ladders;
         std::shared_ptr<Door> entranceDoor;
         std::shared_ptr<Door> exitDoor;
         std::string bossEntityName;
@@ -159,7 +159,7 @@ namespace hikari {
          *
          * @return list of ladder rectangles
          */
-        const std::list<BoundingBox<float>> & getLadders() const;
+        const std::vector<BoundingBox<float>> & getLadders() const;
 
         /**
          * Gets a reference to the list of Forces in the room.

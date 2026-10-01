@@ -46,7 +46,7 @@ namespace hikari {
         void setAnimationSet(const std::weak_ptr<AnimationSet> & animationSetPtr);
 
         const std::string & getAnimation() const;
-        const std::weak_ptr<AnimationSet> getAnimationSet() const;
+        const std::weak_ptr<AnimationSet> & getAnimationSet() const;
 
         bool isXFlipped() const;
         void setXFlipped(bool isFlipped);

@@ -16,7 +16,7 @@ namespace hikari {
         std::string itemName;
         bool canSpawnAgain;
 
-        void handleEntityDeathEvent(EventDataPtr event);
+        void handleEntityDeathEvent(const EventDataPtr & event);
 
     public:
         ItemSpawner(const std::string & itemNam);

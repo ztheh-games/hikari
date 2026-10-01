@@ -32,7 +32,7 @@ namespace hikari {
         }
     }
 
-    const std::shared_ptr<sf::Texture> Tileset::getTexture() const {
+    const std::shared_ptr<sf::Texture> & Tileset::getTexture() const {
         return texture;
     }
 

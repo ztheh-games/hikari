@@ -3,17 +3,13 @@
 
 #include "hikari/core/util/Log.hpp"
 
+#include <utility>
+
 namespace hikari {
-    Shot::Shot(std::list<std::weak_ptr<GameObject>> trackedObjects)
-        : trackedObjects(trackedObjects)
+    Shot::Shot(std::vector<std::weak_ptr<GameObject>> trackedObjects)
+        : trackedObjects(std::move(trackedObjects))
     {
-        HIKARI_LOG(debug4) << "Created Shot with " << trackedObjects.size() << " tracked objects!";
-    }
-
-    Shot::Shot(const Shot & proto)
-        : trackedObjects(proto.trackedObjects)
-    {
-
+        HIKARI_LOG(debug4) << "Created Shot with " << this->trackedObjects.size() << " tracked objects!";
     }
 
     bool Shot::isActive() const {

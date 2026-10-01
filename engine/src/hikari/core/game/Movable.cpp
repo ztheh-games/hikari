@@ -108,7 +108,7 @@ namespace hikari {
 
     }
 
-    std::shared_ptr<CollisionResolver> Movable::getCollisionResolver() {
+    const std::shared_ptr<CollisionResolver> & Movable::getCollisionResolver() {
         return collisionResolver;
     }
 

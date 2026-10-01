@@ -42,7 +42,7 @@ namespace hikari {
 
     void WorldCollisionResolver::sweepHorizontalEdge(const int& x, const int& yMin, const int& yMax, const Direction& directionX, CollisionInfo& collisionInfo, int ignoredObstacleId) {
         if(world) {
-            const auto currentRoom = world->getCurrentRoom();
+            const auto & currentRoom = world->getCurrentRoom();
             if(currentRoom) {
                 const int tileSize = currentRoom->getGridSize();
                 const int tileX = x / tileSize;
@@ -51,8 +51,7 @@ namespace hikari {
 
                 collisionInfo.isCollisionX = false;
 
-                const auto obstacles = world->getObstacles();
-                const std::size_t obstacleCount = obstacles.size();
+                const auto & enemies = world->getActiveEnemies();
                 const BoundingBoxF sweepBox(
                     static_cast<float>(x),
                     static_cast<float>(yMin),
@@ -60,12 +59,14 @@ namespace hikari {
                     static_cast<float>(yMax - yMin)
                 );
 
-                for(std::size_t i = 0; i < obstacleCount; ++i) {
-                    if(obstacles[i]->getId() == ignoredObstacleId) {
+                for(const auto & enemy : enemies) {
+                    const Entity * obstacle = enemy.get();
+
+                    if(!obstacle->isObstacle() || obstacle->getId() == ignoredObstacleId) {
                         continue;
                     }
 
-                    const auto & obstacleBounds = obstacles[i]->getBoundingBox();
+                    const auto & obstacleBounds = obstacle->getBoundingBox();
 
                     if(sweepBox.intersects(obstacleBounds)) {
                         collisionInfo.isCollisionX = true;
@@ -73,7 +74,7 @@ namespace hikari {
                         collisionInfo.tileY = 0;
                         collisionInfo.tileType = 0;
                         collisionInfo.directionX = directionX;
-                        collisionInfo.obstacleId = obstacles[i]->getId();
+                        collisionInfo.obstacleId = obstacle->getId();
 
                         if(directionX == Directions::Left) {
                             collisionInfo.correctedX = static_cast<int>(obstacleBounds.getRight() + 1);
@@ -106,7 +107,7 @@ namespace hikari {
 
     void WorldCollisionResolver::sweepVerticalEdge(const int& y, const int& xMin, const int& xMax, const Direction& directionY, CollisionInfo& collisionInfo, int ignoredObstacleId) {
         if(world) {
-            const auto currentRoom = world->getCurrentRoom();
+            const auto & currentRoom = world->getCurrentRoom();
             if(currentRoom) {
                 const int tileSize = currentRoom->getGridSize();
                 const int tileY = y / tileSize;
@@ -115,35 +116,36 @@ namespace hikari {
 
                 collisionInfo.isCollisionY = false;
 
-                const auto obstacles = world->getObstacles();
-                const std::size_t obstacleCount = obstacles.size();
+                const auto & enemies = world->getActiveEnemies();
                 const BoundingBoxF sweepBox(
                     static_cast<float>(xMin),
                     static_cast<float>(y),
                     static_cast<float>(xMax - xMin),
                     1.0f
                 );
-                std::shared_ptr<Entity> selectedObstacle;
+                const Entity * selectedObstacle = nullptr;
 
-                for(std::size_t i = 0; i < obstacleCount; ++i) {
-                    if(obstacles[i]->getId() == ignoredObstacleId) {
+                for(const auto & enemy : enemies) {
+                    const Entity * obstacle = enemy.get();
+
+                    if(!obstacle->isObstacle() || obstacle->getId() == ignoredObstacleId) {
                         continue;
                     }
 
-                    const auto & obstacleBounds = obstacles[i]->getBoundingBox();
+                    const auto & obstacleBounds = obstacle->getBoundingBox();
 
                     if(sweepBox.intersects(obstacleBounds) &&
                         (!selectedObstacle ||
                             CollisionSelection::isPreferredVerticalObstacle(
                                 directionY,
                                 obstacleBounds,
-                                obstacles[i]->getId(),
+                                obstacle->getId(),
                                 selectedObstacle->getBoundingBox(),
                                 selectedObstacle->getId()
                             )
                         )
                     ) {
-                        selectedObstacle = obstacles[i];
+                        selectedObstacle = obstacle;
                     }
                 }
 
@@ -188,7 +190,7 @@ namespace hikari {
 
     void WorldCollisionResolver::determineTileCorrection(const Direction& direction, CollisionInfo& collisionInfo) {
         if(world) {
-            const auto currentRoom = world->getCurrentRoom();
+            const auto & currentRoom = world->getCurrentRoom();
             if(currentRoom) {
                 updateTileBounds(collisionInfo.tileX, collisionInfo.tileY);
 
@@ -219,7 +221,7 @@ namespace hikari {
 
     void WorldCollisionResolver::updateTileBounds(int tileX, int tileY) {
         if(world) {
-            const auto currentRoom = world->getCurrentRoom();
+            const auto & currentRoom = world->getCurrentRoom();
 
             if(currentRoom) {
                 const int tileSize = currentRoom->getGridSize();

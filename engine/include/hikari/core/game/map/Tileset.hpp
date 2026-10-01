@@ -52,7 +52,7 @@ namespace hikari {
         );
         const size_t& getTileSize() const;
         const sf::IntRect& getTileRect(const unsigned int &index) const;
-        const std::shared_ptr<sf::Texture> getTexture() const;
+        const std::shared_ptr<sf::Texture> & getTexture() const;
         void update(float delta);
     };
 

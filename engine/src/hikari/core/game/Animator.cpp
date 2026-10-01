@@ -2,6 +2,8 @@
 #include "hikari/core/game/Animation.hpp"
 #include "hikari/core/game/AnimationPlaybackException.hpp"
 
+#include <utility>
+
 namespace hikari {
     
     Animator::Animator() 
@@ -25,7 +27,7 @@ namespace hikari {
         return currentFrameIndex;
     }
 
-    std::shared_ptr<Animation> Animator::getAnimation() const {
+    const std::shared_ptr<Animation> & Animator::getAnimation() const {
         return animation;
     }
 
@@ -102,7 +104,7 @@ namespace hikari {
                 rewind();
             }
 
-            this->animation = animation;
+            this->animation = std::move(animation);
         } else {
             // TODO: thrown exception or what?
         }

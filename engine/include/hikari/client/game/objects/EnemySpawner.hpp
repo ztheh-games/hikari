@@ -29,7 +29,7 @@ namespace hikari {
         bool wasReawoken;             // True after going to sleep and waking up
         Sqrat::Table instanceConfig;
 
-        void handleObjectRemovedEvent(EventDataPtr event);
+        void handleObjectRemovedEvent(const EventDataPtr & event);
 
     public:
         EnemySpawner(const std::string & enemyType, 

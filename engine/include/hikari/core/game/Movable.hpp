@@ -136,7 +136,7 @@ namespace hikari {
         unsigned int getGravityApplicationThreshold() const;
         void setGravityApplicationThreshold(unsigned int threshold);
 
-        static std::shared_ptr<CollisionResolver> getCollisionResolver();
+        static const std::shared_ptr<CollisionResolver> & getCollisionResolver();
         static void setCollisionResolver(std::shared_ptr<CollisionResolver> resolver);
 
         static void setGravity(const float& gravity);

@@ -72,7 +72,7 @@ namespace hikari {
         return currentAnimation;
     }
 
-    const std::weak_ptr<AnimationSet> AnimatedSprite::getAnimationSet() const {
+    const std::weak_ptr<AnimationSet> & AnimatedSprite::getAnimationSet() const {
         return animationSet;
     }
 
