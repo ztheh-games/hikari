@@ -11,6 +11,11 @@ Gameplay and feature videos can be seen on [hakaselabshikari's YouTube page][7].
 
 You can also contact us via our [Facebook fan page][8], if that's your kind of thing.
 
+## Architecture ##
+
+See [the architecture overview](docs/architecture.md) for a high-level map of
+the runtime, game states, services, content pipeline, and extension points.
+
 ## Customization & Extension ##
 
 The game is designed to be as data-driven as possible and as such it allows for customization and extension.
