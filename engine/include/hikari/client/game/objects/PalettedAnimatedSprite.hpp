@@ -1,26 +1,22 @@
 #ifndef HIKARI_CLIENT_GAME_OBJECTS_PALETTEDANIMATEDSPRITE
 #define HIKARI_CLIENT_GAME_OBJECTS_PALETTEDANIMATEDSPRITE
 
-#include "hikari/client/game/objects/AnimatedSprite.hpp"
+#include "hikari/core/graphics/Graphics.hpp"
 
-#include <SFML/Graphics/Color.hpp>
+#include "hikari/client/game/objects/AnimatedSprite.hpp"
 
 #include <memory>
 #include <vector>
 
-namespace sf {
-    class Image;
-    class Shader;
-    class Texture;
-}
+
 
 namespace hikari {
     class PalettedAnimatedSprite : public AnimatedSprite {
     private:
-        static std::unique_ptr<sf::Shader> pixelShader;
-        static std::unique_ptr<sf::Image> colorTableImage;
-        static std::unique_ptr<sf::Texture> colorTableTexture;
-        static std::vector<std::vector<sf::Color>> colorTable;
+        static std::unique_ptr<hikari::gfx::Shader> pixelShader;
+        static std::unique_ptr<hikari::gfx::Image> colorTableImage;
+        static std::unique_ptr<hikari::gfx::Texture> colorTableTexture;
+        static std::vector<std::vector<hikari::gfx::Color>> colorTable;
 
         // The index of the "shared palette", used to color multiple things (hero, powerups, etc.)
         static int sharedPaletteIndex;
@@ -32,12 +28,12 @@ namespace hikari {
         bool useSharedPalette;
 
     public:
-        static void setShaderFile(const std::string & file);
-        static void createColorTable(const std::vector<std::vector<sf::Color>> & colors);
+        static void initializePaletteShader();
+        static void createColorTable(const std::vector<std::vector<hikari::gfx::Color>> & colors);
         static void destroySharedResources();
         static void setSharedPaletteIndex(int index);
         static int getSharedPaletteIndex();
-        static const std::vector<std::vector<sf::Color>> & getColorTable();
+        static const std::vector<std::vector<hikari::gfx::Color>> & getColorTable();
 
         PalettedAnimatedSprite();
         PalettedAnimatedSprite(const PalettedAnimatedSprite & proto);
@@ -48,7 +44,7 @@ namespace hikari {
         //
         virtual void update(float dt);
 
-        virtual void render(sf::RenderTarget &target) const;
+        virtual void render(hikari::gfx::RenderTarget &target) const;
 
         int getPaletteIndex() const;
         void setPaletteIndex(int index);

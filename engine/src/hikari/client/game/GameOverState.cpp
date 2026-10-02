@@ -1,3 +1,5 @@
+#include "hikari/core/graphics/Graphics.hpp"
+#include "hikari/client/platform/Events.hpp"
 #include "hikari/client/game/GameOverState.hpp"
 #include "hikari/client/game/Input.hpp"
 #include "hikari/client/audio/AudioService.hpp"
@@ -144,11 +146,11 @@ namespace hikari {
         }
     }
 
-    void GameOverState::handleEvent(sf::Event &event) {
+    void GameOverState::handleEvent(hikari::platform::Event &event) {
 
     }
 
-    void GameOverState::render(sf::RenderTarget &target) {
+    void GameOverState::render(hikari::gfx::RenderTarget &target) {
         guiService.renderAsTop(guiWrapper.get(), target);
     }
 

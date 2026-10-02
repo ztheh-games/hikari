@@ -3,6 +3,7 @@
 #include "hikari/client/audio/GMESoundStream.hpp"
 
 #include <json/value.h>
+#include <stdexcept>
 
 namespace hikari {
 
@@ -17,30 +18,22 @@ namespace hikari {
         , mutedFlag(false)
         , sampleVolume(DEFAULT_VOLUME)
         , musicVolume(DEFAULT_VOLUME)
-        , musicStream(MUSIC_BUFFER_SIZE, 1)
-        , sampleStream(SAMPLE_BUFFER_SIZE, 12)
         , library(nullptr)
     {
         if(isValidConfiguration(configuration)) {
             auto musicDataFilePath = configuration["music"].asString();
-            musicLoaded = musicStream.open(musicDataFilePath);
+            musicLoaded = GMESoundStream::validateFile(musicDataFilePath);
 
             auto samplesDataFilePath = configuration["samples"].asString();
-            samplesLoaded = sampleStream.open(samplesDataFilePath);
+            samplesLoaded = GMESoundStream::validateFile(samplesDataFilePath);
 
             library.reset(new SoundLibrary(configuration["library"].asString()));
+        } else {
+            throw std::invalid_argument("Invalid audio service configuration");
         }
     }
 
-    AudioService::~AudioService() {
-        if(isMusicLoaded()) {
-            musicStream.stop();
-        }
-
-        if(isSamplesLoaded()) {
-            sampleStream.stop();
-        }
-    }
+    AudioService::~AudioService() = default;
 
     bool AudioService::isValidConfiguration(const Json::Value &configuration) const {
         bool valid = configuration.isMember("music")
@@ -104,6 +97,8 @@ namespace hikari {
     bool AudioService::isSamplesLoaded() const {
         return samplesLoaded;
     }
+
+    void AudioService::update() { library->checkErrors(); }
 
     void AudioService::mute() {
         mutedFlag = true;

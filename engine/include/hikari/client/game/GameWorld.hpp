@@ -1,12 +1,12 @@
 #ifndef HIKARI_CLIENT_GAME_GAMEWORLD
 #define HIKARI_CLIENT_GAME_GAMEWORLD
 
+#include "hikari/core/graphics/Graphics.hpp"
+
 #include "hikari/core/game/Updatable.hpp"
 #include "hikari/core/math/Vector2.hpp"
 #include "hikari/core/game/Direction.hpp"
 #include "hikari/core/geom/BoundingBox.hpp"
-
-#include <SFML/Graphics/RenderTarget.hpp>
 
 #include <memory>
 #include <queue>
@@ -14,9 +14,7 @@
 #include <vector>
 #include <list>
 
-namespace sf {
-    class RenderTarget;
-}
+
 
 namespace hikari {
 
@@ -127,7 +125,7 @@ namespace hikari {
         */
         const Direction getPlayerFacingDirection() const;
 
-        void render(sf::RenderTarget &target);
+        void render(hikari::gfx::RenderTarget &target);
         virtual void update(float dt);
     };
 }

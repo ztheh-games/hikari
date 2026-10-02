@@ -1,3 +1,4 @@
+#include "hikari/core/graphics/Graphics.hpp"
 #include "hikari/client/game/objects/Hero.hpp"
 #include "hikari/client/game/objects/HeroClimbingMobilityState.hpp"
 #include "hikari/client/game/objects/HeroIdleMobilityState.hpp"
@@ -16,7 +17,6 @@
 #include "hikari/core/game/map/Tileset.hpp"
 #include "hikari/core/util/Log.hpp"
 #include "hikari/core/geom/GeometryUtils.hpp"
-#include <SFML/Graphics/RenderTarget.hpp>
 
 namespace hikari {
 
@@ -494,7 +494,7 @@ namespace hikari {
         }
     }
 
-    void Hero::render(sf::RenderTarget &target) {
+    void Hero::render(hikari::gfx::RenderTarget &target) {
         if(isVisible) {
             Entity::render(target);
         }

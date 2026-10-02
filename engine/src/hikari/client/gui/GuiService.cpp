@@ -1,3 +1,5 @@
+#include "hikari/core/graphics/Graphics.hpp"
+#include "hikari/client/platform/Events.hpp"
 #include "hikari/client/gui/GuiService.hpp"
 #include "hikari/client/gui/HikariImageLoader.hpp"
 #include "hikari/client/gui/InputHelper.hpp"
@@ -5,9 +7,7 @@
 #include "hikari/core/util/ImageCache.hpp"
 #include "hikari/core/util/Log.hpp"
 
-#include <SFML/Graphics.hpp>
-
-#include <guichan/sfml.hpp>
+#include "hikari/client/gui/Backend.hpp"
 #include <guichan/gui.hpp>
 #include <guichan/widgets/container.hpp>
 #include <guichan/hakase/fixedimagefont.hpp>
@@ -15,8 +15,35 @@
 #include <guichan/actionevent.hpp>
 
 #include <json/reader.h>
+#include <algorithm>
 
 namespace hikari {
+    namespace {
+        struct TargetBinding {
+            gcn::GpuGraphics & graphics;
+            gfx::RenderTarget & previous;
+            gfx::RenderTarget & target;
+            gfx::View view;
+            gfx::IntRect clip;
+            TargetBinding(gcn::GpuGraphics & graphics, gfx::RenderTarget & target)
+                : graphics(graphics), previous(graphics.getRenderTarget()), target(target),
+                  view(target.getView()), clip(target.getClip()) {
+                graphics.setRenderTarget(target);
+                target.setView(target.getDefaultView());
+            }
+            ~TargetBinding() {
+                target.setView(view);
+                target.setClip(clip);
+                graphics.setRenderTarget(previous);
+            }
+        };
+        struct HiddenWidget {
+            gcn::Widget & widget;
+            bool visible;
+            explicit HiddenWidget(gcn::Widget & widget) : widget(widget), visible(widget.isVisible()) { widget.setVisible(false); }
+            ~HiddenWidget() { widget.setVisible(visible); }
+        };
+    }
 
     class GuiService::GlobalRegistration {
     public:
@@ -32,11 +59,11 @@ namespace hikari {
 
     const std::string GuiService::DEFAULT_FONT_NAME = "default";
 
-    GuiService::GuiService(const Json::Value & config, ImageCache & imageCache, sf::RenderTarget & renderTarget)
+    GuiService::GuiService(const Json::Value & config, ImageCache & imageCache, hikari::gfx::RenderTarget & renderTarget)
         : renderTarget(renderTarget)
         , gui(new gcn::Gui())
-        , graphics(new gcn::SFMLGraphics(renderTarget))
-        , input(new gcn::SFMLInput())
+        , graphics(new gcn::GpuGraphics(renderTarget))
+        , input(new gcn::PlatformInput())
         , imageLoader(nullptr)
         , rootWidget(new gcn::Container())
         , rootContainer(new gcn::Container())
@@ -146,9 +173,9 @@ namespace hikari {
         });
     }
 
-    void GuiService::processEvent(sf::Event & evt) {
+    void GuiService::processEvent(hikari::platform::Event & evt) {
         if(input) {
-            input->pushInput(evt, renderTarget);
+            input->pushInput(evt);
         }
     }
 
@@ -177,41 +204,30 @@ namespace hikari {
     }
 
     void GuiService::renderRootContainer() {
-        bool isHudVisible = hudContainer->isVisible();
-        hudContainer->setVisible(false);
-
+        HiddenWidget hidden(*hudContainer);
         gui->draw();
-
-        hudContainer->setVisible(isHudVisible);
     }
 
-    void GuiService::renderRootContainer(sf::RenderTarget & target) {
-        sf::RenderTarget & oldTarget = graphics->getRenderTarget();
-
-        graphics->setRenderTarget(target);
+    void GuiService::renderRootContainer(hikari::gfx::RenderTarget & target) {
+        TargetBinding binding(*graphics,target);
         renderRootContainer();
-
-        graphics->setRenderTarget(oldTarget);
     }
 
-    void GuiService::renderAsTop(gcn::Widget * widget, sf::RenderTarget & target) {
+    void GuiService::renderAsTop(gcn::Widget * widget, hikari::gfx::RenderTarget & target) {
         if(widget) {
-            sf::RenderTarget & oldTarget = graphics->getRenderTarget();
-
-            graphics->setRenderTarget(target);
+            TargetBinding binding(*graphics,target);
             widget->_draw(graphics.get());
-
-            graphics->setRenderTarget(oldTarget);
         }
     }
 
     void GuiService::renderHudContainer() {
-        bool isRootVisible = rootContainer->isVisible();
-        rootContainer->setVisible(false);
-
+        HiddenWidget hidden(*rootContainer);
         gui->draw();
+    }
 
-        rootContainer->setVisible(isRootVisible);
+    void GuiService::renderHudContainer(gfx::RenderTarget & target) {
+        TargetBinding binding(*graphics,target);
+        renderHudContainer();
     }
 
 } // hikari

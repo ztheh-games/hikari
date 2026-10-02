@@ -10,8 +10,6 @@
 
 #include <json/value.h>
 
-#include <SFML/Graphics/Texture.hpp>
-
 #include <exception>
 #include <fstream>
 #include <iostream>

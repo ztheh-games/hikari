@@ -1,3 +1,5 @@
+#include "hikari/core/graphics/Graphics.hpp"
+#include "hikari/client/platform/Events.hpp"
 #include "hikari/client/game/PasswordState.hpp"
 #include "hikari/client/game/Input.hpp"
 #include "hikari/client/audio/AudioService.hpp"
@@ -42,11 +44,11 @@ namespace hikari {
 
     }
 
-    void PasswordState::handleEvent(sf::Event &event) {
+    void PasswordState::handleEvent(hikari::platform::Event &event) {
 
     }
 
-    void PasswordState::render(sf::RenderTarget &target) {
+    void PasswordState::render(hikari::gfx::RenderTarget &target) {
         guiService.renderAsTop(guiWrapper.get(), target);
     }
 

@@ -1,3 +1,4 @@
+#include "hikari/client/platform/Events.hpp"
 #include "hikari/client/game/RealTimeInput.hpp"
 
 namespace hikari {
@@ -8,15 +9,15 @@ namespace hikari {
         , keybindings()
     {
         // Set up defaut key bindings
-        bindKey(Input::BUTTON_UP,    sf::Keyboard::Key::Up);
-        bindKey(Input::BUTTON_RIGHT, sf::Keyboard::Key::Right);
-        bindKey(Input::BUTTON_DOWN,  sf::Keyboard::Key::Down);
-        bindKey(Input::BUTTON_LEFT,  sf::Keyboard::Key::Left);
-        bindKey(Input::BUTTON_SHOOT, sf::Keyboard::Key::A);
-        bindKey(Input::BUTTON_JUMP,  sf::Keyboard::Key::S);
-        bindKey(Input::BUTTON_START, sf::Keyboard::Key::Enter);
-        bindKey(Input::BUTTON_SELECT, sf::Keyboard::Key::RShift);
-        bindKey(Input::BUTTON_CANCEL, sf::Keyboard::Key::Escape);
+        bindKey(Input::BUTTON_UP,    hikari::platform::Keyboard::Key::Up);
+        bindKey(Input::BUTTON_RIGHT, hikari::platform::Keyboard::Key::Right);
+        bindKey(Input::BUTTON_DOWN,  hikari::platform::Keyboard::Key::Down);
+        bindKey(Input::BUTTON_LEFT,  hikari::platform::Keyboard::Key::Left);
+        bindKey(Input::BUTTON_SHOOT, hikari::platform::Keyboard::Key::A);
+        bindKey(Input::BUTTON_JUMP,  hikari::platform::Keyboard::Key::S);
+        bindKey(Input::BUTTON_START, hikari::platform::Keyboard::Key::Enter);
+        bindKey(Input::BUTTON_SELECT, hikari::platform::Keyboard::Key::RShift);
+        bindKey(Input::BUTTON_CANCEL, hikari::platform::Keyboard::Key::Escape);
     }
 
     const bool RealTimeInput::isUp(const Button &button) const {
@@ -166,18 +167,18 @@ namespace hikari {
     void RealTimeInput::update(float dt) {
         previousState = currentState;
 
-        currentState.buttonUp     = sf::Keyboard::isKeyPressed(keybindings[Input::BUTTON_UP]);
-        currentState.buttonRight  = sf::Keyboard::isKeyPressed(keybindings[Input::BUTTON_RIGHT]);
-        currentState.buttonDown   = sf::Keyboard::isKeyPressed(keybindings[Input::BUTTON_DOWN]);
-        currentState.buttonLeft   = sf::Keyboard::isKeyPressed(keybindings[Input::BUTTON_LEFT]);
-        currentState.buttonShoot  = sf::Keyboard::isKeyPressed(keybindings[Input::BUTTON_SHOOT]);
-        currentState.buttonJump   = sf::Keyboard::isKeyPressed(keybindings[Input::BUTTON_JUMP]);
-        currentState.buttonStart  = sf::Keyboard::isKeyPressed(keybindings[Input::BUTTON_START]);
-        currentState.buttonSelect = sf::Keyboard::isKeyPressed(keybindings[Input::BUTTON_SELECT]);
-        currentState.buttonCancel = sf::Keyboard::isKeyPressed(keybindings[Input::BUTTON_CANCEL]);
+        currentState.buttonUp     = hikari::platform::Keyboard::isKeyPressed(keybindings[Input::BUTTON_UP]);
+        currentState.buttonRight  = hikari::platform::Keyboard::isKeyPressed(keybindings[Input::BUTTON_RIGHT]);
+        currentState.buttonDown   = hikari::platform::Keyboard::isKeyPressed(keybindings[Input::BUTTON_DOWN]);
+        currentState.buttonLeft   = hikari::platform::Keyboard::isKeyPressed(keybindings[Input::BUTTON_LEFT]);
+        currentState.buttonShoot  = hikari::platform::Keyboard::isKeyPressed(keybindings[Input::BUTTON_SHOOT]);
+        currentState.buttonJump   = hikari::platform::Keyboard::isKeyPressed(keybindings[Input::BUTTON_JUMP]);
+        currentState.buttonStart  = hikari::platform::Keyboard::isKeyPressed(keybindings[Input::BUTTON_START]);
+        currentState.buttonSelect = hikari::platform::Keyboard::isKeyPressed(keybindings[Input::BUTTON_SELECT]);
+        currentState.buttonCancel = hikari::platform::Keyboard::isKeyPressed(keybindings[Input::BUTTON_CANCEL]);
     }
 
-    void RealTimeInput::bindKey(const Button & button, sf::Keyboard::Key key) {
+    void RealTimeInput::bindKey(const Button & button, hikari::platform::Keyboard::Key key) {
         keybindings[button] = key;
     }
 

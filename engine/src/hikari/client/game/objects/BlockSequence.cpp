@@ -1,3 +1,4 @@
+#include "hikari/core/graphics/Graphics.hpp"
 #include "hikari/client/game/GameWorld.hpp"
 #include "hikari/client/game/events/EventBus.hpp"
 #include "hikari/client/game/events/EventData.hpp"
@@ -10,8 +11,6 @@
 #include "hikari/client/game/objects/BlockTiming.hpp"
 #include "hikari/core/util/Log.hpp"
 
-#include <SFML/Graphics/RenderTarget.hpp>
-#include <SFML/Graphics/RectangleShape.hpp>
 
 namespace hikari {
     BlockSequence::BlockSequence(const BlockSequenceDescriptor & descriptor, GameWorld & world, int id)
@@ -45,7 +44,7 @@ namespace hikari {
             std::begin(blockPositions),
             std::end(blockPositions),
             [&](const Point2D<int> & topLeft){
-                sf::RectangleShape shape;
+                hikari::gfx::RectangleShape shape;
 
                 shape.setPosition({
                     static_cast<float>(topLeft.getX()),
@@ -213,7 +212,7 @@ namespace hikari {
         // }
     }
 
-    void BlockSequence::render(sf::RenderTarget &target) {
+    void BlockSequence::render(hikari::gfx::RenderTarget &target) {
         // target.draw(outlineShape);
 
         // for(auto it = std::begin(blockRects), end = std::end(blockRects); it != end; it++) {

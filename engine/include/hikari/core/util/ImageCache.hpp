@@ -1,15 +1,15 @@
 #ifndef HIKARI_CORE_UTIL_IMAGECACHE
 #define HIKARI_CORE_UTIL_IMAGECACHE
 
+#include "hikari/core/graphics/Graphics.hpp"
+
 #include "hikari/core/Platform.hpp"
 #include "hikari/core/util/ResourceCache.hpp"
 
-#include <SFML/Graphics/Color.hpp>
-#include <SFML/Graphics/Texture.hpp>
 
 namespace hikari {
 
-    class HIKARI_API ImageCache : public ResourceCache<sf::Texture> {
+    class HIKARI_API ImageCache : public ResourceCache<hikari::gfx::Texture> {
     public:
         static const bool USE_SMOOTHING;
         static const bool NO_SMOOTHING;
@@ -19,13 +19,13 @@ namespace hikari {
     private:
         bool enableSmoothing;
         bool enableMask;
-        sf::Color maskColor;
+        hikari::gfx::Color maskColor;
 
     protected:
         virtual ImageCache::Resource loadResource(const std::string &fileName);
 
     public:
-        ImageCache(bool smoothing, bool masking, const sf::Color &mask = sf::Color(255, 0, 255));
+        ImageCache(bool smoothing, bool masking, const hikari::gfx::Color &mask = hikari::gfx::Color(255, 0, 255));
 
         virtual ~ImageCache() { }
     };

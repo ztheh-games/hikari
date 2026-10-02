@@ -1,16 +1,17 @@
+#include "hikari/core/graphics/Graphics.hpp"
 #include "hikari/core/util/PhysFSUtils.hpp"
 #include "hikari/core/util/FileSystem.hpp"
 #include "hikari/core/util/PhysFS.hpp"
 #include <json/reader.h>
-#include <SFML/Graphics/Image.hpp>
-#include <SFML/Graphics/Texture.hpp>
+
+
 #include <memory>
 #include <sstream>
 #include <stdexcept>
 
 namespace hikari {
 
-    bool PhysFSUtils::loadImage(const std::string &fileName, sf::Texture &texture) {
+    bool PhysFSUtils::loadImage(const std::string &fileName, hikari::gfx::Texture &texture) {
         if(PhysFS::exists(fileName)) {
             auto fs = FileSystem::openFileRead(fileName);
 
@@ -22,10 +23,10 @@ namespace hikari {
 
             fs->read(buffer.get(), length);
 
-            // Load into a sf::Image first so you can apply color keying
-            sf::Image rawImage;
+            // Load into a hikari::gfx::Image first so you can apply color keying
+            hikari::gfx::Image rawImage;
             bool success = rawImage.loadFromMemory(buffer.get(), static_cast<size_t>(length));
-            rawImage.createMaskFromColor(sf::Color(255, 0, 255));
+            rawImage.createMaskFromColor(hikari::gfx::Color(255, 0, 255));
 
             // Then copy the color-keyed pixels to the texture
             success &= texture.resize(rawImage.getSize());

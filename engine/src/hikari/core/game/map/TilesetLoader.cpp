@@ -1,3 +1,4 @@
+#include "hikari/core/graphics/Graphics.hpp"
 #include "hikari/core/game/map/TilesetLoader.hpp"
 #include "hikari/core/game/map/Tileset.hpp"
 #include "hikari/core/game/TileAnimator.hpp"
@@ -96,14 +97,14 @@ namespace hikari {
         int numberOfTiles = json[PROPERTY_NAME_TILES].size();
         int version = json.get(PROPERTY_NAME_VERSION, 0).asInt();
 
-        std::vector<sf::IntRect> tiles(numberOfTiles);
+        std::vector<hikari::gfx::IntRect> tiles(numberOfTiles);
         std::vector<TileAnimator> tileAnimators;
 
         for(int i = 0; i < numberOfTiles; ++i) {
             const Json::Value &tileJson = json[PROPERTY_NAME_TILES][i];
 
             if(isValidTileJson(tileJson)) {
-                tiles.at(i) = sf::IntRect(
+                tiles.at(i) = hikari::gfx::IntRect(
                     {
                         tileJson[PROPERTY_NAME_X].asInt(),
                         tileJson[PROPERTY_NAME_Y].asInt()

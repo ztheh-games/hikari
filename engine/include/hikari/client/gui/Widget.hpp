@@ -1,12 +1,9 @@
 #ifndef HIKARI_CORE_GUI_WIDGET
 #define HIKARI_CORE_GUI_WIDGET
 
-#include <memory>
-#include <SFML/System/Vector2.hpp>
+#include "hikari/core/graphics/Graphics.hpp"
 
-namespace sf {
-    class RenderTarget;
-}
+#include <memory>
 
 namespace hikari {
 namespace gui {
@@ -15,7 +12,7 @@ namespace gui {
     private:
         int id;
         bool visible;
-        sf::Vector2i position;
+        hikari::gfx::Vector2i position;
 
         std::weak_ptr<Widget> parent;
     public:
@@ -24,13 +21,13 @@ namespace gui {
         const std::weak_ptr<Widget> & getParent() const;
         void setParent(const std::weak_ptr<Widget> & newParent);
 
-        virtual const sf::Vector2i& getPosition() const;
-        virtual void setPosition(const sf::Vector2i &newPosition);
+        virtual const hikari::gfx::Vector2i& getPosition() const;
+        virtual void setPosition(const hikari::gfx::Vector2i &newPosition);
 
         const bool& isVisible() const;
         void setVisible(const bool &isVisible);
 
-        virtual void render(sf::RenderTarget &target) = 0;
+        virtual void render(hikari::gfx::RenderTarget &target) = 0;
         virtual void update(const float &delta) = 0;
     };
 

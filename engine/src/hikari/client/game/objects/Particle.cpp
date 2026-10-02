@@ -1,10 +1,9 @@
+#include "hikari/core/graphics/Graphics.hpp"
 #include "hikari/client/game/objects/Particle.hpp"
 #include "hikari/client/game/objects/Entity.hpp"
 #include "hikari/core/game/AnimationSet.hpp"
 #include "hikari/core/game/SpriteAnimator.hpp"
 
-#include <SFML/Graphics/Texture.hpp>
-#include <SFML/Graphics/RenderTarget.hpp>
 
 namespace hikari {
 
@@ -72,7 +71,7 @@ namespace hikari {
         }
     }
 
-    void Particle::render(sf::RenderTarget &target) {
+    void Particle::render(hikari::gfx::RenderTarget &target) {
         auto position = getPosition();
 
         sprite.setPosition({
@@ -132,7 +131,7 @@ namespace hikari {
         return animationSet;
     }
 
-    void Particle::setSpriteTexture(const std::shared_ptr<sf::Texture>& newTexture) {
+    void Particle::setSpriteTexture(const std::shared_ptr<hikari::gfx::Texture>& newTexture) {
         spriteTexture = newTexture;
 
         if(spriteTexture) {

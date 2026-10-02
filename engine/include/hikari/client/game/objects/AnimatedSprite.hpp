@@ -1,19 +1,17 @@
 #ifndef HIKARI_CLIENT_GAME_OBJECTS_ANIMATEDSPRITE
 #define HIKARI_CLIENT_GAME_OBJECTS_ANIMATEDSPRITE
 
+#include "hikari/core/graphics/Graphics.hpp"
+
 #include "hikari/core/game/SpriteAnimator.hpp"
 #include "hikari/core/game/Updatable.hpp"
 #include "hikari/core/math/Vector2.hpp"
-#include "hikari/core/util/SfmlResources.hpp"
 
-#include <SFML/Graphics/Sprite.hpp>
 
 #include <string>
 #include <memory>
 
-namespace sf {
-    class RenderTarget;
-}
+
 
 namespace hikari {
     class Animation;
@@ -21,7 +19,7 @@ namespace hikari {
 
     class AnimatedSprite {
     protected:
-        SfmlResources::DefaultSprite sprite;
+        gfx::Sprite sprite;
 
     private:
         std::string currentAnimation;
@@ -40,7 +38,7 @@ namespace hikari {
         //
         virtual void update(float dt);
 
-        virtual void render(sf::RenderTarget &target) const;
+        virtual void render(hikari::gfx::RenderTarget &target) const;
 
         void setAnimation(const std::string & animationName);
         void setAnimationSet(const std::weak_ptr<AnimationSet> & animationSetPtr);

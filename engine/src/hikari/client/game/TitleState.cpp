@@ -1,3 +1,5 @@
+#include "hikari/core/graphics/Graphics.hpp"
+#include "hikari/client/platform/Events.hpp"
 #include "hikari/client/game/TitleState.hpp"
 #include "hikari/client/game/events/EventBus.hpp"
 #include "hikari/client/game/events/GameQuitEventData.hpp"
@@ -19,8 +21,6 @@
 
 #include <json/value.h>
 
-#include <SFML/Graphics.hpp>
-#include <SFML/Window/Event.hpp>
 
 namespace hikari {
 
@@ -166,11 +166,11 @@ namespace hikari {
         }
     }
 
-    void TitleState::handleEvent(sf::Event &event) {
+    void TitleState::handleEvent(hikari::platform::Event &event) {
 
     }
 
-    void TitleState::render(sf::RenderTarget &target) {
+    void TitleState::render(hikari::gfx::RenderTarget &target) {
         guiService.renderAsTop(guiContainer.get(), target);
     }
 

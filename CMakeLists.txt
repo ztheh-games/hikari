@@ -15,11 +15,6 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/modules/")
 set(HIKARI_GOOD_COMPILER_FLAGS "-Wall -Wpedantic -O -g")
 set(HIKARI_DUMB_COMPILER_FLAGS "-W3")
 
-if(WIN32)
-    # always link statically on Windows
-    set(SFML_STATIC_LIBRARIES TRUE)
-endif()
-
 option(HIKARI_FETCH_DEPENDENCIES
     "Download pinned dependencies instead of using system packages"
     ON
@@ -32,17 +27,34 @@ if(HIKARI_FETCH_DEPENDENCIES)
         set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build shared libraries" FORCE)
     endif()
 
-    set(SFML_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
-    set(SFML_BUILD_DOC OFF CACHE BOOL "" FORCE)
-    set(SFML_BUILD_NETWORK OFF CACHE BOOL "" FORCE)
-    set(SFML_BUILD_TEST_SUITE OFF CACHE BOOL "" FORCE)
+    set(SDL_SHARED OFF CACHE BOOL "" FORCE)
+    set(SDL_STATIC ON CACHE BOOL "" FORCE)
+    set(SDL_TESTS OFF CACHE BOOL "" FORCE)
+    set(SDL_INSTALL OFF CACHE BOOL "" FORCE)
     FetchContent_Declare(
-        SFML
-        URL https://github.com/SFML/SFML/archive/refs/tags/3.1.0.tar.gz
-        URL_HASH SHA256=91209a112c2bd0bc6f4ce0d5f3e413cfb48b57c0de59f5507dc81f71b1ad7a5c
+        SDL3
+        URL https://github.com/libsdl-org/SDL/archive/refs/tags/release-3.4.16.tar.gz
+        URL_HASH SHA256=c2ee715e42ec520c4d11fd8d249ef1d2b2baf4ad31148b72b3b000276c0b3633
         DOWNLOAD_EXTRACT_TIMESTAMP TRUE
     )
-    FetchContent_MakeAvailable(SFML)
+    FetchContent_MakeAvailable(SDL3)
+
+    set(SDLIMAGE_BACKEND_STB ON CACHE BOOL "" FORCE)
+    set(SDLIMAGE_PNG_LIBPNG OFF CACHE BOOL "" FORCE)
+    set(SDLIMAGE_VENDORED OFF CACHE BOOL "" FORCE)
+    set(SDLIMAGE_AVIF OFF CACHE BOOL "" FORCE)
+    set(SDLIMAGE_JXL OFF CACHE BOOL "" FORCE)
+    set(SDLIMAGE_TIF OFF CACHE BOOL "" FORCE)
+    set(SDLIMAGE_WEBP OFF CACHE BOOL "" FORCE)
+    set(SDLIMAGE_INSTALL OFF CACHE BOOL "" FORCE)
+    set(SDLIMAGE_TESTS OFF CACHE BOOL "" FORCE)
+    FetchContent_Declare(
+        SDL3_image
+        URL https://github.com/libsdl-org/SDL_image/archive/refs/tags/release-3.4.6.tar.gz
+        URL_HASH SHA256=0bbac8c799273488ce32c4a53a44fc0fc70a6079458bd9d46fc4e72da138367f
+        DOWNLOAD_EXTRACT_TIMESTAMP TRUE
+    )
+    FetchContent_MakeAvailable(SDL3_image)
 
     set(PHYSFS_BUILD_SHARED OFF CACHE BOOL "" FORCE)
     set(PHYSFS_BUILD_STATIC ON CACHE BOOL "" FORCE)
@@ -62,6 +74,16 @@ if(HIKARI_FETCH_DEPENDENCIES)
     FetchContent_MakeAvailable(PhysFS)
     unset(CMAKE_POLICY_VERSION_MINIMUM)
 endif()
+
+if(NOT TARGET SDL3::SDL3)
+    find_package(SDL3 3.4.16 EXACT CONFIG REQUIRED)
+endif()
+if(NOT TARGET SDL3_image::SDL3_image)
+    find_package(SDL3_image 3.4.6 EXACT CONFIG REQUIRED)
+endif()
+
+include(cmake/HikariShaders.cmake)
+enable_testing()
 
 #
 # MSVC-specific settings

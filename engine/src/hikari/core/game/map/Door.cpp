@@ -1,8 +1,7 @@
+#include "hikari/core/graphics/Graphics.hpp"
 #include "hikari/core/game/map/Door.hpp"
 #include "hikari/core/math/Vector2.hpp"
 #include "hikari/core/util/Log.hpp"
-
-#include <SFML/Graphics/RenderTarget.hpp>
 
 namespace hikari {
 
@@ -108,7 +107,7 @@ namespace hikari {
         animatedSprite.update(dt);
     }
 
-    void Door::render(sf::RenderTarget & target) const {
+    void Door::render(hikari::gfx::RenderTarget & target) const {
         animatedSprite.render(target);
     }
 

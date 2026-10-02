@@ -1,9 +1,10 @@
 #ifndef HIKARI_CLIENT_GAME_KEYBOARDINPUT
 #define HIKARI_CLIENT_GAME_KEYBOARDINPUT
 
+#include "hikari/client/platform/Events.hpp"
+
 #include "hikari/core/Platform.hpp"
 #include "hikari/client/game/Input.hpp"
-#include <SFML/Window/Event.hpp>
 
 namespace hikari {
 
@@ -55,7 +56,7 @@ namespace hikari {
         virtual const bool wasPressed(const Button &button) const;
         virtual const bool wasReleased(const Button &button) const;
 
-        void processEvent(const sf::Event &keyboardEvent);
+        void processEvent(const hikari::platform::Event &keyboardEvent);
         virtual void update(float dt);
     };
     

@@ -1,11 +1,14 @@
 #ifndef HIKARI_CLIENT
 #define HIKARI_CLIENT
 
+#include "hikari/core/graphics/Graphics.hpp"
+#include "hikari/client/platform/Events.hpp"
+
 #include "hikari/client/ClientConfig.hpp"
 #include "hikari/client/game/GameConfig.hpp"
 #include "hikari/core/util/NonCopyable.hpp"
 #include <json/value.h>
-#include <SFML/Graphics.hpp>
+
 #include <memory>
 #include <string>
 
@@ -46,10 +49,9 @@ namespace hikari {
         Json::Value gameConfigJson;
         ClientConfig clientConfig;
         std::shared_ptr<GameConfig> gameConfig;
-        sf::VideoMode videoMode;
-        sf::RenderWindow window;
-        sf::RenderTexture screenBuffer;
-        sf::View screenBufferView;
+        std::unique_ptr<platform::Session> sdl;
+        platform::Window window;
+        hikari::gfx::RenderTexture screenBuffer;
         bool quitGame;
         std::unique_ptr<SharedGraphicsResources> graphicsResources;
         std::unique_ptr<ClientRuntime> runtime;

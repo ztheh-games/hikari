@@ -1,3 +1,5 @@
+#include "hikari/core/graphics/Graphics.hpp"
+#include "hikari/client/platform/Events.hpp"
 #include "hikari/client/Client.hpp"
 #include "hikari/client/ClientRuntime.hpp"
 #include "hikari/client/audio/AudioService.hpp"
@@ -51,8 +53,6 @@
 #include <squirrel.h>
 #include <sqrat.h>
 
-#include <SFML/Graphics/Color.hpp>
-
 #include <guichan/gui.hpp>
 #include <guichan/exception.hpp>
 
@@ -83,7 +83,7 @@ namespace hikari {
         , gameConfigJson()
         , clientConfig()
         , gameConfig()
-        , videoMode({SCREEN_WIDTH, SCREEN_HEIGHT}, SCREEN_BITS_PER_PIXEL)
+        , sdl()
         , window()
         , screenBuffer()
         , quitGame(false)
@@ -233,17 +233,12 @@ namespace hikari {
             }
         }
 
-        videoMode.size = {SCREEN_WIDTH * screenScaler, SCREEN_HEIGHT * screenScaler};
-
         // Due to some weirdness between OSX, Windows, and Linux, the window
         // needs to be created before anything serious can be done.
         window.create(
-            videoMode,
+            {SCREEN_WIDTH * screenScaler, SCREEN_HEIGHT * screenScaler},
             APP_TITLE,
-            enabledFullScreen ? sf::State::Fullscreen : sf::State::Windowed);
-        window.setActive(true);
-        window.setVerticalSyncEnabled(clientConfig.isVsyncEnabled());
-        window.setKeyRepeatEnabled(false);
+            enabledFullScreen, clientConfig.isVsyncEnabled());
 
         // Screen buffer is hard-coded to be the size of the render area, in
         // other words, it doesn't scale with the window size. When it is
@@ -251,20 +246,12 @@ namespace hikari {
         // its (desired) pixelated quality.
         screenBuffer.resize({SCREEN_WIDTH, SCREEN_HEIGHT});
 
-        screenBufferView.setSize({
-            static_cast<float>(SCREEN_WIDTH),
-            static_cast<float>(SCREEN_HEIGHT)});
-
-        screenBufferView.setCenter({
-            static_cast<float>(SCREEN_WIDTH / 2),
-            static_cast<float>(SCREEN_HEIGHT / 2)});
-
         graphicsResources = std::make_unique<SharedGraphicsResources>();
         SliceStateTransition::createSharedTextures();
     }
 
     void Client::loadPalettes() {
-        PalettedAnimatedSprite::setShaderFile("assets/shaders/palette.frag");
+        PalettedAnimatedSprite::initializePaletteShader();
         PalettedAnimatedSprite::createColorTable(
             PaletteHelpers::loadPaletteFile("assets/palettes.json"));
     }
@@ -321,14 +308,14 @@ namespace hikari {
     }
 
     void Client::loop() {
-        sf::Clock clock;
+        hikari::platform::Clock clock;
         quitGame = false;
 
         const float dt = 1.0f/60.0f;
         float totalRuntime = 0.0f;
         float speedMultiplier = 1.0f;
 
-        sf::Time currentTime = clock.getElapsedTime();
+        hikari::platform::Time currentTime = clock.getElapsedTime();
         float accumulator = 0.0f;
 
         auto & guiService = runtime->gui;
@@ -344,7 +331,7 @@ namespace hikari {
             // Logic
             //
 
-            sf::Time newTime = clock.getElapsedTime();
+            hikari::platform::Time newTime = clock.getElapsedTime();
             float frameTime = newTime.asSeconds() - currentTime.asSeconds();
             currentTime = newTime;
             accumulator += frameTime;
@@ -352,26 +339,26 @@ namespace hikari {
 
             while(accumulator >= dt) {
                 while(auto event = window.pollEvent()) {
-                    if(event->is<sf::Event::Closed>()) {
+                    if(event->is<hikari::platform::Event::Closed>()) {
                         quitGame = true;
                     }
 
-                    const sf::Event::KeyPressed* keyPressed = event->getIf<sf::Event::KeyPressed>();
-                    const sf::Event::KeyReleased* keyReleased = event->getIf<sf::Event::KeyReleased>();
+                    const hikari::platform::Event::KeyPressed* keyPressed = event->getIf<hikari::platform::Event::KeyPressed>();
+                    const hikari::platform::Event::KeyReleased* keyReleased = event->getIf<hikari::platform::Event::KeyReleased>();
                     if(keyPressed || keyReleased) {
-                        const sf::Keyboard::Key keyCode = keyPressed ? keyPressed->code : keyReleased->code;
+                        const hikari::platform::Keyboard::Key keyCode = keyPressed ? keyPressed->code : keyReleased->code;
 
                         // Audio tweaking code
-                        if(keyCode == sf::Keyboard::Key::Y) {
+                        if(keyCode == hikari::platform::Keyboard::Key::Y) {
                             audioService->setMusicVolume(audioService->getMusicVolume() + 10.0f);
                         }
-                        if(keyCode == sf::Keyboard::Key::U) {
+                        if(keyCode == hikari::platform::Keyboard::Key::U) {
                             audioService->setMusicVolume(audioService->getMusicVolume() - 10.0f);
                         }
-                        if(keyCode == sf::Keyboard::Key::H) {
+                        if(keyCode == hikari::platform::Keyboard::Key::H) {
                             audioService->mute();
                         }
-                        if(keyCode == sf::Keyboard::Key::J) {
+                        if(keyCode == hikari::platform::Keyboard::Key::J) {
                             audioService->unmute();
                         }
 
@@ -409,33 +396,21 @@ namespace hikari {
             // Rendering
             //
 
-            window.clear(sf::Color::Blue);
-            screenBuffer.clear(sf::Color::Magenta);
+            screenBuffer.clear(hikari::gfx::Color::Magenta);
             controller.render(screenBuffer);
-
-            // This is weird because we call display() twice on screenBuffer.
-            // We need to do this in order to render it to a buffer, and then
-            // that buffer gets rendered back to screenBuffer, hence the need
-            // to call display() again.
             screenBuffer.display();
-            screenEffectsService->setInputTexture(screenBuffer);
-            screenEffectsService->render(screenBuffer);
-
-            window.setView(screenBufferView);
-            guiService->renderHudContainer();
-
-            screenBuffer.display();
-
-            sf::Sprite renderSprite(screenBuffer.getTexture());
-
-            window.draw(renderSprite);
-            window.display();
+            auto & finalBuffer = screenEffectsService->apply(screenBuffer);
+            guiService->renderHudContainer(finalBuffer);
+            finalBuffer.display();
+            audioService->update();
+            window.present(finalBuffer.getTexture());
         }
 
         HIKARI_LOG(debug) << "Quitting; total run time = " << totalRuntime << " seconds.";
     }
 
     int Client::run() {
+        sdl = std::make_unique<platform::Session>();
         initWindow();
         initServices();
         initGame();

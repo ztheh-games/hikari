@@ -1,10 +1,12 @@
 #ifndef HIKARI_CORE_GUI_BOSSMENU
 #define HIKARI_CORE_GUI_BOSSMENU
 
+#include "hikari/core/graphics/Graphics.hpp"
+
 #include "hikari/client/gui/Widget.hpp"
-#include "hikari/core/util/SfmlResources.hpp"
-#include <SFML/Graphics/Image.hpp>
-#include <SFML/Graphics/Sprite.hpp>
+
+
+
 #include <vector>
 
 namespace hikari {
@@ -13,8 +15,8 @@ namespace hikari {
     private:
         int selectedIndex;
         std::vector<bool> validIndicies;
-        SfmlResources::DefaultSprite background;
-        SfmlResources::DefaultSprite frame;
+        gfx::Sprite background;
+        gfx::Sprite frame;
     };
 
 } // hikari

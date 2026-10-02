@@ -1,9 +1,10 @@
+#include "hikari/core/graphics/Graphics.hpp"
 #include "hikari/core/game/TileAnimator.hpp"
 #include "hikari/core/game/Animation.hpp"
 
 namespace hikari {
 
-    TileAnimator::TileAnimator(std::vector<sf::IntRect> &tiles, unsigned int tileIndex)
+    TileAnimator::TileAnimator(std::vector<hikari::gfx::IntRect> &tiles, unsigned int tileIndex)
         : Animator()
         , tileIndex(tileIndex)
         , tiles(tiles) {
@@ -28,7 +29,7 @@ namespace hikari {
         Animator::update(delta);
     }
 
-    void TileAnimator::update(float delta, sf::IntRect &tileRect) {
+    void TileAnimator::update(float delta, hikari::gfx::IntRect &tileRect) {
         update(delta);
 
         const AnimationFrame &currentFrame = getAnimation()->getFrameAt(getCurrentFrameIndex());

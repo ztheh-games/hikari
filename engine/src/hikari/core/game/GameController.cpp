@@ -1,3 +1,5 @@
+#include "hikari/core/graphics/Graphics.hpp"
+#include "hikari/client/platform/Events.hpp"
 #include "hikari/core/game/GameController.hpp"
 #include "hikari/core/game/GameControllerException.hpp"
 #include "hikari/core/game/StateTransition.hpp"
@@ -76,8 +78,8 @@ namespace hikari {
             stateName,
             // std::unique_ptr<StateTransition>(new SliceStateTransition(SliceStateTransition::SLICE_LEFT, 1.066666666666667f)),
             // std::unique_ptr<StateTransition>(new DefaultStateTransition(DefaultStateTransition::ENTERING))
-            std::unique_ptr<StateTransition>(new FadeStateTransition(FadeStateTransition::FADE_OUT, sf::Color::Black, (1.0f/60.0f*13.0f))),
-            std::unique_ptr<StateTransition>(new FadeStateTransition(FadeStateTransition::FADE_IN, sf::Color::Black, (1.0f/60.0f*13.0f)))
+            std::unique_ptr<StateTransition>(new FadeStateTransition(FadeStateTransition::FADE_OUT, hikari::gfx::Color::Black, (1.0f/60.0f*13.0f))),
+            std::unique_ptr<StateTransition>(new FadeStateTransition(FadeStateTransition::FADE_IN, hikari::gfx::Color::Black, (1.0f/60.0f*13.0f)))
         );
     }
 
@@ -106,7 +108,7 @@ namespace hikari {
         }
     }
 
-    void GameController::handleEvent(sf::Event &event) {
+    void GameController::handleEvent(hikari::platform::Event &event) {
         if(!state) {
             throw GameControllerException("Current game state is null, cannot handle event.");
         }
@@ -114,7 +116,7 @@ namespace hikari {
         state->handleEvent(event);
     }
 
-    void GameController::render(sf::RenderTarget &target) {
+    void GameController::render(hikari::gfx::RenderTarget &target) {
         if(!state) {
             throw GameControllerException("Current game state is null, cannot render.");
         }
@@ -166,11 +168,11 @@ namespace hikari {
 
     }
 
-    void GameController::DefaultGameState::handleEvent(sf::Event &event) {
+    void GameController::DefaultGameState::handleEvent(hikari::platform::Event &event) {
 
     }
 
-    void GameController::DefaultGameState::render(sf::RenderTarget &target) {
+    void GameController::DefaultGameState::render(hikari::gfx::RenderTarget &target) {
 
     }
 
@@ -200,7 +202,7 @@ namespace hikari {
 
     }
 
-    void GameController::DefaultStateTransition::render(sf::RenderTarget &target) {
+    void GameController::DefaultStateTransition::render(hikari::gfx::RenderTarget &target) {
         if(direction == ENTERING) {
             if(enteringState) {
                 enteringState->render(target);

@@ -40,9 +40,21 @@ add_executable( tests ${TEST_SOURCE_FILES} ${INCLUDE_DIRS} )
 add_executable(runtime-tests
     src/test/Main.cpp
     src/test/TestClientRuntime.cpp
+    src/test/TestGraphics.cpp
+    src/test/TestAudio.cpp
 )
 target_link_libraries(runtime-tests PRIVATE hikari-runtime)
 target_include_directories(runtime-tests PRIVATE ${TEST_BASE_DIR}/include)
 target_compile_definitions(runtime-tests PRIVATE
     HIKARI_TEST_CONTENT_DIR="${PROJECT_SOURCE_DIR}/content"
 )
+
+add_executable(gpu-tests src/test/Main.cpp src/test/TestGPU.cpp)
+target_link_libraries(gpu-tests PRIVATE hikari-runtime)
+target_include_directories(gpu-tests PRIVATE ${TEST_BASE_DIR}/include)
+target_compile_definitions(gpu-tests PRIVATE HIKARI_TEST_CONTENT_DIR="${PROJECT_SOURCE_DIR}/content")
+add_test(NAME core COMMAND tests)
+add_test(NAME runtime COMMAND runtime-tests)
+set_tests_properties(runtime PROPERTIES ENVIRONMENT "SDL_AUDIO_DRIVER=dummy")
+add_test(NAME gpu COMMAND gpu-tests)
+set_tests_properties(gpu PROPERTIES LABELS gpu ENVIRONMENT "SDL_AUDIO_DRIVER=dummy")
