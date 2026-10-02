@@ -1,10 +1,11 @@
+#include "hikari/core/graphics/Graphics.hpp"
 #include "hikari/core/game/AnimationSet.hpp"
 
 namespace hikari {
 
     const AnimationPtr AnimationSet::NULL_ANIMATION = AnimationPtr();
 
-    AnimationSet::AnimationSet(const std::string& name, const std::string& imageFileName, const std::shared_ptr<sf::Texture> & texture)
+    AnimationSet::AnimationSet(const std::string& name, const std::string& imageFileName, const std::shared_ptr<hikari::gfx::Texture> & texture)
         : name(name)
         , imageFileName(imageFileName)
         , texture(texture)
@@ -20,7 +21,7 @@ namespace hikari {
         return imageFileName;
     }
 
-    const std::shared_ptr<sf::Texture> & AnimationSet::getTexture() const {
+    const std::shared_ptr<hikari::gfx::Texture> & AnimationSet::getTexture() const {
         return texture;
     }
 

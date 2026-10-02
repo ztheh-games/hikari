@@ -1,9 +1,9 @@
 #ifndef HIKARI_CLIENT_GAME_RENDERABLE
 #define HIKARI_CLIENT_GAME_RENDERABLE
 
-namespace sf {
-    class RenderTarget;
-}
+#include "hikari/core/graphics/Graphics.hpp"
+
+
 
 namespace hikari {
 
@@ -23,7 +23,7 @@ namespace hikari {
          * Renders an object to the render target.
          * @param target the render target
          */
-        virtual void render(sf::RenderTarget & target) = 0;
+        virtual void render(hikari::gfx::RenderTarget & target) = 0;
 
         /**
          * Sets the z-index of this Renderable. The z-index affects rendering order.

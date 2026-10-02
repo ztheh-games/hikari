@@ -1,6 +1,8 @@
 #ifndef HIKARI_CLIENT_GAME_OBJECTS_HERO
 #define HIKARI_CLIENT_GAME_OBJECTS_HERO
 
+#include "hikari/core/graphics/Graphics.hpp"
+
 #include "hikari/client/game/objects/Entity.hpp"
 #include "hikari/client/game/objects/controllers/HeroActionController.hpp"
 #include "hikari/core/math/Vector2.hpp"
@@ -231,7 +233,7 @@ namespace hikari {
         void setAmbientVelocity(const Vector2<float> & velocity);
 
         virtual void update(float dt);
-        virtual void render(sf::RenderTarget &target);
+        virtual void render(hikari::gfx::RenderTarget &target);
         virtual void handleCollision(Movable& body, CollisionInfo& info);
         virtual void handleCrush(Movable& body, CollisionInfo& info);
         virtual void fireWeapon();

@@ -1,6 +1,8 @@
 #ifndef HIKARI_CORE_GAME_MAP_DOOR
 #define HIKARI_CORE_GAME_MAP_DOOR
 
+#include "hikari/core/graphics/Graphics.hpp"
+
 #include "hikari/core/Platform.hpp"
 #include "hikari/core/game/Updatable.hpp"
 #include "hikari/core/geom/BoundingBox.hpp"
@@ -8,9 +10,7 @@
 
 #include <memory>
 
-namespace sf {
-    class RenderTarget;
-}
+
 
 namespace hikari {
 
@@ -59,7 +59,7 @@ namespace hikari {
         // Inherited from hikari::Updatable
         virtual void update(float dt);
 
-        void render(sf::RenderTarget & target) const;
+        void render(hikari::gfx::RenderTarget & target) const;
     };
 
 } // hikari

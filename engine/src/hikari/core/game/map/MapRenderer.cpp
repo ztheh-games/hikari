@@ -1,9 +1,10 @@
+#include "hikari/core/graphics/Graphics.hpp"
 #include "hikari/core/game/map/MapRenderer.hpp"
 #include "hikari/core/game/map/Door.hpp"
 #include "hikari/core/game/map/Force.hpp"
 #include "hikari/core/game/map/Room.hpp"
 #include "hikari/core/game/map/Tileset.hpp"
-#include <SFML/Graphics.hpp>
+
 #include <algorithm>
 #include <cmath>
 
@@ -32,12 +33,12 @@ namespace hikari {
             tileSprite.setTexture(*(tileData->getTexture()));
         }
 
-        debugLadderShape.setFillColor(sf::Color(128, 128, 0, 96));
-        debugLadderShape.setOutlineColor(sf::Color(255, 255, 255, 128));
+        debugLadderShape.setFillColor(hikari::gfx::Color(128, 128, 0, 96));
+        debugLadderShape.setOutlineColor(hikari::gfx::Color(255, 255, 255, 128));
         debugLadderShape.setOutlineThickness(1.0f);
 
-        debugForceShape.setFillColor(sf::Color(128, 0, 0, 96));
-        debugForceShape.setOutlineColor(sf::Color(255, 255, 255, 128));
+        debugForceShape.setFillColor(hikari::gfx::Color(128, 0, 0, 96));
+        debugForceShape.setOutlineColor(hikari::gfx::Color(255, 255, 255, 128));
         debugForceShape.setOutlineThickness(1.0f);
     }
 
@@ -63,11 +64,11 @@ namespace hikari {
         return tileData;
     }
 
-    void MapRenderer::renderBackground(sf::RenderTarget &target) {
+    void MapRenderer::renderBackground(hikari::gfx::RenderTarget &target) {
         target.draw(backgroundShape);
     }
 
-    void MapRenderer::renderForeground(sf::RenderTarget &target) {
+    void MapRenderer::renderForeground(hikari::gfx::RenderTarget &target) {
         int tileIndex = Room::NO_TILE;
         int tileAttributes = TileAttribute::NO_ATTRIBUTES;
 
@@ -94,8 +95,8 @@ namespace hikari {
         // Render ladder outlines if debug rendering is enabled
         if(isDebugLadderRenderingEnabled) {
             std::for_each(std::begin(room->getLadders()), std::end(room->getLadders()), [this, &target](const BoundingBox<float> & ladder) {
-                debugLadderShape.setPosition(sf::Vector2f(ladder.getLeft(), ladder.getTop()));
-                debugLadderShape.setSize(sf::Vector2f(ladder.getWidth(), ladder.getHeight()));
+                debugLadderShape.setPosition(hikari::gfx::Vector2f(ladder.getLeft(), ladder.getTop()));
+                debugLadderShape.setSize(hikari::gfx::Vector2f(ladder.getWidth(), ladder.getHeight()));
 
                 target.draw(debugLadderShape);
             });
@@ -105,8 +106,8 @@ namespace hikari {
         if(isDebugForceRenderingEnabled) {
             std::for_each(std::begin(room->getForces()), std::end(room->getForces()), [this, &target](const std::shared_ptr<Force> & force) {
                 const auto & bounds = force->getBounds();
-                debugForceShape.setPosition(sf::Vector2f(bounds.getLeft(), bounds.getTop()));
-                debugForceShape.setSize(sf::Vector2f(bounds.getWidth(), bounds.getHeight()));
+                debugForceShape.setPosition(hikari::gfx::Vector2f(bounds.getLeft(), bounds.getTop()));
+                debugForceShape.setSize(hikari::gfx::Vector2f(bounds.getWidth(), bounds.getHeight()));
 
                 target.draw(debugForceShape);
             });
@@ -125,29 +126,29 @@ namespace hikari {
             }
 
             if(isDebugDoorRenderingEnabled) {
-                sf::RectangleShape doorRect;
-                doorRect.setOutlineColor(sf::Color(255, 255, 255, 192));
+                hikari::gfx::RectangleShape doorRect;
+                doorRect.setOutlineColor(hikari::gfx::Color(255, 255, 255, 192));
                 doorRect.setOutlineThickness(1.0f);
 
                 if(entranceDoor) {
-                    doorRect.setFillColor(sf::Color(0, 192, 32, 96));
+                    doorRect.setFillColor(hikari::gfx::Color(0, 192, 32, 96));
                     doorRect.setPosition(
-                        sf::Vector2f(entranceDoor->getX() * 16.0f, entranceDoor->getY() * 16.0f)
+                        hikari::gfx::Vector2f(entranceDoor->getX() * 16.0f, entranceDoor->getY() * 16.0f)
                     );
                     doorRect.setSize(
-                        sf::Vector2f(entranceDoor->getWidth() * 16.0f, entranceDoor->getHeight() * 16.0f)
+                        hikari::gfx::Vector2f(entranceDoor->getWidth() * 16.0f, entranceDoor->getHeight() * 16.0f)
                     );
 
                     target.draw(doorRect);
                 }
 
                 if(exitDoor) {
-                    doorRect.setFillColor(sf::Color(192, 0, 32, 96));
+                    doorRect.setFillColor(hikari::gfx::Color(192, 0, 32, 96));
                     doorRect.setPosition(
-                        sf::Vector2f(exitDoor->getX() * 16.0f, exitDoor->getY() * 16.0f)
+                        hikari::gfx::Vector2f(exitDoor->getX() * 16.0f, exitDoor->getY() * 16.0f)
                     );
                     doorRect.setSize(
-                        sf::Vector2f(exitDoor->getWidth() * 16.0f, exitDoor->getHeight() * 16.0f)
+                        hikari::gfx::Vector2f(exitDoor->getWidth() * 16.0f, exitDoor->getHeight() * 16.0f)
                     );
 
                     target.draw(doorRect);
@@ -156,7 +157,7 @@ namespace hikari {
         }
     }
 
-    void MapRenderer::render(sf::RenderTarget &target) {
+    void MapRenderer::render(hikari::gfx::RenderTarget &target) {
         renderBackground(target);
         renderForeground(target);
     }
@@ -169,18 +170,18 @@ namespace hikari {
             const auto & bgColor = room->getBackgroundColor();
 
             backgroundShape.setSize(
-                sf::Vector2f(
+                hikari::gfx::Vector2f(
                     widthInTiles * gridSize,
                     heightInTiles * gridSize
                 )
             );
 
             backgroundShape.setPosition(
-                sf::Vector2f(room->getX() * gridSize, room->getY() * gridSize)
+                hikari::gfx::Vector2f(room->getX() * gridSize, room->getY() * gridSize)
             );
 
             backgroundShape.setFillColor(
-                sf::Color(
+                hikari::gfx::Color(
                     ((bgColor >> 16) & 0xFF), // Extract Red
                     ((bgColor >>  8) & 0xFF), // Extract Green
                     ( bgColor        & 0xFF), // Extract Blue
@@ -218,7 +219,7 @@ namespace hikari {
     }
 
     inline void MapRenderer::applyTileToSprite(const int &tileIndex, const int &x, const int &y) {
-        const sf::IntRect& rect = tileData->getTileRect(tileIndex);
+        const hikari::gfx::IntRect& rect = tileData->getTileRect(tileIndex);
 
         tileSprite.setTextureRect(rect);
         tileSprite.setPosition({
@@ -230,7 +231,7 @@ namespace hikari {
     inline void MapRenderer::applyTileAttributes(const int &attributes) {
         //tileSprite.FlipX(false);
         //tileSprite.FlipY(false);
-        tileSprite.setRotation(sf::degrees(0.0f));
+        tileSprite.setRotation(hikari::gfx::degrees(0.0f));
         tileSprite.setOrigin({0.0f, 0.0f});
 
         if((attributes & TileAttribute::FLIP_HORIZONTAL) == TileAttribute::FLIP_HORIZONTAL) {
@@ -244,7 +245,7 @@ namespace hikari {
         if((attributes & TileAttribute::ROTATE_BY_90) == TileAttribute::ROTATE_BY_90) {
             float tileRotationOffset = static_cast<float>(tileData->getTileSize() * 0.5f);
             tileSprite.setOrigin({tileRotationOffset, tileRotationOffset});
-            tileSprite.setRotation(sf::degrees(90.0f));
+            tileSprite.setRotation(hikari::gfx::degrees(90.0f));
             tileSprite.move({tileRotationOffset, tileRotationOffset});
         }
     }

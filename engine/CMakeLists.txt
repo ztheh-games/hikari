@@ -116,18 +116,6 @@ set( GUICHAN_SOURCE_FILES
 
 source_group(extlibs\\guichan FILES ${GUICHAN_SOURCE_FILES})
 
-set( GUICHAN_SFML_DIR "${PROJECT_SOURCE_DIR}/extlibs/guichan-sfml" )
-set( GUICHAN_SFML_SOURCE_FILES
-    ${GUICHAN_SFML_DIR}/src/guichan/sfml.cpp
-    ${GUICHAN_SFML_DIR}/src/guichan/sfml/sfmlfont.cpp
-    ${GUICHAN_SFML_DIR}/src/guichan/sfml/sfmlgraphics.cpp
-    ${GUICHAN_SFML_DIR}/src/guichan/sfml/sfmlimage.cpp
-    ${GUICHAN_SFML_DIR}/src/guichan/sfml/sfmlimageloader.cpp
-    ${GUICHAN_SFML_DIR}/src/guichan/sfml/sfmlinput.cpp
-)
-
-source_group(extlibs\\guichan-sfml FILES ${GUICHAN_SFML_SOURCE_FILES})
-
 set( GUICHAN_HAKASE_DIR "${PROJECT_SOURCE_DIR}/extlibs/guichan-hakase" )
 set( GUICHAN_HAKASE_SOURCE_FILES
     ${GUICHAN_HAKASE_DIR}/src/guichan/hakase/fixedimagefont.cpp
@@ -146,6 +134,9 @@ set( HIKARI_CLIENT_SOURCE_FILES
     src/hikari/client/ClientRuntime.cpp
     src/hikari/client/ClientConfig.cpp
     src/hikari/client/CommandProcessor.cpp
+    src/hikari/client/platform/Events.cpp
+    src/hikari/core/graphics/Graphics.cpp
+    src/hikari/core/graphics/Renderer.cpp
 )
 
 source_group(hikari\\client FILES ${HIKARI_CLIENT_SOURCE_FILES})
@@ -259,7 +250,7 @@ source_group(hikari\\client\\scripting FILES ${HIKARI_CLIENT_SCRIPTING_SOURCE_FI
 set( HIKARI_CLIENT_AUDIO_SOURCE_FILES
     src/hikari/client/audio/AudioService.cpp
     src/hikari/client/audio/GMESoundStream.cpp
-    src/hikari/client/audio/NSFSoundStream.cpp
+    src/hikari/client/audio/Playback.cpp
     src/hikari/client/audio/SoundLibrary.cpp
 )
 
@@ -279,6 +270,9 @@ set( HIKARI_CLIENT_GUI_SOURCE_FILES
     src/hikari/client/gui/Icon.cpp
     src/hikari/client/gui/IconAnimator.cpp
     src/hikari/client/gui/InputHelper.cpp
+    src/hikari/client/gui/GpuGraphics.cpp
+    src/hikari/client/gui/PlatformInput.cpp
+    src/hikari/client/gui/GpuImage.cpp
 )
 
 source_group(hikari\\client\\gui FILES ${HIKARI_CLIENT_GUI_SOURCE_FILES})
@@ -369,7 +363,6 @@ set( HIKARI_SOURCE_FILES
     ${PHYSFS_STREAM_SOURCE_FILES}
     ${SQUIRREL_FILES}
     ${GUICHAN_SOURCE_FILES}
-    ${GUICHAN_SFML_SOURCE_FILES}
     ${GUICHAN_HAKASE_SOURCE_FILES}
     ${ENGINE_SOURCE_FILES}
 )
@@ -386,7 +379,6 @@ set( INCLUDE_DIRS
     ${SQRAT_DIR}/include
     ${GUICHAN_DIR}/include
     ${GUICHAN_DIR}/include/guichan
-    ${GUICHAN_SFML_DIR}/include
     ${GUICHAN_HAKASE_DIR}/include
 )
 
@@ -406,39 +398,20 @@ add_custom_target(
   COMMAND ${CMAKE_COMMAND} -E echo "Copying content to output directory."
   COMMAND ${CMAKE_COMMAND} -E copy_directory "${PROJECT_SOURCE_DIR}/content" $<TARGET_FILE_DIR:hikari>
 )
+add_dependencies(hikari content)
 
 #
 # We want to link statically on Windows
 #
-if(MSVC)
-    set(SFML_STATIC_LIBRARIES TRUE)
-endif(MSVC)
+target_link_libraries(hikari-runtime PUBLIC SDL3::SDL3 SDL3_image::SDL3_image)
 
-if(TARGET SFML::Graphics)
-    target_link_libraries(hikari-runtime PUBLIC SFML::Graphics SFML::Window SFML::Audio SFML::System)
-else()
-    find_package(SFML 3 COMPONENTS Graphics Window Audio System REQUIRED)
-    if(APPLE)
-        set(OTHER_SFML_LDFLAGS ${OTHER_SFML_LDFLAGS} "-stdlib=libc++")
-    endif(APPLE)
-    target_include_directories(hikari-runtime PUBLIC ${SFML_INCLUDE_DIR})
-    target_link_libraries(hikari-runtime PUBLIC ${SFML_LIBRARIES} ${OTHER_SFML_LDFLAGS})
-
-    #
-    # Copy the correct .dll files from SFML's directory to the ouput directory.
-    #
-    if(MSVC)
-        #add_custom_target(
-        #  windows-dependency-dlls
-        #  ALL
-        #  COMMAND ${CMAKE_COMMAND} -E echo "Copying .dll files used by SFML to output directory."
-        #  COMMAND ${CMAKE_COMMAND} -E copy "${SFML_INCLUDE_DIR}/../bin/libsndfile-1.dll" $<TARGET_FILE_DIR:hikari>/libsndfile-1.dll
-        #)
-    endif(MSVC)
+if(NOT TARGET PhysFS::PhysFS-static)
+    find_package(PhysFS CONFIG QUIET)
 endif()
-
 if(TARGET PhysFS::PhysFS-static)
     target_link_libraries(hikari-runtime PUBLIC PhysFS::PhysFS-static)
+elseif(TARGET PhysFS::PhysFS)
+    target_link_libraries(hikari-runtime PUBLIC PhysFS::PhysFS)
 else()
     find_package(PhysFS REQUIRED)
     #ADD_DEFINITIONS(-fno-common)

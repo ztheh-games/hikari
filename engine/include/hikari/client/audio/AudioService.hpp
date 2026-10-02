@@ -1,8 +1,6 @@
 #ifndef HIKARI_CLIENT_AUDIOSERVICE
 #define HIKARI_CLIENT_AUDIOSERVICE
 
-#include "hikari/client/audio/NSFSoundStream.hpp"
-
 #include <memory>
 #include <string>
 
@@ -25,9 +23,6 @@ namespace hikari {
         bool mutedFlag;
         float sampleVolume;
         float musicVolume;
-
-        NSFSoundStream musicStream;
-        NSFSoundStream sampleStream;
 
         std::unique_ptr<SoundLibrary> library;
 
@@ -52,6 +47,7 @@ namespace hikari {
 
         bool isMusicLoaded() const;
         bool isSamplesLoaded() const;
+        void update();
 
         /**
          * Disables all audio and stops any playing music and samples. When

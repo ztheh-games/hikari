@@ -1,3 +1,4 @@
+#include "hikari/core/graphics/Graphics.hpp"
 #include "hikari/client/game/objects/Entity.hpp"
 #include "hikari/client/game/objects/PalettedAnimatedSprite.hpp"
 #include "hikari/client/game/Shot.hpp"
@@ -7,8 +8,6 @@
 #include "hikari/core/game/map/Tileset.hpp"
 #include "hikari/core/game/SpriteAnimator.hpp"
 #include "hikari/core/util/Log.hpp"
-
-#include <SFML/Graphics/RenderTarget.hpp>
 
 namespace hikari {
 
@@ -52,12 +51,12 @@ namespace hikari {
             std::bind(&Entity::handleCrush, this, std::placeholders::_1, std::placeholders::_2));
 
         #ifdef HIKARI_DEBUG_ENTITIES
-        boxOutline.setFillColor(sf::Color(128, 64, 0, 128));
-        boxOutline.setOutlineColor(sf::Color(255, 255, 255, 128));
+        boxOutline.setFillColor(hikari::gfx::Color(128, 64, 0, 128));
+        boxOutline.setOutlineColor(hikari::gfx::Color(255, 255, 255, 128));
         boxOutline.setOutlineThickness(1.0f);
 
-        boxPosition.setFillColor(sf::Color(255, 0, 0, 196));
-        boxPosition.setOutlineColor(sf::Color(255, 255, 255, 196));
+        boxPosition.setFillColor(hikari::gfx::Color(255, 0, 0, 196));
+        boxPosition.setOutlineColor(hikari::gfx::Color(255, 255, 255, 196));
         boxPosition.setOutlineThickness(1.0f);
         #endif // HIKARI_DEBUG_ENTITIES
 
@@ -476,22 +475,22 @@ namespace hikari {
             const BoundingBoxF& bb = getBoundingBox();
 
             boxOutline.setPosition({std::floor(bb.getLeft() ), std::floor(bb.getTop())});
-            boxOutline.setSize(sf::Vector2f(std::floor(bb.getWidth() ), std::floor(bb.getHeight())));
+            boxOutline.setSize(hikari::gfx::Vector2f(std::floor(bb.getWidth() ), std::floor(bb.getHeight())));
 
             boxPosition.setPosition({std::floor(getPosition().getX()), std::floor(getPosition().getY())});
-            boxPosition.setSize(sf::Vector2f(1.0f, 1.0f));
+            boxPosition.setSize(hikari::gfx::Vector2f(1.0f, 1.0f));
         }
         #endif // HIKARI_DEBUG_ENTITIES
 
         removeNonActiveShots();
     }
 
-    void Entity::render(sf::RenderTarget &target) {
+    void Entity::render(hikari::gfx::RenderTarget &target) {
         #ifdef HIKARI_DEBUG_ENTITIES
         // Draw bounding box behind sprite
         if(debug) {
             // Bounding box is yellow
-            boxOutline.setOutlineColor(sf::Color(255, 255, 0));
+            boxOutline.setOutlineColor(hikari::gfx::Color(255, 255, 0));
             target.draw(boxOutline);
 
             for(auto hitBox = hitBoxes.begin();
@@ -501,15 +500,15 @@ namespace hikari {
                 auto & box = (*hitBox).bounds;
 
                 boxOutline.setPosition({std::floor(box.getLeft() ), std::floor(box.getTop())});
-                boxOutline.setSize(sf::Vector2f(std::floor(box.getWidth() ), std::floor(box.getHeight())));
+                boxOutline.setSize(hikari::gfx::Vector2f(std::floor(box.getWidth() ), std::floor(box.getHeight())));
 
                 boxPosition.setPosition({std::floor(box.getPosition().getX()), std::floor(box.getPosition().getY())});
-                boxPosition.setSize(sf::Vector2f(1.0f, 1.0f));
+                boxPosition.setSize(hikari::gfx::Vector2f(1.0f, 1.0f));
 
                 if((*hitBox).shieldFlag) {
-                    boxOutline.setOutlineColor(sf::Color(255, 0, 0));
+                    boxOutline.setOutlineColor(hikari::gfx::Color(255, 0, 0));
                 } else {
-                    boxOutline.setOutlineColor(sf::Color(0, 255, 0));
+                    boxOutline.setOutlineColor(hikari::gfx::Color(0, 255, 0));
                 }
 
                 target.draw(boxOutline);
@@ -535,7 +534,7 @@ namespace hikari {
         zIndex = index;
     }
 
-    void Entity::renderEntity(sf::RenderTarget &target) {
+    void Entity::renderEntity(hikari::gfx::RenderTarget &target) {
         if(animatedSprite) {
             animatedSprite->setPosition(
                 getPosition().toFloor()

@@ -1,6 +1,8 @@
 #ifndef HIKARI_CLIENT_GAME_OBJECTS_ENTITY
 #define HIKARI_CLIENT_GAME_OBJECTS_ENTITY
 
+#include "hikari/core/graphics/Graphics.hpp"
+
 #include "hikari/client/game/objects/GameObject.hpp"
 #include "hikari/client/game/objects/HitBox.hpp"
 #include "hikari/client/game/objects/Faction.hpp"
@@ -11,17 +13,13 @@
 #include "hikari/core/math/Vector2.hpp"
 #include "hikari/client/game/Shot.hpp"
 
-#include <SFML/Graphics/RectangleShape.hpp>
-
 #include <list>
 #include <memory>
 #include <vector>
 
  #define HIKARI_DEBUG_ENTITIES
 
-namespace sf {
-    class RenderTarget;
-} // sf
+ // sf
 
 namespace hikari {
 
@@ -51,8 +49,8 @@ namespace hikari {
         std::shared_ptr<Room> room;
 
         #ifdef HIKARI_DEBUG_ENTITIES
-        sf::RectangleShape boxOutline;
-        sf::RectangleShape boxPosition;
+        hikari::gfx::RectangleShape boxOutline;
+        hikari::gfx::RectangleShape boxPosition;
         #endif // HIKARI_DEBUG_ENTITIES
 
         Direction direction;
@@ -81,7 +79,7 @@ namespace hikari {
         std::unique_ptr<PalettedAnimatedSprite> & getAnimatedSprite();
         std::vector<Shot> activeShots;
 
-        virtual void renderEntity(sf::RenderTarget &target);
+        virtual void renderEntity(hikari::gfx::RenderTarget &target);
 
         /**
          * Removes any non-active shots that are currently being observed by the
@@ -357,9 +355,9 @@ namespace hikari {
          * to the target and, optionally, debug information (hitboxes, etc.) if
          * those features are enabled.
          *
-         * @param target a sf::RenderTarget to draw to
+         * @param target a hikari::gfx::RenderTarget to draw to
          */
-        virtual void render(sf::RenderTarget &target);
+        virtual void render(hikari::gfx::RenderTarget &target);
 
         virtual int getZIndex() const;
 

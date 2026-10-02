@@ -1,3 +1,4 @@
+#include "hikari/core/graphics/Graphics.hpp"
 #include "hikari/client/ClientRuntime.hpp"
 #include "hikari/client/ClientConfig.hpp"
 #include "hikari/client/audio/AudioService.hpp"
@@ -28,7 +29,7 @@
 namespace hikari {
 
     ClientRuntime::ClientRuntime(const ClientConfig & config,
-            const Json::Value & gameConfig, sf::RenderTexture & screenBuffer)
+            const Json::Value & gameConfig, hikari::gfx::RenderTexture & screenBuffer)
         : input(std::make_shared<KeyboardInput>())
         , events(std::make_shared<EventBusImpl>("GlobalEvents", true))
         , images(std::make_shared<ImageCache>(ImageCache::NO_SMOOTHING, ImageCache::USE_MASKING))

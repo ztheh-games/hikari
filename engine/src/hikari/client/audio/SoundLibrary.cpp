@@ -7,8 +7,7 @@
 #include <functional>
 #include <string>
 
-#include <SFML/Audio/Sound.hpp>
-#include <SFML/Audio/SoundBuffer.hpp>
+#include <stdexcept>
 
 #include <json/reader.h>
 #include <json/value.h>
@@ -22,6 +21,7 @@ namespace hikari {
     SoundLibrary::SoundLibrary(const std::string & file)
         : isEnabledFlag(false)
         , file(file)
+        , device(std::make_shared<audio::Device>())
         , music()
         , samples()
         , sampleSoundBuffers()
@@ -52,10 +52,10 @@ namespace hikari {
                 //
                 // Create the sound stream/emulators
                 //
-                auto musicStream = std::make_shared<GMESoundStream>(MUSIC_BUFFER_SIZE);
-                auto sampleStream = std::make_shared<GMESoundStream>(SAMPLE_BUFFER_SIZE);
-                musicStream->open(nsfFile);
-                sampleStream->open(nsfFile);
+                auto musicStream = std::make_shared<GMESoundStream>(MUSIC_BUFFER_SIZE, device);
+                auto sampleStream = std::make_shared<GMESoundStream>(SAMPLE_BUFFER_SIZE, device);
+                if(!musicStream->open(nsfFile) || !sampleStream->open(nsfFile))
+                    throw std::runtime_error("Cannot load NSF library: " + nsfFile);
 
                 samplers.push_back(musicStream);
                 HIKARI_LOG(debug) << "Loaded sampler for " << nsfFile;
@@ -94,7 +94,7 @@ namespace hikari {
                     sampleEntry->samplerId = samplerIndex;
 
                     // Create a sound buffer and pre-render the sample into it.
-                    auto sampleSoundBuffer = std::shared_ptr<sf::SoundBuffer>(
+                    auto sampleSoundBuffer = std::shared_ptr<audio::PcmBuffer>(
                             sampleStream->renderTrackToBuffer(sampleEntry->track));
 
                     // Index the buffers my the same key (the name of the sample)
@@ -102,7 +102,7 @@ namespace hikari {
 
                     auto p = std::make_shared<SamplePlayer>();
                     p->buffer = sampleSoundBuffer;
-                    p->player = std::make_shared<sf::Sound>(*sampleSoundBuffer.get());
+                    p->player = std::make_shared<audio::SampleVoice>(device, sampleSoundBuffer);
                     p->priority = sampleEntryJson[PROP_PRIORITY].asUInt();
 
                     samplePlayers.insert(std::make_pair(name, p));
@@ -112,6 +112,8 @@ namespace hikari {
 
                 }
             }
+        } else {
+            throw std::runtime_error("Invalid sound library JSON: " + file);
         }
 
         isEnabledFlag = true;
@@ -157,7 +159,7 @@ namespace hikari {
                 const auto & otherPlayer = pair.second;
 
                 if(otherPlayer->priority <= samplePlayer->priority &&
-                    otherPlayer->player->getStatus() != sf::SoundSource::Status::Stopped) {
+                    otherPlayer->player->isPlaying()) {
                     otherPlayer->player->stop();
                 }
             }
@@ -181,7 +183,7 @@ namespace hikari {
     void SoundLibrary::setSampleVolume(float volume) {
         std::for_each(std::begin(samplePlayers), std::end(samplePlayers), [volume](std::unordered_map<std::string, std::shared_ptr<SamplePlayer>>::value_type & pair) {
             const auto & otherPlayer = pair.second;
-            const std::shared_ptr<sf::Sound> player = otherPlayer->player;
+            const auto & player = otherPlayer->player;
 
             player->setVolume(volume);
         });
@@ -196,10 +198,15 @@ namespace hikari {
     void SoundLibrary::stopSample() {
         std::for_each(std::begin(samplePlayers), std::end(samplePlayers), [](std::unordered_map<std::string, std::shared_ptr<SamplePlayer>>::value_type & pair) {
             const auto & otherPlayer = pair.second;
-            const std::shared_ptr<sf::Sound> player = otherPlayer->player;
+            const auto & player = otherPlayer->player;
 
             player->stop();
         });
+    }
+
+    void SoundLibrary::checkErrors() {
+        for(const auto & sampler : samplers) sampler->checkError();
+        for(const auto & pair : samplePlayers) pair.second->player->checkError();
     }
 
 } // hikari

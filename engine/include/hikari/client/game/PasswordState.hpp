@@ -1,9 +1,12 @@
 #ifndef HIKARI_CLIENT_GAME_PASSWORDSTATE
 #define HIKARI_CLIENT_GAME_PASSWORDSTATE
 
+#include "hikari/core/graphics/Graphics.hpp"
+#include "hikari/client/platform/Events.hpp"
+
 #include "hikari/core/game/GameState.hpp"
-#include <SFML/Graphics/RenderTarget.hpp>
-#include <SFML/Graphics/View.hpp>
+
+
 #include <memory>
 #include <string>
 
@@ -45,8 +48,8 @@ namespace hikari {
         PasswordState(const std::string &name, const Json::Value &params, GameController & controller, GuiService & guiService, AudioService & audioService, Input & keyboardInput);
         virtual ~PasswordState();
 
-        virtual void handleEvent(sf::Event &event);
-        virtual void render(sf::RenderTarget &target);
+        virtual void handleEvent(hikari::platform::Event &event);
+        virtual void render(hikari::gfx::RenderTarget &target);
         virtual bool update(float dt);
         virtual void onEnter();
         virtual void onExit();

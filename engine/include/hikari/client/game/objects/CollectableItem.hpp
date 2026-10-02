@@ -1,6 +1,8 @@
 #ifndef HIKARI_CLIENT_GAME_OBJECTS_COLLECTABLEITEM
 #define HIKARI_CLIENT_GAME_OBJECTS_COLLECTABLEITEM
 
+#include "hikari/core/graphics/Graphics.hpp"
+
 #include "hikari/client/game/objects/Entity.hpp"
 #include "hikari/core/util/Cloneable.hpp"
 #include <memory>
@@ -32,7 +34,7 @@ namespace hikari {
         virtual void onSleep();
 
         virtual void update(float dt);
-        virtual void render(sf::RenderTarget &target);
+        virtual void render(hikari::gfx::RenderTarget &target);
         virtual void handleCrush(Movable& body, CollisionInfo& info);
         virtual void reset();
     };

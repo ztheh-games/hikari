@@ -1,6 +1,8 @@
 #ifndef HIKARI_CORE_GAME_ANIMATIONSET
 #define HIKARI_CORE_GAME_ANIMATIONSET
 
+#include "hikari/core/graphics/Graphics.hpp"
+
 #include "hikari/core/Platform.hpp"
 #include "hikari/core/game/Animation.hpp"
 #include <memory>
@@ -8,9 +10,7 @@
 #include <unordered_map>
 #include <utility>
 
-namespace sf {
-    class Texture;
-}
+
 
 namespace hikari {
 
@@ -23,17 +23,17 @@ namespace hikari {
     private:
         std::string name;
         std::string imageFileName;
-        std::shared_ptr<sf::Texture> texture;
+        std::shared_ptr<hikari::gfx::Texture> texture;
         std::unordered_map<std::string, AnimationPtr> animationMap;
 
     public:
         static const AnimationPtr NULL_ANIMATION;
 
-        AnimationSet(const std::string& name, const std::string& imageFileName, const std::shared_ptr<sf::Texture> & texture);
+        AnimationSet(const std::string& name, const std::string& imageFileName, const std::shared_ptr<hikari::gfx::Texture> & texture);
 
         const std::string& getName() const;
         const std::string& getImageFileName() const;
-        const std::shared_ptr<sf::Texture> & getTexture() const;
+        const std::shared_ptr<hikari::gfx::Texture> & getTexture() const;
 
         bool add(const std::string& name, const AnimationPtr& animation);
         bool has(const std::string& name) const;

@@ -1,6 +1,9 @@
 #ifndef HIKARI_CLIENT_GAME_OPTIONSSTATE
 #define HIKARI_CLIENT_GAME_OPTIONSSTATE
 
+#include "hikari/core/graphics/Graphics.hpp"
+#include "hikari/client/platform/Events.hpp"
+
 #include "hikari/core/game/GameState.hpp"
 
 #include <memory>
@@ -56,8 +59,8 @@ namespace hikari {
         OptionsState(const std::string &name, const Json::Value &params, GameController & controller, GuiService & guiService);
         virtual ~OptionsState();
 
-        virtual void handleEvent(sf::Event &event);
-        virtual void render(sf::RenderTarget &target);
+        virtual void handleEvent(hikari::platform::Event &event);
+        virtual void render(hikari::gfx::RenderTarget &target);
         virtual bool update(float dt);
         virtual void onEnter();
         virtual void onExit();

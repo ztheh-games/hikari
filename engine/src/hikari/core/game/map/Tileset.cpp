@@ -1,3 +1,4 @@
+#include "hikari/core/graphics/Graphics.hpp"
 #include "hikari/core/game/map/Tileset.hpp"
 #include <algorithm>
 
@@ -8,9 +9,9 @@ namespace hikari {
     }
 
     Tileset::Tileset(
-        const std::shared_ptr<sf::Texture> &texture, 
+        const std::shared_ptr<hikari::gfx::Texture> &texture,
         const size_t& tileSize, 
-        const std::vector<sf::IntRect> &tiles,
+        const std::vector<hikari::gfx::IntRect> &tiles,
         const std::vector<TileAnimator> &tileAnimators
     )
         : tileSize(tileSize)
@@ -24,7 +25,7 @@ namespace hikari {
         return tileSize; 
     }
 
-    const sf::IntRect& Tileset::getTileRect(const unsigned int &index) const {
+    const hikari::gfx::IntRect& Tileset::getTileRect(const unsigned int &index) const {
         if(index < tiles.size()) {
             return tiles.at(index);
         } else {
@@ -32,7 +33,7 @@ namespace hikari {
         }
     }
 
-    const std::shared_ptr<sf::Texture> & Tileset::getTexture() const {
+    const std::shared_ptr<hikari::gfx::Texture> & Tileset::getTexture() const {
         return texture;
     }
 

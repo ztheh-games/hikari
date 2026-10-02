@@ -1,10 +1,10 @@
+#include "hikari/core/graphics/Graphics.hpp"
 #include "hikari/client/game/objects/Enemy.hpp"
 #include "hikari/client/game/objects/EnemyBrain.hpp"
 #include "hikari/client/game/events/EventBus.hpp"
 #include "hikari/client/game/events/EntityDeathEventData.hpp"
 #include "hikari/core/game/SpriteAnimator.hpp"
 #include "hikari/core/util/Log.hpp"
-#include <SFML/Graphics/RenderTarget.hpp>
 
 namespace hikari {
 
@@ -49,7 +49,7 @@ namespace hikari {
         return std::unique_ptr<Enemy>(new Enemy(*this));
     }
 
-    void Enemy::render(sf::RenderTarget &target) {
+    void Enemy::render(hikari::gfx::RenderTarget &target) {
         if(damageTickCounter == 0) {
             Entity::render(target);
         }

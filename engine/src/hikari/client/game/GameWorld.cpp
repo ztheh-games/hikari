@@ -1,3 +1,4 @@
+#include "hikari/core/graphics/Graphics.hpp"
 #include "hikari/client/game/GameWorld.hpp"
 #include "hikari/client/game/events/EventBus.hpp"
 #include "hikari/client/game/events/ObjectRemovedEventData.hpp"
@@ -115,7 +116,7 @@ namespace hikari {
     const std::shared_ptr<Room> & GameWorld::getCurrentRoom() const {
         return currentRoom;
     }
-    void GameWorld::render(sf::RenderTarget &target) {
+    void GameWorld::render(hikari::gfx::RenderTarget &target) {
 
     }
 

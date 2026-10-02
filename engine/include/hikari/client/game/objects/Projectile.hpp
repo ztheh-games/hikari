@@ -1,6 +1,8 @@
 #ifndef HIKARI_CLIENT_GAME_OBJECTS_PROJECTILE
 #define HIKARI_CLIENT_GAME_OBJECTS_PROJECTILE
 
+#include "hikari/core/graphics/Graphics.hpp"
+
 #include "hikari/client/game/objects/Entity.hpp"
 #include "hikari/core/util/Cloneable.hpp"
 #include <memory>
@@ -33,7 +35,7 @@ namespace hikari {
         virtual std::unique_ptr<Projectile> clone() const;
 
         virtual void update(float dt);
-        virtual void render(sf::RenderTarget &target);
+        virtual void render(hikari::gfx::RenderTarget &target);
 
         virtual void handleCollision(Movable& body, CollisionInfo& info);
 

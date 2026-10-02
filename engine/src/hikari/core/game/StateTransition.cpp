@@ -1,7 +1,6 @@
+#include "hikari/core/graphics/Graphics.hpp"
 #include "hikari/core/game/StateTransition.hpp"
 #include "hikari/core/game/GameState.hpp"
-
-#include <SFML/Graphics/RenderTarget.hpp>
 
 namespace hikari {
 
@@ -33,7 +32,7 @@ namespace hikari {
         return completeFlag;
     }
 
-    void StateTransition::render(sf::RenderTarget & target) {
+    void StateTransition::render(hikari::gfx::RenderTarget & target) {
 
     }
 
@@ -46,7 +45,7 @@ namespace hikari {
     //      * @return true if complete, false if still working
     //      */
     //     bool isComplete() const;
-    //     void render(sf::RenderTarget &target);
+    //     void render(hikari::gfx::RenderTarget &target);
     //     void update(float dt);
 
 } // hikari

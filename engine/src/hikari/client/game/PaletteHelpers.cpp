@@ -1,3 +1,4 @@
+#include "hikari/core/graphics/Graphics.hpp"
 #include "hikari/client/game/PaletteHelpers.hpp"
 
 #include "hikari/core/util/FileSystem.hpp"
@@ -8,10 +9,10 @@
 namespace hikari {
 namespace PaletteHelpers {
 
-    std::vector<std::vector<sf::Color>> loadPaletteFile(const std::string & filePath) {
+    std::vector<std::vector<hikari::gfx::Color>> loadPaletteFile(const std::string & filePath) {
         HIKARI_LOG(debug2) << "Loading palettes...";
 
-        std::vector<std::vector<sf::Color>> palette;
+        std::vector<std::vector<hikari::gfx::Color>> palette;
 
         auto fileContents = FileSystem::openFileRead(filePath);
         Json::Value root;
@@ -29,7 +30,7 @@ namespace PaletteHelpers {
 
                 HIKARI_LOG(debug3) << "Parsing palette \"" << paletteName << "\".";
 
-                std::vector<sf::Color> paletteEntry;
+                std::vector<hikari::gfx::Color> paletteEntry;
                 paletteEntry.reserve(paletteEntries.size());
 
                 for(decltype(paletteEntries.size()) j = 0; j < paletteEntries.size(); ++j) {
@@ -39,7 +40,7 @@ namespace PaletteHelpers {
                     const int blue  = colorComponents[2u].asInt();
                     const int alpha = colorComponents[3u].asInt();
 
-                    paletteEntry.emplace_back(sf::Color(red, green, blue, alpha));
+                    paletteEntry.emplace_back(hikari::gfx::Color(red, green, blue, alpha));
                 }
 
                 palette.push_back(paletteEntry);

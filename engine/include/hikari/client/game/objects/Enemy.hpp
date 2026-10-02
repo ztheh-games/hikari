@@ -1,6 +1,8 @@
 #ifndef HIKARI_CLIENT_GAME_OBJECTS_ENEMY
 #define HIKARI_CLIENT_GAME_OBJECTS_ENEMY
 
+#include "hikari/core/graphics/Graphics.hpp"
+
 #include "hikari/client/game/objects/Entity.hpp"
 #include "hikari/core/util/Cloneable.hpp"
 #include <memory>
@@ -39,7 +41,7 @@ namespace hikari {
         virtual void onDeactivated();
 
         virtual void update(float dt);
-        virtual void render(sf::RenderTarget &target);
+        virtual void render(hikari::gfx::RenderTarget &target);
 
         virtual void handleCollision(Movable& body, CollisionInfo& info);
         virtual void handleCrush(Movable& body, CollisionInfo& info);

@@ -1,13 +1,13 @@
 #ifndef HIKARI_CLIENT_GAME_BLOCKSEQUENCE
 #define HIKARI_CLIENT_GAME_BLOCKSEQUENCE
 
+#include "hikari/core/graphics/Graphics.hpp"
+
 #include "hikari/client/game/objects/BlockSequenceDescriptor.hpp"
 #include "hikari/client/game/objects/GameObject.hpp"
 #include "hikari/core/game/Renderable.hpp"
 #include "hikari/core/geom/Rectangle2D.hpp"
 
-#include <SFML/Graphics/RenderTarget.hpp>
-#include <SFML/Graphics/RectangleShape.hpp>
 
 #include <memory>
 
@@ -31,8 +31,8 @@ namespace hikari {
         GameWorld & world;
         std::weak_ptr<EventBus> eventBus;
         std::vector<std::shared_ptr<Enemy>> blockEntities;
-        sf::RectangleShape outlineShape;
-        std::vector<sf::RectangleShape> blockRects;
+        hikari::gfx::RectangleShape outlineShape;
+        std::vector<hikari::gfx::RectangleShape> blockRects;
 
     protected:
         virtual void onActivated();
@@ -46,7 +46,7 @@ namespace hikari {
 
         virtual void reset();
 
-        virtual void render(sf::RenderTarget &target);
+        virtual void render(hikari::gfx::RenderTarget &target);
         virtual void setZIndex(int index);
         virtual int getZIndex() const;
 

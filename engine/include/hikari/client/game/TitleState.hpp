@@ -1,6 +1,9 @@
 #ifndef HIKARI_CLIENT_GAME_TITLESTATE
 #define HIKARI_CLIENT_GAME_TITLESTATE
 
+#include "hikari/core/graphics/Graphics.hpp"
+#include "hikari/client/platform/Events.hpp"
+
 #include "hikari/core/game/GameState.hpp"
 
 #include <memory>
@@ -59,8 +62,8 @@ namespace hikari {
         TitleState(const std::string &name, const Json::Value &params, GameController & controller, GuiService & guiService, AudioService & audioService, EventBus & globalEventBus);
         virtual ~TitleState();
 
-        virtual void handleEvent(sf::Event &event);
-        virtual void render(sf::RenderTarget &target);
+        virtual void handleEvent(hikari::platform::Event &event);
+        virtual void render(hikari::gfx::RenderTarget &target);
         virtual bool update(float dt);
         virtual void onEnter();
         virtual void onExit();

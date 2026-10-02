@@ -1,8 +1,7 @@
+#include "hikari/core/graphics/Graphics.hpp"
 #include "hikari/core/game/StateTransition.hpp"
 
-#include <SFML/Graphics/Color.hpp>
-#include <SFML/Graphics/RectangleShape.hpp>
-#include <SFML/Graphics/RenderTexture.hpp>
+
 
 namespace hikari {
 
@@ -17,17 +16,17 @@ namespace hikari {
         SliceDirection direction;
         const float duration;
         float accumulator;
-        sf::RectangleShape overlay;
-        sf::RenderTexture exitingStateTexture;
-        sf::RenderTexture enteringStateTexture;
-        sf::Sprite exitingStateSpriteLayer;
-        sf::Sprite enteringStateSpriteLayer;
+        hikari::gfx::RectangleShape overlay;
+        hikari::gfx::RenderTexture exitingStateTexture;
+        hikari::gfx::RenderTexture enteringStateTexture;
+        hikari::gfx::Sprite exitingStateSpriteLayer;
+        hikari::gfx::Sprite enteringStateSpriteLayer;
 
     public:
         SliceStateTransition(SliceDirection direction, float duration);
         virtual ~SliceStateTransition();
 
-        virtual void render(sf::RenderTarget &target);
+        virtual void render(hikari::gfx::RenderTarget &target);
         virtual void update(float dt);
     };
 

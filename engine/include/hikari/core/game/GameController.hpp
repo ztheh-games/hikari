@@ -1,6 +1,9 @@
 #ifndef HIKARI_CORE_GAME_GAMECONTROLLER
 #define HIKARI_CORE_GAME_GAMECONTROLLER
 
+#include "hikari/core/graphics/Graphics.hpp"
+#include "hikari/client/platform/Events.hpp"
+
 #include <map>
 #include <string>
 #include <memory>
@@ -13,9 +16,7 @@
     #pragma warning(disable:4251)
 #endif
 
-namespace sf {
-    class RenderTarget;
-}
+
 
 namespace hikari {
 
@@ -46,8 +47,8 @@ namespace hikari {
         public:
             DefaultGameState();
             virtual ~DefaultGameState() { }
-            virtual void handleEvent(sf::Event &event);
-            virtual void render(sf::RenderTarget &target);
+            virtual void handleEvent(hikari::platform::Event &event);
+            virtual void render(hikari::gfx::RenderTarget &target);
             virtual bool update(float dt);
             virtual void onEnter();
             virtual void onExit();
@@ -68,7 +69,7 @@ namespace hikari {
             DefaultStateTransition(StateDirection direction);
             virtual ~DefaultStateTransition();
 
-            virtual void render(sf::RenderTarget &target);
+            virtual void render(hikari::gfx::RenderTarget &target);
             virtual void update(float dt);
         };
 
@@ -100,8 +101,8 @@ namespace hikari {
 
         std::string getPreviousStateName() const;
 
-        void handleEvent(sf::Event &event);
-        void render(sf::RenderTarget &target);
+        void handleEvent(hikari::platform::Event &event);
+        void render(hikari::gfx::RenderTarget &target);
         void update(float dt);
     };
 

@@ -1,15 +1,15 @@
 #ifndef HIKARI_CLIENT_GAME_FADE_COLOR_TASK
 #define HIKARI_CLIENT_GAME_FADE_COLOR_TASK
 
+#include "hikari/core/graphics/Graphics.hpp"
+
 #include "hikari/client/game/BaseTask.hpp"
 
-#include <SFML/Graphics/Color.hpp>
-#include <SFML/Graphics/RectangleShape.hpp>
 
 namespace hikari {
 
     /**
-     * A Task which fades the color of an sf::RectangleShape in or out. Fades to
+     * A Task which fades the color of an hikari::gfx::RectangleShape in or out. Fades to
      * or from transparent. Takes a duration after which the fade is complete and
      * the task is marked as complete.
      */
@@ -22,12 +22,12 @@ namespace hikari {
 
     private:
         FadeDirection direction;
-        sf::RectangleShape & rectangle;
+        hikari::gfx::RectangleShape & rectangle;
         const float duration;
         float accumulator;
 
     public:
-        FadeColorTask(FadeDirection direction, sf::RectangleShape & rectangle,
+        FadeColorTask(FadeDirection direction, hikari::gfx::RectangleShape & rectangle,
             float duration);
 
         virtual ~FadeColorTask();
