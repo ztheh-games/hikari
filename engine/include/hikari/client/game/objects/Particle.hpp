@@ -1,22 +1,19 @@
 #ifndef HIKARI_CLIENT_GAME_OBJECTS_PARTICLE
 #define HIKARI_CLIENT_GAME_OBJECTS_PARTICLE
 
+#include "hikari/core/graphics/Graphics.hpp"
+
 #include "hikari/client/game/objects/GameObject.hpp"
 #include "hikari/core/geom/BoundingBox.hpp"
 #include "hikari/core/math/Vector2.hpp"
 #include "hikari/core/game/Renderable.hpp"
 #include "hikari/core/game/Animator.hpp"
 #include "hikari/core/util/Cloneable.hpp"
-#include "hikari/core/util/SfmlResources.hpp"
 
-#include <SFML/Graphics/Sprite.hpp>
 
 #include <memory>
 
-namespace sf {
-    class RenderTarget;
-    class Texture;
-}
+
 
 namespace hikari {
     class Animation;
@@ -34,8 +31,8 @@ namespace hikari {
         Vector2<float> velocity;
         BoundingBox<float> boundingBox;
 
-        SfmlResources::DefaultSprite sprite;
-        std::shared_ptr<sf::Texture> spriteTexture;
+        gfx::Sprite sprite;
+        std::shared_ptr<hikari::gfx::Texture> spriteTexture;
         std::weak_ptr<Animation> animation;
         std::weak_ptr<AnimationSet> animationSet;
         std::unique_ptr<Animator> animator;
@@ -52,7 +49,7 @@ namespace hikari {
         virtual std::unique_ptr<Particle> clone() const;
 
         virtual void update(float dt);
-        virtual void render(sf::RenderTarget &target);
+        virtual void render(hikari::gfx::RenderTarget &target);
         virtual int getZIndex() const;
         virtual void setZIndex(int index);
 
@@ -71,7 +68,7 @@ namespace hikari {
         void setAnimationSet(const std::weak_ptr<AnimationSet> & animationSet);
         const std::weak_ptr<AnimationSet> & getAnimationSet() const;
 
-        void setSpriteTexture(const std::shared_ptr<sf::Texture>& newTexture);
+        void setSpriteTexture(const std::shared_ptr<hikari::gfx::Texture>& newTexture);
 
         void setCurrentAnimation(const std::string & animationName);
 

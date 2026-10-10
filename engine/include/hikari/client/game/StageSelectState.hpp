@@ -1,14 +1,15 @@
 #ifndef HIKARI_CLIENT_GAME_STAGESELECTSTATE
 #define HIKARI_CLIENT_GAME_STAGESELECTSTATE
 
+#include "hikari/core/graphics/Graphics.hpp"
+#include "hikari/client/platform/Events.hpp"
+
 #include "hikari/core/game/GameState.hpp"
 #include "hikari/client/game/StageSelectStateConfig.hpp"
 #include "hikari/core/geom/Point2D.hpp"
-#include "hikari/core/util/SfmlResources.hpp"
 
-#include <SFML/Graphics/RenderTarget.hpp>
-#include <SFML/Graphics/Sprite.hpp>
-#include <SFML/Graphics/View.hpp>
+
+
 
 #include <memory>
 #include <queue>
@@ -16,9 +17,7 @@
 
 #include <json/value.h>
 
-namespace sf {
-    class Sprite;
-}
+
 
 namespace gcn {
     class Container;
@@ -52,7 +51,7 @@ namespace hikari {
         std::string name;
         GameController & controller;
         StageSelectStateConfig config;
-        sf::View view;
+        hikari::gfx::View view;
         GuiService & guiService;
         AudioService & audioService;
         GameProgress & gameProgress;
@@ -73,10 +72,10 @@ namespace hikari {
         std::shared_ptr<AnimationSet> portraitAnimations;
         std::shared_ptr<AnimationSet> eyeAnimations;
 
-        SfmlResources::DefaultSprite background;
-        SfmlResources::DefaultSprite foreground;
-        SfmlResources::DefaultSprite leftEye;
-        SfmlResources::DefaultSprite rightEye;
+        gfx::Sprite background;
+        gfx::Sprite foreground;
+        gfx::Sprite leftEye;
+        gfx::Sprite rightEye;
 
         int cursorRow;
         int cursorColumn;
@@ -114,8 +113,8 @@ namespace hikari {
         StageSelectState(const std::string &name, const Json::Value &params, const StageSelectStateConfig & config, GameController & controller, GuiService & guiService, AudioService & audioService, GameProgress & gameProgress, ScreenEffectsService & screenEffectsService, ImageCache & imageCache, AnimationSetCache & animationCache);
         virtual ~StageSelectState();
 
-        virtual void handleEvent(sf::Event &event);
-        virtual void render(sf::RenderTarget &target);
+        virtual void handleEvent(hikari::platform::Event &event);
+        virtual void render(hikari::gfx::RenderTarget &target);
         virtual bool update(float dt);
         virtual void onEnter();
         virtual void onExit();

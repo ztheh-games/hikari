@@ -42,7 +42,7 @@ flowchart LR
     VFS --> Client
     VFS --> Services
 
-    SFML[SFML<br/>window, graphics, input, audio] --> Runtime
+    SDL[SDL3 + SDL_image<br/>SDL_gpu, window, input, audio] --> Runtime
     Guichan[Guichan GUI] --> Services
     Squirrel[Squirrel + Sqrat] --> Services
     JSON[JsonCpp] --> Client
@@ -68,7 +68,7 @@ strictly isolated modules:
 
 [`Main.cpp`](../engine/src/hikari/client/Main.cpp) constructs a
 [`Client`](../engine/include/hikari/client/Client.hpp) and calls `run()`.
-`Client` owns the top-level resources for the process: the SFML window and
+`Client` owns the top-level resources for the process: the SDL session/window and
 logical render target, configuration, and the process quit flag.
 [`ClientRuntime`](../engine/include/hikari/client/ClientRuntime.hpp) owns the
 controller and typed application services. It is used only by the composition
@@ -83,13 +83,13 @@ Startup follows this order:
 2. `conf.json` supplies client settings, while `game.json` supplies content
    paths, GUI definitions, startup scripts, state configuration, and the
    initial state.
-3. `run()` creates the SFML window and a fixed 256x240 `RenderTexture`. The
+3. `run()` initializes SDL, creates the SDL_gpu window and a fixed 256x240 `RenderTexture`. The
    window may scale that texture, but game rendering remains at the logical
    resolution.
 4. `initServices()` constructs `ClientRuntime`, which owns the caches, loaders,
    prototype factories, input, GUI, audio, scripting, progress, event, and
-   screen-effect services. Shader initialization belongs to the screen-effect
-   instance and happens after the rendering environment exists.
+   screen-effect services. Material parameters belong to individual effects;
+   compiled shaders and graphics pipelines belong to the window's renderer.
 5. `initGame()` loads palettes, executes startup scripts, converts JSON object
    templates into factory prototypes, loads damage values, creates the
    top-level game states, and selects the configured initial state.
@@ -98,7 +98,7 @@ Startup follows this order:
    and the global collision-resolver reference are cleared, states and gameplay
    objects are destroyed, then prototype factories, screen effects and GUI, the
    VM, remaining services and caches, shared graphics resources, render targets,
-   window, and finally PhysicsFS.
+   window/GPU device, SDL, and finally PhysicsFS.
    Guichan's global font and image-loader registrations are cleared by the GUI
    owner, including when its constructor fails.
 
@@ -134,7 +134,7 @@ therefore execute zero or more fixed simulation updates before one render.
 
 ```mermaid
 flowchart TD
-    Poll[Poll SFML events] --> Dispatch[Update global input,<br/>active state, and GUI input]
+    Poll[Poll SDL events] --> Dispatch[Update global input,<br/>active state, and GUI input]
     Dispatch --> Update[GameController update at 1/60 s]
     Update --> Effects[Update screen effects]
     Effects --> Input[Advance global input state]
@@ -369,43 +369,84 @@ brains, effects, and prototypes must be destroyed before the scripting runtime.
 
 ## Rendering, GUI, and audio
 
-SFML supplies the window, event types, graphics primitives, shaders, render
-targets, and audio streaming base classes. The game renders pixel art to the
-fixed-size texture, applies palette and full-screen shader effects, then
-scales the result to the window.
+Engine-owned `gfx` types record transformed quads, material parameters, clipping,
+and offscreen dependencies without exposing SDL handles to gameplay.
+Rendering uses small POD coordinate/rectangle types; gameplay's existing math
+and collision geometry remain unchanged. Texture pixel mutations preserve
+already-recorded draws through copy-on-write snapshots.
+`platform` owns the SDL window, event translation, keyboard polling, and clocks.
+The renderer owns SDL_gpu textures, indexed quad buffers, samplers, shaders, and
+pipelines. It executes upload and non-nested render passes on D3D12, Vulkan, or
+Metal, then stretches the 256x240 logical image to the swapchain.
+
+Palette lookup and stepped fades use packaged SPIR-V, DXIL, and MSL variants;
+see [shader assets](shader-assets.md). Screen effects write a separate target
+rather than sampling their active output, and the global HUD is recorded into
+the final logical target before presentation. Recorded target generations retain
+distinct allocations while referenced, including transition snapshots.
 
 [`GuiService`](../engine/src/hikari/client/gui/GuiService.cpp) adapts Guichan
-to SFML. It owns a root widget with two layers:
+to the engine's `GpuGraphics`, `GpuImage`, and `PlatformInput` adapters. Bitmap
+font sheets retain CPU pixels, cached image ownership is shared, and nested
+Guichan clipping becomes GPU scissors without changing the camera. Mouse
+positions are converted from window coordinates to logical coordinates.
+The service owns a root widget with two layers:
 
 - a root container where the active game state attaches its widgets;
 - a HUD container for overlays that must remain in front.
 
 [`AudioService`](../engine/src/hikari/client/audio/AudioService.cpp) loads
 music/sample configuration through `SoundLibrary`. Game Music Emu support
-allows NSF sources, while SFML provides the output stream integration.
+decodes NSF tracks at 44100 Hz, stereo, signed 16-bit. Music streams and
+pre-rendered sample voices use SDL_AudioStream bound to one shared playback
+device. Music remains exclusive; lower/equal-priority samples are interrupted
+while higher-priority samples continue. Callback failures are surfaced by
+main-thread polling, and callbacks close before decoder/PCM state is destroyed.
 States and gameplay code can call the service directly; scripts use the
 audio proxy; gameplay objects can also request sounds through local events.
 
 ## Build, dependencies, and tests
 
 The root [`CMakeLists.txt`](../CMakeLists.txt) targets C++17 and adds the
-engine and test directories. By default, CMake fetches pinned SFML and
+engine and test directories. By default, CMake fetches pinned SDL3, SDL_image, and
 PhysicsFS versions; system packages can be selected instead.
 
 [`engine/CMakeLists.txt`](../engine/CMakeLists.txt) compiles Hikari and vendored
 sources into the internal `hikari-runtime` static library, linked by the
-`hikari` executable and runtime tests. It links SFML and PhysicsFS and copies
+`hikari` executable and runtime tests. It links SDL3, SDL_image, and PhysicsFS and copies
 the complete `content` directory beside the executable. The library is a test
 reuse boundary, not a plugin or a separation of the `core` and `client` layers.
 
-The vendored source graph includes JsonCpp, Squirrel/Sqrat, Guichan and its
-SFML adapters, PhysicsFS stream adapters, and Game Music Emu. The
+The vendored source graph includes JsonCpp, Squirrel/Sqrat, Guichan,
+PhysicsFS stream adapters, and Game Music Emu. The
 [`tests` target](../tests/CMakeLists.txt) covers math/geometry, movement, and
 `EventBusImpl` using a small production-source subset. `runtime-tests` links the
 production runtime and exercises filesystem cleanup, ordered service teardown,
 script-backed prototypes, failed startup, repeated construction, factory
-injection, and refill tasks. Runtime tests use repository content and require
-an SFML graphics context.
+injection, and refill tasks, plus engine recording/image/input/GUI contracts.
+Runtime tests use repository content and a dummy SDL audio driver, not a GPU.
+`gpu-tests` separately performs fenced SDL_gpu readbacks for pixel-level
+geometry, palette, fade, clipping, and offscreen-generation checks; an
+unavailable modern GPU is an explicit failure, not a silently skipped test.
+
+The migration's Windows Debug/Release checks cover CPU/runtime contracts, D3D12 pixel
+readbacks, native window input/presentation, callback teardown, and target/
+pipeline reuse, resize, minimized presentation/restore, fullscreen desktop
+fallback, vsync-enabled/disabled presentation, and explicit GPU-device failure.
+Hidden or minimized windows skip GPU encoding rather than depending on a
+backend to return a null swapchain. A real client smoke check also covers
+title-to-stage-select-to-gameplay entry and normal window-close shutdown.
+The original alpha-blending baseline was captured before the
+full-tree cutover; no temporary SFML backend remains. Original palette/fade
+shader captures were unavailable on this host's GDI Generic OpenGL, so those
+readbacks check the original shader formulas rather than captured SFML images.
+The core/runtime/GPU suites pass in fetch-mode Debug/Release and installed-package
+Release builds; the latter uses independently installed SDL, SDL_image, and
+PhysicsFS SDKs with dependency fetching disabled.
+Linux/Vulkan, macOS/Metal, comprehensive legacy screen-image comparisons, and
+physical multi-monitor/high-DPI behavior remain acceptance gates for suitable
+machines. Packaged shader formats are not evidence of backend execution on
+those untested platforms.
 
 ## Current architectural pressure points
 

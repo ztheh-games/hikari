@@ -5,11 +5,7 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
-
-namespace sf {
-    class SoundBuffer;
-    class Sound;
-}
+#include "hikari/client/audio/Playback.hpp"
 
 namespace hikari {
 
@@ -38,16 +34,17 @@ namespace hikari {
         };
 
         struct SamplePlayer {
-            std::shared_ptr<sf::SoundBuffer> buffer;
-            std::shared_ptr<sf::Sound> player;
+            std::shared_ptr<audio::PcmBuffer> buffer;
+            std::shared_ptr<audio::SampleVoice> player;
             unsigned int priority;
         };
 
         bool isEnabledFlag;
         const std::string file;
+        std::shared_ptr<audio::Device> device;
         std::unordered_map<std::string, std::shared_ptr<MusicEntry>> music;
         std::unordered_map<std::string, std::shared_ptr<SampleEntry>> samples;
-        std::unordered_map<std::string, std::shared_ptr<sf::SoundBuffer>> sampleSoundBuffers;
+        std::unordered_map<std::string, std::shared_ptr<audio::PcmBuffer>> sampleSoundBuffers;
         std::vector<std::shared_ptr<GMESoundStream>> samplers;
         std::unordered_map<std::string, std::shared_ptr<SamplePlayer>> samplePlayers;
         std::shared_ptr<SampleEntry> currentlyPlayingSample;
@@ -87,6 +84,7 @@ namespace hikari {
 
         void stopMusic();
         void stopSample();
+        void checkErrors();
     };
 
 } // hikari

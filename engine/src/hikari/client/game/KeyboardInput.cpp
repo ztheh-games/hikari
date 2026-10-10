@@ -1,3 +1,4 @@
+#include "hikari/client/platform/Events.hpp"
 #include "hikari/client/game/KeyboardInput.hpp"
 #include "hikari/core/util/Log.hpp"
 namespace hikari {
@@ -153,66 +154,66 @@ namespace hikari {
         }
     }
 
-    void KeyboardInput::processEvent(const sf::Event &keyboardEvent) {
-        if(const auto* keyPressed = keyboardEvent.getIf<sf::Event::KeyPressed>()) {
+    void KeyboardInput::processEvent(const hikari::platform::Event &keyboardEvent) {
+        if(const auto* keyPressed = keyboardEvent.getIf<hikari::platform::Event::KeyPressed>()) {
                     HIKARI_LOG(debug3) << "Pressed a key!";
 
             switch(keyPressed->code) {
-                case sf::Keyboard::Key::Up:
+                case hikari::platform::Keyboard::Key::Up:
                     currentState.buttonUp = BUTTON_PUSHED;
                     break;
-                case sf::Keyboard::Key::Right:
+                case hikari::platform::Keyboard::Key::Right:
                     currentState.buttonRight = BUTTON_PUSHED;
                     break;
-                case sf::Keyboard::Key::Down:
+                case hikari::platform::Keyboard::Key::Down:
                     currentState.buttonDown = BUTTON_PUSHED;
                     break;
-                case sf::Keyboard::Key::Left:
+                case hikari::platform::Keyboard::Key::Left:
                     currentState.buttonLeft = BUTTON_PUSHED;
                     break;
-                case sf::Keyboard::Key::A:
+                case hikari::platform::Keyboard::Key::A:
                     currentState.buttonShoot = BUTTON_PUSHED;
                     currentState.buttonStart = BUTTON_PUSHED;
                     break;
-                case sf::Keyboard::Key::S:
+                case hikari::platform::Keyboard::Key::S:
                     currentState.buttonJump = BUTTON_PUSHED;
                     break;
-                case sf::Keyboard::Key::Enter:
+                case hikari::platform::Keyboard::Key::Enter:
                     currentState.buttonStart = BUTTON_PUSHED;
                     break;
-                case sf::Keyboard::Key::Escape:
+                case hikari::platform::Keyboard::Key::Escape:
                     currentState.buttonCancel = BUTTON_PUSHED;
                     break;
                 default:
                     break;
             }
-        } else if(const auto* keyReleased = keyboardEvent.getIf<sf::Event::KeyReleased>()) {
+        } else if(const auto* keyReleased = keyboardEvent.getIf<hikari::platform::Event::KeyReleased>()) {
                     HIKARI_LOG(debug3) << "Released a key!";
 
             switch(keyReleased->code) {
-                case sf::Keyboard::Key::Up:
+                case hikari::platform::Keyboard::Key::Up:
                     currentState.buttonUp = !BUTTON_PUSHED;
                     break;
-                case sf::Keyboard::Key::Right:
+                case hikari::platform::Keyboard::Key::Right:
                     currentState.buttonRight = !BUTTON_PUSHED;
                     break;
-                case sf::Keyboard::Key::Down:
+                case hikari::platform::Keyboard::Key::Down:
                     currentState.buttonDown = !BUTTON_PUSHED;
                     break;
-                case sf::Keyboard::Key::Left:
+                case hikari::platform::Keyboard::Key::Left:
                     currentState.buttonLeft = !BUTTON_PUSHED;
                     break;
-                case sf::Keyboard::Key::A:
+                case hikari::platform::Keyboard::Key::A:
                     currentState.buttonStart = !BUTTON_PUSHED;
                     currentState.buttonShoot = !BUTTON_PUSHED;
                     break;
-                case sf::Keyboard::Key::S:
+                case hikari::platform::Keyboard::Key::S:
                     currentState.buttonJump = !BUTTON_PUSHED;
                     break;
-                case sf::Keyboard::Key::Enter:
+                case hikari::platform::Keyboard::Key::Enter:
                     currentState.buttonStart = !BUTTON_PUSHED;
                     break;
-                case sf::Keyboard::Key::Escape:
+                case hikari::platform::Keyboard::Key::Escape:
                     currentState.buttonCancel = !BUTTON_PUSHED;
                     break;
                 default:

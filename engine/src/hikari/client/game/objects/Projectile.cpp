@@ -1,3 +1,4 @@
+#include "hikari/core/graphics/Graphics.hpp"
 #include "hikari/client/game/objects/Projectile.hpp"
 #include "hikari/client/game/objects/Motion.hpp"
 #include "hikari/client/game/objects/motions/LinearMotion.hpp"
@@ -6,7 +7,6 @@
 #include "hikari/core/game/SpriteAnimator.hpp"
 #include "hikari/core/math/Vector2.hpp"
 #include "hikari/core/util/Log.hpp"
-#include <SFML/Graphics/RenderTarget.hpp>
 
 namespace hikari {
 
@@ -39,7 +39,7 @@ namespace hikari {
         return std::unique_ptr<Projectile>(new Projectile(*this));
     }
 
-    void Projectile::render(sf::RenderTarget &target) {
+    void Projectile::render(hikari::gfx::RenderTarget &target) {
         Entity::render(target);
     }
 

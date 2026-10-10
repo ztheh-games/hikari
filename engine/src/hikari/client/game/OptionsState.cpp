@@ -1,3 +1,5 @@
+#include "hikari/core/graphics/Graphics.hpp"
+#include "hikari/client/platform/Events.hpp"
 #include "hikari/client/game/OptionsState.hpp"
 #include "hikari/client/game/Input.hpp"
 #include "hikari/client/audio/AudioService.hpp"
@@ -16,8 +18,6 @@
 
 #include <json/value.h>
 
-#include <SFML/Graphics.hpp>
-#include <SFML/Window/Event.hpp>
 
 namespace hikari {
 
@@ -124,11 +124,11 @@ namespace hikari {
         guiContainer->add(sampleVolumeLabel.get(), 100, 80 + 32);
     }
 
-    void OptionsState::handleEvent(sf::Event &event) {
+    void OptionsState::handleEvent(hikari::platform::Event &event) {
 
     }
 
-    void OptionsState::render(sf::RenderTarget &target) {
+    void OptionsState::render(hikari::gfx::RenderTarget &target) {
         guiService.renderAsTop(guiContainer.get(), target);
     }
 

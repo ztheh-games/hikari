@@ -1,53 +1,48 @@
 #ifndef HIKARI_CLIENT_SCREENEFFECTSSERVICE
 #define HIKARI_CLIENT_SCREENEFFECTSSERVICE
 
+#include "hikari/core/graphics/Graphics.hpp"
+
 #include "hikari/core/util/NonCopyable.hpp"
-#include "hikari/core/util/SfmlResources.hpp"
+
 
 #include <memory>
 #include <vector>
 
-#include <SFML/Graphics/RenderTexture.hpp>
-#include <SFML/Graphics/RectangleShape.hpp>
-#include <SFML/Graphics/Shader.hpp>
-#include <SFML/Graphics/Sprite.hpp>
+
+
 
 #include "hikari/core/util/FileSystem.hpp"
 
-namespace sf {
-    class RenderTarget;
-    class Texture;
-}
+
 
 namespace hikari {
 
     struct ScreenEffect {
-        sf::Sprite * inputSprite;
+        hikari::gfx::Sprite * inputSprite;
 
         virtual void update(float dt) {
 
         }
 
-        virtual void render(sf::RenderTarget & target) {
+        virtual void render(hikari::gfx::RenderTarget & target) {
 
         }
     };
 
     class ScreenEffectsService : public NonCopyable {
     private:
-        sf::Shader fadeShader;
-        sf::RenderTexture backBuffer;
-        SfmlResources::DefaultSprite inputSprite;
+        hikari::gfx::Shader fadeShader;
+        hikari::gfx::RenderTexture backBuffer;
+        gfx::Sprite inputSprite;
         std::vector<std::shared_ptr<ScreenEffect>> effects;
 
     public:
         ScreenEffectsService(int bufferWidth, int bufferHeight);
         virtual ~ScreenEffectsService();
 
-        void setInputTexture(const sf::RenderTexture & texture);
-
         void update(float dt);
-        void render(sf::RenderTarget & target);
+        gfx::RenderTexture & apply(gfx::RenderTexture & input);
 
         void fadeOut(float fadeDuration = 0.2167f);
         void fadeIn(float fadeDuration = 0.2167f);
@@ -58,14 +53,13 @@ namespace hikari {
     struct FadeOutShaderScreenEffect : public ScreenEffect {
         float timer;
         float fadeDuration;
-        sf::Shader & pixelShader;
+        hikari::gfx::Shader & pixelShader;
 
-        FadeOutShaderScreenEffect(sf::Shader & shader, float fadeDuration = 1.0f)
+        FadeOutShaderScreenEffect(hikari::gfx::Shader & shader, float fadeDuration = 1.0f)
             : timer(0)
             , fadeDuration(fadeDuration)
             , pixelShader(shader)
         {
-            pixelShader.setUniform("texture", sf::Shader::CurrentTexture);
             pixelShader.setUniform("fadePercent", (timer / fadeDuration) * 100.0f);
         }
 
@@ -73,7 +67,7 @@ namespace hikari {
             timer += dt;
         }
 
-        virtual void render(sf::RenderTarget & target) {
+        virtual void render(hikari::gfx::RenderTarget & target) {
             pixelShader.setUniform("fadePercent", (timer / fadeDuration) * 100.0f);
             target.draw(*inputSprite, &pixelShader);
         }
@@ -82,14 +76,13 @@ namespace hikari {
     struct FadeInShaderScreenEffect : public ScreenEffect {
         float timer;
         float fadeDuration;
-        sf::Shader & pixelShader;
+        hikari::gfx::Shader & pixelShader;
 
-        FadeInShaderScreenEffect(sf::Shader & shader, float fadeDuration = 1.0f)
+        FadeInShaderScreenEffect(hikari::gfx::Shader & shader, float fadeDuration = 1.0f)
             : timer(fadeDuration)
             , fadeDuration(fadeDuration)
             , pixelShader(shader)
         {
-            pixelShader.setUniform("texture", sf::Shader::CurrentTexture);
             pixelShader.setUniform("fadePercent", (timer / fadeDuration) * 100.0f);
         }
 
@@ -101,7 +94,7 @@ namespace hikari {
             }
         }
 
-        virtual void render(sf::RenderTarget & target) {
+        virtual void render(hikari::gfx::RenderTarget & target) {
             pixelShader.setUniform("fadePercent", (timer / fadeDuration) * 100.0f);
             target.draw(*inputSprite, &pixelShader);
         }

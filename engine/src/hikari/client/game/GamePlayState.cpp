@@ -1,3 +1,5 @@
+#include "hikari/core/graphics/Graphics.hpp"
+#include "hikari/client/platform/Events.hpp"
 #include "hikari/client/game/GamePlayState.hpp"
 #include "hikari/client/game/GameConfig.hpp"
 #include "hikari/client/game/GameProgress.hpp"
@@ -73,9 +75,7 @@
 
 #include <json/value.h>
 
-#include <SFML/Graphics/Drawable.hpp>
-#include <SFML/Graphics/View.hpp>
-#include <SFML/Window/Event.hpp>
+
 
 #include <guichan/widgets/container.hpp>
 #include <guichan/widgets/label.hpp>
@@ -142,7 +142,7 @@ namespace hikari {
         , view()
         , spawnerMarker()
         , transitionMarker()
-        , leftBar(sf::Vector2f(8.0f, 240.0f))
+        , leftBar(hikari::gfx::Vector2f(8.0f, 240.0f))
         , canViewMenu(false)
         , isTransitioningMenu(false)
         , isRefillingEnergy(false)
@@ -439,13 +439,13 @@ namespace hikari {
         }
     }
 
-    void GamePlayState::handleEvent(sf::Event &event) {
-        const auto* keyPressed = event.getIf<sf::Event::KeyPressed>();
+    void GamePlayState::handleEvent(hikari::platform::Event &event) {
+        const auto* keyPressed = event.getIf<hikari::platform::Event::KeyPressed>();
         if(!keyPressed) {
             return;
         }
 
-        if(keyPressed->code == sf::Keyboard::Key::Enter) {
+        if(keyPressed->code == hikari::platform::Keyboard::Key::Enter) {
             // Menu handlng code use to be here. <--
 
             // if(auto gp = gameProgress.lock()) {
@@ -468,7 +468,7 @@ namespace hikari {
             // }
         }
 
-        if(keyPressed->code == sf::Keyboard::Key::Backspace) {
+        if(keyPressed->code == hikari::platform::Keyboard::Key::Backspace) {
             if(keyPressed->shift) {
                 startStage();
             } else {
@@ -476,19 +476,19 @@ namespace hikari {
             }
         }
 
-        if(keyPressed->code == sf::Keyboard::Key::R) {
+        if(keyPressed->code == hikari::platform::Keyboard::Key::R) {
             hero->performStun();
         }
 
-        if(keyPressed->code == sf::Keyboard::Key::T) {
+        if(keyPressed->code == hikari::platform::Keyboard::Key::T) {
             gameProgress.setPlayerEnergy(0);
         }
 
-        if(keyPressed->code == sf::Keyboard::Key::Y) {
+        if(keyPressed->code == hikari::platform::Keyboard::Key::Y) {
             gameProgress.setPlayerEnergy(1.0f);
         }
 
-        if(keyPressed->code == sf::Keyboard::Key::B) {
+        if(keyPressed->code == hikari::platform::Keyboard::Key::B) {
             if(hero->getZIndex() == 0) {
                 hero->setZIndex(-1);
             } else {
@@ -497,7 +497,7 @@ namespace hikari {
         }
     }
 
-    void GamePlayState::render(sf::RenderTarget &target) {
+    void GamePlayState::render(hikari::gfx::RenderTarget &target) {
         if(subState) {
             subState->render(target);
         }
@@ -1256,7 +1256,7 @@ namespace hikari {
         hero->setWeaponId(gameProgress.getCurrentWeapon());
     }
 
-    void GamePlayState::renderMap(sf::RenderTarget &target) const {
+    void GamePlayState::renderMap(hikari::gfx::RenderTarget &target) const {
         const auto& oldView = target.getDefaultView();
         auto newView = camera.getPixelAlignedView();
         target.setView(newView);
@@ -1267,7 +1267,7 @@ namespace hikari {
         target.setView(oldView);
     }
 
-    void GamePlayState::renderHero(sf::RenderTarget &target) const {
+    void GamePlayState::renderHero(hikari::gfx::RenderTarget &target) const {
         const auto& oldView = target.getDefaultView();
         auto newView = camera.getPixelAlignedView();
         target.setView(newView);
@@ -1279,7 +1279,7 @@ namespace hikari {
         target.setView(oldView);
     }
 
-    void GamePlayState::renderEntities(sf::RenderTarget &target) const {
+    void GamePlayState::renderEntities(hikari::gfx::RenderTarget &target) const {
         const auto& oldView = target.getDefaultView();
         auto newView = camera.getPixelAlignedView();
         target.setView(newView);
@@ -1290,38 +1290,38 @@ namespace hikari {
         std::for_each(
             std::begin(activeItems),
             std::end(activeItems),
-            std::bind(&CollectableItem::render, std::placeholders::_1, ReferenceWrapper<sf::RenderTarget>(target)));
+            std::bind(&CollectableItem::render, std::placeholders::_1, ReferenceWrapper<hikari::gfx::RenderTarget>(target)));
 
         const auto & activeEnemies = world.getActiveEnemies();
 
         std::for_each(
             std::begin(activeEnemies),
             std::end(activeEnemies),
-            std::bind(&Enemy::render, std::placeholders::_1, ReferenceWrapper<sf::RenderTarget>(target)));
+            std::bind(&Enemy::render, std::placeholders::_1, ReferenceWrapper<hikari::gfx::RenderTarget>(target)));
 
         const auto & activeParticles = world.getActiveParticles();
 
         std::for_each(
             std::begin(activeParticles),
             std::end(activeParticles),
-            std::bind(&Particle::render, std::placeholders::_1, ReferenceWrapper<sf::RenderTarget>(target)));
+            std::bind(&Particle::render, std::placeholders::_1, ReferenceWrapper<hikari::gfx::RenderTarget>(target)));
 
         const auto & activeProjectiles = world.getActiveProjectiles();
 
         std::for_each(
             std::begin(activeProjectiles),
             std::end(activeProjectiles),
-            std::bind(&Projectile::render, std::placeholders::_1, ReferenceWrapper<sf::RenderTarget>(target)));
+            std::bind(&Projectile::render, std::placeholders::_1, ReferenceWrapper<hikari::gfx::RenderTarget>(target)));
 
         // Restore UI view
         target.setView(oldView);
     }
 
-    void GamePlayState::renderHud(sf::RenderTarget &target) const {
+    void GamePlayState::renderHud(hikari::gfx::RenderTarget &target) const {
 
     }
 
-    void GamePlayState::renderWorld(sf::RenderTarget &target) const {
+    void GamePlayState::renderWorld(hikari::gfx::RenderTarget &target) const {
         const auto& oldView = target.getDefaultView();
         auto newView = camera.getPixelAlignedView();
         auto & orderedEntities = renderQueue;
@@ -1816,7 +1816,7 @@ namespace hikari {
         return SubState::CONTINUE;
     }
 
-    void GamePlayState::ReadySubState::render(sf::RenderTarget &target) {
+    void GamePlayState::ReadySubState::render(hikari::gfx::RenderTarget &target) {
         gamePlayState.renderMap(target);
     }
 
@@ -1898,7 +1898,7 @@ namespace hikari {
         return SubState::CONTINUE;
     }
 
-    void GamePlayState::TeleportSubState::render(sf::RenderTarget &target) {
+    void GamePlayState::TeleportSubState::render(hikari::gfx::RenderTarget &target) {
         gamePlayState.renderMap(target);
         gamePlayState.renderHero(target);
     }
@@ -2351,7 +2351,7 @@ namespace hikari {
         return SubState::CONTINUE;
     }
 
-    void GamePlayState::PlayingSubState::render(sf::RenderTarget &target) {
+    void GamePlayState::PlayingSubState::render(hikari::gfx::RenderTarget &target) {
         gamePlayState.renderWorld(target);
     }
 
@@ -2600,7 +2600,7 @@ namespace hikari {
         return SubState::CONTINUE;
     }
 
-    void GamePlayState::TransitionSubState::render(sf::RenderTarget &target) {
+    void GamePlayState::TransitionSubState::render(hikari::gfx::RenderTarget &target) {
         gamePlayState.renderMap(target);
 
         if(nextRoom) {
@@ -2887,7 +2887,7 @@ namespace hikari {
         return complete ? SubState::NEXT : SubState::CONTINUE;
     }
 
-    void GamePlayState::BossDefeatedSubState::render(sf::RenderTarget &target) {
+    void GamePlayState::BossDefeatedSubState::render(hikari::gfx::RenderTarget &target) {
         gamePlayState.renderWorld(target);
         gamePlayState.renderHud(target);
     }

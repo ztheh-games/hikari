@@ -1,22 +1,20 @@
 #ifndef HIKARI_CORE_GAME_MAP_MAPRENDERER
 #define HIKARI_CORE_GAME_MAP_MAPRENDERER
 
+#include "hikari/core/graphics/Graphics.hpp"
+
 #include "hikari/core/Platform.hpp"
 #include "hikari/core/geom/Rectangle2D.hpp"
-#include "hikari/core/util/SfmlResources.hpp"
+
 #include <memory>
-#include <SFML/Graphics/RectangleShape.hpp>
-#include <SFML/Graphics/Sprite.hpp>
+
 
 #if (_WIN32 && _MSC_VER)
     #pragma warning(push)
     #pragma warning(disable:4251)
 #endif
 
-namespace sf {
-    class RenderTarget;
-    class View;
-}
+
 
 namespace hikari {
 
@@ -34,10 +32,10 @@ namespace hikari {
         static const int TILE_OVERDRAW;
         RoomPtr room;
         TileDataPtr tileData;
-        SfmlResources::DefaultSprite tileSprite;
-        sf::RectangleShape backgroundShape;
-        sf::RectangleShape debugLadderShape;
-        sf::RectangleShape debugForceShape;
+        gfx::Sprite tileSprite;
+        hikari::gfx::RectangleShape backgroundShape;
+        hikari::gfx::RectangleShape debugLadderShape;
+        hikari::gfx::RectangleShape debugForceShape;
         Rectangle2D<int> visibleScreenArea;
         Rectangle2D<int> visibleTileArea;
 
@@ -57,9 +55,9 @@ namespace hikari {
 
         void setCullRegion(const Rectangle2D<int> &cullRegion);
 
-        void render(sf::RenderTarget &target);
-        void renderBackground(sf::RenderTarget &target);
-        void renderForeground(sf::RenderTarget &target);
+        void render(hikari::gfx::RenderTarget &target);
+        void renderBackground(hikari::gfx::RenderTarget &target);
+        void renderForeground(hikari::gfx::RenderTarget &target);
     };
 
 } // hikari

@@ -1,3 +1,4 @@
+#include "hikari/core/graphics/Graphics.hpp"
 #include "hikari/core/game/map/Camera.hpp"
 #include <cmath>
 
@@ -20,12 +21,12 @@ namespace hikari {
         return view;
     }
 
-    sf::View Camera::getPixelAlignedView() const {
-        sf::Vector2f pixelAlignedCenter(view.getX() + (view.getWidth() / 2), view.getY() + (view.getHeight() / 2));
+    hikari::gfx::View Camera::getPixelAlignedView() const {
+        hikari::gfx::Vector2f pixelAlignedCenter(view.getX() + (view.getWidth() / 2), view.getY() + (view.getHeight() / 2));
         pixelAlignedCenter.x = std::floor(pixelAlignedCenter.x);
         pixelAlignedCenter.y = std::floor(pixelAlignedCenter.y);
 
-        sf::View pixelAlignedView(pixelAlignedCenter, sf::Vector2f(view.getWidth(), view.getHeight()));
+        hikari::gfx::View pixelAlignedView(pixelAlignedCenter, hikari::gfx::Vector2f(view.getWidth(), view.getHeight()));
 
         return pixelAlignedView;
     }

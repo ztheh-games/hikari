@@ -1,8 +1,7 @@
+#include "hikari/core/graphics/Graphics.hpp"
 #include "hikari/core/game/StateTransition.hpp"
 #include "hikari/client/game/FadeColorTask.hpp"
 
-#include <SFML/Graphics/Color.hpp>
-#include <SFML/Graphics/RectangleShape.hpp>
 
 namespace hikari {
 
@@ -15,14 +14,14 @@ namespace hikari {
 
     private:
         FadeDirection direction;
-        sf::RectangleShape overlay;
+        hikari::gfx::RectangleShape overlay;
         FadeColorTask fadeTask;
 
     public:
-        FadeStateTransition(FadeDirection direction, sf::Color color, float duration);
+        FadeStateTransition(FadeDirection direction, hikari::gfx::Color color, float duration);
         virtual ~FadeStateTransition();
 
-        virtual void render(sf::RenderTarget &target);
+        virtual void render(hikari::gfx::RenderTarget &target);
         virtual void update(float dt);
     };
 

@@ -1,11 +1,10 @@
+#include "hikari/core/graphics/Graphics.hpp"
 #include "hikari/client/game/objects/AnimatedSprite.hpp"
-
-#include <SFML/Graphics/RenderTarget.hpp>
 
 namespace hikari {
     class AnimatedSprite {
     private:
-        sf::Sprite sprite;
+        hikari::gfx::Sprite sprite;
         std::string currentAnimation;
         std::weak_ptr<Animation> animation;
         std::weak_ptr<AnimationSet> animationSet;
@@ -26,7 +25,7 @@ namespace hikari {
             animator.update(dt);
         }
 
-        void AnimatedSprite::render(sf::RenderTarget &target) {
+        void AnimatedSprite::render(hikari::gfx::RenderTarget &target) {
             target.draw(sprite);
         }
 

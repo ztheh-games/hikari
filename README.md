@@ -1,5 +1,3 @@
-[![Build Status](https://travis-ci.org/zackthehuman/hikari.svg?branch=master)](https://travis-ci.org/zackthehuman/hikari)
-
 ![Hikari](http://zackthehuman.com/images/hikari/hikari-logo.png)
 
 Project Hikari
@@ -36,14 +34,26 @@ Project Hikari uses CMake 4.4.3 to generate platform and compiler-specific build
 
 By default, CMake downloads pinned, compatible versions of these dependencies:
 
-* [SFML 3.1.0][4]
+* [SDL 3.4.16][4]
+* [SDL_image 3.4.6](https://github.com/libsdl-org/SDL_image)
 * [PhysicsFS 3.2.0][5]
 
 Configure with `-DHIKARI_FETCH_DEPENDENCIES=OFF` to use installed copies instead.
+Set `-DCMAKE_PREFIX_PATH="<SDK prefix>"` when those packages are outside CMake's
+default search locations. SDL and SDL_image must match the pinned versions;
+PhysicsFS's exported CMake targets are preferred, with the legacy finder retained
+for installations without package configuration files.
 
-SFML 3 requires a C++17-compliant compiler.
+Hikari requires a C++17-compliant compiler and a modern GPU supporting D3D12
+(Windows), Vulkan (Windows/Linux), or Metal (macOS). Rendering uses SDL_gpu;
+there is no OpenGL or software fallback. Linux builds also need the development
+packages for the SDL video/audio backends appropriate to the host.
 
-### Building on Windows (VS2010+) ###
+Normal builds use packaged SPIR-V, DXIL, and MSL shaders and do not build a shader
+compiler. See [shader assets](docs/shader-assets.md) for regeneration using an
+existing SDL_shadercross executable, including the local recodr cache.
+
+### Building on Windows ###
 
 1. Install CMake 4.4.3 and Visual Studio with C++ support.
 2. Clone the repository.
@@ -75,7 +85,7 @@ SFML 3 requires a C++17-compliant compiler.
 
 ### Building on Mac (Makefile) ###
 
-1. Install CMake 4.4.3 and a C++17 compiler. When using system dependencies, SFML must be built with the same version of `libc++` as Hikari.
+1. Install CMake 4.4.3 and a C++17 compiler.
 2. Clone the repository.
 
         git clone https://github.com/zackthehuman/hikari.git hikari
@@ -99,7 +109,7 @@ No. While the mechanics of the game are very similar to Mega Man 3, this project
 [1]: http://megaman.wikia.com/wiki/Dr._Light
 [2]: http://en.wikipedia.org/wiki/Mega_Man
 [3]: http://www.cmake.org/
-[4]: http://www.sfml-dev.org/
+[4]: https://www.libsdl.org/
 [5]: http://icculus.org/physfs/downloads/
 [6]: http://squirrel-lang.org
 [7]: https://www.youtube.com/user/hakaselabshikari/videos

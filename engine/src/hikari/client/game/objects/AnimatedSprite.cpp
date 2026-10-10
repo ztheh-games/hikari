@@ -1,8 +1,7 @@
+#include "hikari/core/graphics/Graphics.hpp"
 #include "hikari/client/game/objects/AnimatedSprite.hpp"
 #include "hikari/core/game/Animation.hpp"
 #include "hikari/core/game/AnimationSet.hpp"
-
-#include <SFML/Graphics/RenderTarget.hpp>
 
 #include <iostream>
 
@@ -39,7 +38,7 @@ namespace hikari {
         animator.update(dt);
     }
 
-    void AnimatedSprite::render(sf::RenderTarget &target) const {
+    void AnimatedSprite::render(hikari::gfx::RenderTarget &target) const {
         target.draw(sprite);
     }
 

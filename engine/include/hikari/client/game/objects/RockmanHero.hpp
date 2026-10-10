@@ -1,3 +1,4 @@
+#include "hikari/core/graphics/Graphics.hpp"
 /*
 #ifndef HIKARI_CLIENT_GAME_OBJECTS_ROCKMANHERO
 #define HIKARI_CLIENT_GAME_OBJECTS_ROCKMANHERO
@@ -29,7 +30,7 @@ namespace hikari {
         RockmanHero(const int& id, std::shared_ptr<AnimationSet> animations, std::shared_ptr<Input> input);
         void setAnimationSet(std::shared_ptr<AnimationSet> animations);
         virtual ~RockmanHero();
-        virtual void render(sf::RenderTarget &target);
+        virtual void render(hikari::gfx::RenderTarget &target);
         virtual void update(const float &dt);
     };
 

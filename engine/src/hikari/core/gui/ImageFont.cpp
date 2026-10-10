@@ -1,10 +1,10 @@
+#include "hikari/core/graphics/Graphics.hpp"
 #include "hikari/core/gui/ImageFont.hpp"
-#include <SFML/Graphics/Texture.hpp>
-#include <SFML/Graphics/RenderTarget.hpp>
+
 
 namespace hikari {
 
-    ImageFont::ImageFont(const std::shared_ptr<sf::Texture> &glyphTexture, const std::string &glyphs, 
+    ImageFont::ImageFont(const std::shared_ptr<hikari::gfx::Texture> &glyphTexture, const std::string &glyphs,
         const int &glyphWidth, const int &glyphHeight)
         : glyphWidth(glyphWidth)
         , glyphHeight(glyphHeight)
@@ -19,7 +19,7 @@ namespace hikari {
                 itr < end; 
                 ++itr, ++i) {
                     char glyph = (*itr);
-                    glyphMap[glyph] = sf::IntRect({i * glyphWidth, 0}, {glyphWidth, glyphHeight});
+                    glyphMap[glyph] = hikari::gfx::IntRect({i * glyphWidth, 0}, {glyphWidth, glyphHeight});
             }
     }
 
@@ -33,7 +33,7 @@ namespace hikari {
         return glyphHeight;
     }
 
-    void ImageFont::renderText(sf::RenderTarget &target, const std::string &text, const int &x, const int &y, const sf::Color &color) {
+    void ImageFont::renderText(hikari::gfx::RenderTarget &target, const std::string &text, const int &x, const int &y, const hikari::gfx::Color &color) {
         int i = 0;
         int dx = 0;
         int dy = 0;

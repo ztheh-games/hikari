@@ -1,6 +1,8 @@
 #ifndef HIKARI_CLIENT_CLIENTRUNTIME
 #define HIKARI_CLIENT_CLIENTRUNTIME
 
+#include "hikari/core/graphics/Graphics.hpp"
+
 #include "hikari/core/game/GameController.hpp"
 #include "hikari/core/util/NonCopyable.hpp"
 #include <memory>
@@ -9,9 +11,7 @@ namespace Json {
     class Value;
 }
 
-namespace sf {
-    class RenderTexture;
-}
+
 
 namespace hikari {
 
@@ -61,7 +61,7 @@ namespace hikari {
         GameController controller;
 
         ClientRuntime(const ClientConfig & config, const Json::Value & gameConfig,
-            sf::RenderTexture & screenBuffer);
+            hikari::gfx::RenderTexture & screenBuffer);
         ~ClientRuntime();
     };
 

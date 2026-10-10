@@ -1,15 +1,14 @@
+#include "hikari/core/graphics/Graphics.hpp"
 #include "hikari/core/game/FadeStateTransition.hpp"
 #include "hikari/core/game/GameState.hpp"
 #include "hikari/core/util/Log.hpp"
 
-#include <SFML/Graphics/RenderTarget.hpp>
-
 namespace hikari {
 
-    FadeStateTransition::FadeStateTransition(FadeDirection direction, sf::Color color, float duration)
+    FadeStateTransition::FadeStateTransition(FadeDirection direction, hikari::gfx::Color color, float duration)
         : StateTransition()
         , direction(direction)
-        , overlay(sf::Vector2f(256.0f, 240.0f))
+        , overlay(hikari::gfx::Vector2f(256.0f, 240.0f))
         , fadeTask(direction == FADE_OUT ? FadeColorTask::FADE_OUT : FadeColorTask::FADE_IN, overlay, duration)
     {
         setComplete(false);
@@ -22,7 +21,7 @@ namespace hikari {
 
     }
 
-    void FadeStateTransition::render(sf::RenderTarget &target) {
+    void FadeStateTransition::render(hikari::gfx::RenderTarget &target) {
         if(direction == FADE_OUT) {
             if(exitingState) {
                 exitingState->render(target);
@@ -33,9 +32,9 @@ namespace hikari {
             }
         }
 
-        const sf::View & oldView = target.getView();
+        const hikari::gfx::View & oldView = target.getView();
 
-        sf::View overlayView(sf::FloatRect({0.0f, 0.0f}, {256.0f, 240.0f}));
+        hikari::gfx::View overlayView(hikari::gfx::FloatRect({0.0f, 0.0f}, {256.0f, 240.0f}));
 
         target.setView(overlayView);
         target.draw(overlay);

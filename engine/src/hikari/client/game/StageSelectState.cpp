@@ -1,3 +1,5 @@
+#include "hikari/core/graphics/Graphics.hpp"
+#include "hikari/client/platform/Events.hpp"
 #include "hikari/client/game/StageSelectState.hpp"
 #include "hikari/client/audio/AudioService.hpp"
 #include "hikari/client/game/GameProgress.hpp"
@@ -18,8 +20,6 @@
 #include "hikari/core/util/StringUtils.hpp"
 #include "hikari/core/util/Log.hpp"
 
-#include <SFML/Graphics.hpp>
-#include <SFML/Window/Event.hpp>
 
 #include <guichan/widgets/container.hpp>
 #include <guichan/widgets/label.hpp>
@@ -249,25 +249,25 @@ namespace hikari {
         guiFlashLayer->requestMoveToTop();
     }
 
-    void StageSelectState::handleEvent(sf::Event &event) {
+    void StageSelectState::handleEvent(hikari::platform::Event &event) {
         bool playSample = false;
         const float SINGLE_FRAME = 1.0f / 60.0f;
 
-        if(const auto* keyPressed = event.getIf<sf::Event::KeyPressed>()) {
+        if(const auto* keyPressed = event.getIf<hikari::platform::Event::KeyPressed>()) {
             if(enableCursorMovement) {
-                if(keyPressed->code == sf::Keyboard::Key::Up) {
+                if(keyPressed->code == hikari::platform::Keyboard::Key::Up) {
                     cursorRow = std::max(0, cursorRow - 1);
                     playSample = true;
-                } else if(keyPressed->code == sf::Keyboard::Key::Down) {
+                } else if(keyPressed->code == hikari::platform::Keyboard::Key::Down) {
                     cursorRow = std::min(NUM_OF_CURSOR_ROWS - 1, cursorRow + 1);
                     playSample = true;
-                } else if(keyPressed->code == sf::Keyboard::Key::Left) {
+                } else if(keyPressed->code == hikari::platform::Keyboard::Key::Left) {
                     cursorColumn = std::max(0, cursorColumn - 1);
                     playSample = true;
-                } else if(keyPressed->code == sf::Keyboard::Key::Right) {
+                } else if(keyPressed->code == hikari::platform::Keyboard::Key::Right) {
                     cursorColumn = std::min(NUM_OF_CURSOR_COLUMNS - 1, cursorColumn + 1);
                     playSample = true;
-                } else if(keyPressed->code == sf::Keyboard::Key::Enter) {
+                } else if(keyPressed->code == hikari::platform::Keyboard::Key::Enter) {
                     // Play the "selected" sound
                     taskQueue.push(std::make_shared<FunctionTask>(0, [&](float dt) -> bool {
                         audioService.playSample("Stage Selected");
@@ -353,7 +353,7 @@ namespace hikari {
                     taskQueue.push(std::make_shared<FunctionTask>(0, [&](float dt) -> bool {
                         controller.requestStateChange(
                             "gameplay",
-                            std::unique_ptr<StateTransition>(new FadeStateTransition(FadeStateTransition::FADE_OUT, sf::Color::Black, (1.0f/60.0f*13.0f))),
+                            std::unique_ptr<StateTransition>(new FadeStateTransition(FadeStateTransition::FADE_OUT, hikari::gfx::Color::Black, (1.0f/60.0f*13.0f))),
                             std::unique_ptr<StateTransition>());
                         startGamePlay = true;
 
@@ -373,7 +373,7 @@ namespace hikari {
         }
     }
 
-    void StageSelectState::render(sf::RenderTarget &target) {
+    void StageSelectState::render(hikari::gfx::RenderTarget &target) {
         guiService.renderAsTop(guiContainer.get(), target);
     }
 

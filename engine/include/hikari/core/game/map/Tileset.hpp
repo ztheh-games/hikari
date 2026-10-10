@@ -1,11 +1,11 @@
 #ifndef HIKARI_CORE_GAME_MAP_TILESET
 #define HIKARI_CORE_GAME_MAP_TILESET
 
+#include "hikari/core/graphics/Graphics.hpp"
+
 #include "hikari/core/Platform.hpp"
 #include "hikari/core/game/TileAnimator.hpp"
 
-#include <SFML/Graphics/Rect.hpp>
-#include <SFML/Graphics/Texture.hpp>
 
 #include <memory>
 
@@ -40,19 +40,19 @@ namespace hikari {
     class HIKARI_API Tileset {
     private:
         size_t tileSize;
-        std::vector<sf::IntRect> tiles;
+        std::vector<hikari::gfx::IntRect> tiles;
         std::vector<TileAnimator> tileAnimators;
-        std::shared_ptr<sf::Texture> texture;
+        std::shared_ptr<hikari::gfx::Texture> texture;
     public:
         Tileset(
-            const std::shared_ptr<sf::Texture> &texture,
+            const std::shared_ptr<hikari::gfx::Texture> &texture,
             const size_t& tileSize,
-            const std::vector<sf::IntRect> &tiles,
+            const std::vector<hikari::gfx::IntRect> &tiles,
             const std::vector<TileAnimator> &tileAnimators
         );
         const size_t& getTileSize() const;
-        const sf::IntRect& getTileRect(const unsigned int &index) const;
-        const std::shared_ptr<sf::Texture> & getTexture() const;
+        const hikari::gfx::IntRect& getTileRect(const unsigned int &index) const;
+        const std::shared_ptr<hikari::gfx::Texture> & getTexture() const;
         void update(float delta);
     };
 

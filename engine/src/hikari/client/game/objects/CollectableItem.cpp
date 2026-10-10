@@ -1,3 +1,4 @@
+#include "hikari/core/graphics/Graphics.hpp"
 #include "hikari/client/game/objects/CollectableItem.hpp"
 #include "hikari/client/game/events/EventBus.hpp"
 #include "hikari/client/game/events/EntityDeathEventData.hpp"
@@ -5,8 +6,6 @@
 
 #include "hikari/core/game/map/Room.hpp"
 #include "hikari/core/util/Log.hpp"
-
-#include <SFML/Graphics/RenderTarget.hpp>
 
 namespace hikari {
 
@@ -67,7 +66,7 @@ namespace hikari {
         }
     }
 
-    void CollectableItem::render(sf::RenderTarget &target) {
+    void CollectableItem::render(hikari::gfx::RenderTarget &target) {
         Entity::render(target);
     }
 

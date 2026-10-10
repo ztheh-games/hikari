@@ -1,9 +1,11 @@
 #ifndef HIKARI_CLIENT_GAME_WEAPONGETSTATE
 #define HIKARI_CLIENT_GAME_WEAPONGETSTATE
 
+#include "hikari/core/graphics/Graphics.hpp"
+#include "hikari/client/platform/Events.hpp"
+
 #include "hikari/core/game/GameState.hpp"
-#include <SFML/Graphics/RenderTarget.hpp>
-#include <SFML/Graphics/View.hpp>
+
 
 #include <memory>
 #include <queue>
@@ -38,7 +40,7 @@ namespace hikari {
         std::string name;
         GameController & controller;
         const GameConfig & gameConfig;
-        sf::View view;
+        hikari::gfx::View view;
         GuiService & guiService;
         AudioService & audioService;
         GameProgress & gameProgress;
@@ -58,8 +60,8 @@ namespace hikari {
         WeaponGetState(const std::string & name, GameController & controller, const GameConfig & gameConfig, GuiService & guiService, AudioService & audioService, GameProgress & gameProgress, Input & keyboardInput);
         virtual ~WeaponGetState();
 
-        virtual void handleEvent(sf::Event &event);
-        virtual void render(sf::RenderTarget &target);
+        virtual void handleEvent(hikari::platform::Event &event);
+        virtual void render(hikari::gfx::RenderTarget &target);
         virtual bool update(float dt);
         virtual void onEnter();
         virtual void onExit();

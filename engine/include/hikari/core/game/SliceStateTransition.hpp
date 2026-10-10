@@ -1,10 +1,10 @@
+#include "hikari/core/graphics/Graphics.hpp"
 #include "hikari/core/game/StateTransition.hpp"
-#include "hikari/core/util/SfmlResources.hpp"
 
-#include <SFML/Graphics/Color.hpp>
-#include <SFML/Graphics/RectangleShape.hpp>
-#include <SFML/Graphics/RenderTexture.hpp>
-#include <SFML/Graphics/Sprite.hpp>
+
+
+
+
 #include <memory>
 
 namespace hikari {
@@ -17,16 +17,16 @@ namespace hikari {
         };
 
     private:
-        static std::unique_ptr<sf::RenderTexture> exitingStateTexture;
-        static std::unique_ptr<sf::RenderTexture> enteringStateTexture;
+        static std::unique_ptr<hikari::gfx::RenderTexture> exitingStateTexture;
+        static std::unique_ptr<hikari::gfx::RenderTexture> enteringStateTexture;
 
         SliceDirection direction;
         const float duration;
         float accumulator;
-        SfmlResources::DefaultSprite exitingStateSpriteLayerTop;
-        SfmlResources::DefaultSprite exitingStateSpriteLayerMiddle;
-        SfmlResources::DefaultSprite exitingStateSpriteLayerBottom;
-        SfmlResources::DefaultSprite enteringStateSpriteLayer;
+        gfx::Sprite exitingStateSpriteLayerTop;
+        gfx::Sprite exitingStateSpriteLayerMiddle;
+        gfx::Sprite exitingStateSpriteLayerBottom;
+        gfx::Sprite enteringStateSpriteLayer;
 
     public:
         SliceStateTransition(SliceDirection direction, float duration);
@@ -35,7 +35,7 @@ namespace hikari {
         static void createSharedTextures();
         static void destroySharedTextures();
 
-        virtual void render(sf::RenderTarget &target);
+        virtual void render(hikari::gfx::RenderTarget &target);
         virtual void update(float dt);
     };
 

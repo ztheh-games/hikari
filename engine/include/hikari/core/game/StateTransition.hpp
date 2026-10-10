@@ -1,14 +1,14 @@
 #ifndef HIKARI_CORE_GAME_STATETRANSITION
 #define HIKARI_CORE_GAME_STATETRANSITION
 
+#include "hikari/core/graphics/Graphics.hpp"
+
 #include <map>
 #include <string>
 #include <memory>
 #include "hikari/core/Platform.hpp"
 
-namespace sf {
-    class RenderTarget;
-}
+
 
 namespace hikari {
 
@@ -40,7 +40,7 @@ namespace hikari {
          * @return true if complete, false if still working
          */
         bool isComplete() const;
-        virtual void render(sf::RenderTarget &target);
+        virtual void render(hikari::gfx::RenderTarget &target);
         virtual void update(float dt);
     };
 

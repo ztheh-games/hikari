@@ -1,10 +1,10 @@
+#include "hikari/core/graphics/Graphics.hpp"
 #include "hikari/core/game/SpriteAnimator.hpp"
 #include "hikari/core/game/Animation.hpp"
-#include <SFML/Graphics/Sprite.hpp>
 
 namespace hikari {
 
-    SpriteAnimator::SpriteAnimator(sf::Sprite &sprite)
+    SpriteAnimator::SpriteAnimator(hikari::gfx::Sprite &sprite)
         : Animator()
         , invertXOffset(false)
         , invertYOffset(false)

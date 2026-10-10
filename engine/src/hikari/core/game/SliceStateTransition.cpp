@@ -1,18 +1,17 @@
+#include "hikari/core/graphics/Graphics.hpp"
 #include "hikari/core/game/SliceStateTransition.hpp"
 #include "hikari/core/game/GameState.hpp"
 #include "hikari/core/util/Log.hpp"
 
-#include <SFML/Graphics/RenderTarget.hpp>
-
 namespace hikari {
 
-    std::unique_ptr<sf::RenderTexture> SliceStateTransition::exitingStateTexture(nullptr);
-    std::unique_ptr<sf::RenderTexture> SliceStateTransition::enteringStateTexture(nullptr);
+    std::unique_ptr<hikari::gfx::RenderTexture> SliceStateTransition::exitingStateTexture(nullptr);
+    std::unique_ptr<hikari::gfx::RenderTexture> SliceStateTransition::enteringStateTexture(nullptr);
 
     void SliceStateTransition::createSharedTextures() {
-        exitingStateTexture.reset(new sf::RenderTexture());
+        exitingStateTexture.reset(new hikari::gfx::RenderTexture());
         exitingStateTexture->resize({256, 240});
-        enteringStateTexture.reset(new sf::RenderTexture());
+        enteringStateTexture.reset(new hikari::gfx::RenderTexture());
         enteringStateTexture->resize({256, 240});
     }
 
@@ -34,11 +33,11 @@ namespace hikari {
         setComplete(false);
 
         exitingStateSpriteLayerTop.setTexture(exitingStateTexture->getTexture());
-        exitingStateSpriteLayerTop.setTextureRect(sf::IntRect({0, 0}, {256, 240 / 3}));
+        exitingStateSpriteLayerTop.setTextureRect(hikari::gfx::IntRect({0, 0}, {256, 240 / 3}));
         exitingStateSpriteLayerMiddle.setTexture(exitingStateTexture->getTexture());
-        exitingStateSpriteLayerMiddle.setTextureRect(sf::IntRect({0, 240 / 3}, {256, 240 / 3}));
+        exitingStateSpriteLayerMiddle.setTextureRect(hikari::gfx::IntRect({0, 240 / 3}, {256, 240 / 3}));
         exitingStateSpriteLayerBottom.setTexture(exitingStateTexture->getTexture());
-        exitingStateSpriteLayerBottom.setTextureRect(sf::IntRect({0, 240 / 3 * 2}, {256, 240 / 3}));
+        exitingStateSpriteLayerBottom.setTextureRect(hikari::gfx::IntRect({0, 240 / 3 * 2}, {256, 240 / 3}));
         enteringStateSpriteLayer.setTexture(enteringStateTexture->getTexture());
     }
 
@@ -46,23 +45,23 @@ namespace hikari {
 
     }
 
-    void SliceStateTransition::render(sf::RenderTarget &target) {
-        //const sf::View & oldView = target.getView();
+    void SliceStateTransition::render(hikari::gfx::RenderTarget &target) {
+        //const hikari::gfx::View & oldView = target.getView();
 
-        //sf::View overlayView(sf::FloatRect(0.0f, 0.0f, 256.0f, 240.0f));
+        //hikari::gfx::View overlayView(hikari::gfx::FloatRect(0.0f, 0.0f, 256.0f, 240.0f));
 
         //target.setView(overlayView);
         // target.draw(overlay);
         //if(!isComplete()) {
             if(direction == SLICE_LEFT) {
                 if(enteringState) {
-                    enteringStateTexture->clear(sf::Color::Transparent);
+                    enteringStateTexture->clear(hikari::gfx::Color::Transparent);
                     enteringState->render(*enteringStateTexture);
                     enteringStateTexture->display();
                     target.draw(enteringStateSpriteLayer);
                 }
                 if(exitingState) {
-                    exitingStateTexture->clear(sf::Color::Transparent);
+                    exitingStateTexture->clear(hikari::gfx::Color::Transparent);
                     exitingState->render(*exitingStateTexture);
                     exitingStateTexture->display();
                     target.draw(exitingStateSpriteLayerTop);
@@ -71,7 +70,7 @@ namespace hikari {
                 }
             } else {
                 // if(enteringState) {
-                //     enteringStateTexture.clear(sf::Color::Green);
+                //     enteringStateTexture.clear(hikari::gfx::Color::Green);
                 //     enteringState->render(enteringStateTexture);
                 //     enteringStateTexture.display();
                 //     target.draw(enteringStateSpriteLayer);
@@ -88,21 +87,21 @@ namespace hikari {
         float percentComplete = accumulator / duration;
 
         exitingStateSpriteLayerTop.setPosition(
-            sf::Vector2f(
+            hikari::gfx::Vector2f(
                 1 * (percentComplete * 256),
                 0
             )
         );
 
         exitingStateSpriteLayerMiddle.setPosition(
-            sf::Vector2f(
+            hikari::gfx::Vector2f(
                 -1 * (percentComplete * 256),
                 240 / 3
             )
         );
 
         exitingStateSpriteLayerBottom.setPosition(
-            sf::Vector2f(
+            hikari::gfx::Vector2f(
                 1 * (percentComplete * 256),
                 240 / 3 * 2
             )

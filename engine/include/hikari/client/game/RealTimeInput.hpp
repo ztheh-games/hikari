@@ -1,10 +1,10 @@
 #ifndef HIKARI_CLIENT_GAME_REALTIMEINPUT
 #define HIKARI_CLIENT_GAME_REALTIMEINPUT
 
+#include "hikari/client/platform/Events.hpp"
+
 #include "hikari/core/Platform.hpp"
 #include "hikari/client/game/Input.hpp"
-
-#include <SFML/Window/Keyboard.hpp>
 
 #include <unordered_map>
 
@@ -60,7 +60,7 @@ namespace hikari {
         ButtonState currentState;
         ButtonState previousState;
 
-        std::unordered_map<Button, sf::Keyboard::Key> keybindings;
+        std::unordered_map<Button, hikari::platform::Keyboard::Key> keybindings;
 
     public:
         RealTimeInput();
@@ -84,7 +84,7 @@ namespace hikari {
          * @param  button the virtual button to set binding for
          * @param  key    the keyboard key to trigger the button
          */
-        void bindKey(const Button & button, sf::Keyboard::Key key);
+        void bindKey(const Button & button, hikari::platform::Keyboard::Key key);
     };
     
 } // hikari

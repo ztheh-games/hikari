@@ -1,8 +1,9 @@
+#include "hikari/core/graphics/Graphics.hpp"
 #include "hikari/core/util/ImageCache.hpp"
 #include "hikari/core/util/FileSystem.hpp"
 #include "hikari/core/util/Log.hpp"
-#include <SFML/Graphics/Image.hpp>
-#include <SFML/Graphics/Texture.hpp>
+
+
 #include <iostream>
 #include <sstream>
 #include <cstddef>
@@ -14,7 +15,7 @@ namespace hikari {
     const bool ImageCache::USE_MASKING = true;
     const bool ImageCache::NO_MASKING = false;
 
-    ImageCache::ImageCache(bool smoothing, bool masking, const sf::Color &mask)
+    ImageCache::ImageCache(bool smoothing, bool masking, const hikari::gfx::Color &mask)
         : enableSmoothing(smoothing)
         , enableMask(masking)
         , maskColor(mask) { 
@@ -24,7 +25,7 @@ namespace hikari {
     ImageCache::Resource ImageCache::loadResource(const std::string &fileName) {
         HIKARI_LOG(debug) << "Caching image: " << fileName;
 
-        Resource texture(new sf::Texture());
+        Resource texture(new hikari::gfx::Texture());
 
         if(FileSystem::exists(fileName)) {
             auto handle = FileSystem::openFileRead(fileName);
@@ -41,7 +42,7 @@ namespace hikari {
 
             handle->read(buffer.get(), length);
 
-            sf::Image imageData;
+            hikari::gfx::Image imageData;
 
             // Fill an image buffer with pixel data
             if(imageData.loadFromMemory(buffer.get(), static_cast<std::size_t>(length))) {

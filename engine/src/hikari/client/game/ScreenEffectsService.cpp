@@ -1,27 +1,20 @@
+#include "hikari/core/graphics/Graphics.hpp"
 #include "hikari/client/game/ScreenEffectsService.hpp"
 #include "hikari/core/util/FileSystem.hpp"
 #include "hikari/core/util/Log.hpp"
-
-#include <SFML/Graphics.hpp>
+#include <algorithm>
 
 namespace hikari {
 
     ScreenEffectsService::ScreenEffectsService(int bufferWidth, int bufferHeight)
-        : backBuffer({static_cast<unsigned int>(bufferWidth), static_cast<unsigned int>(bufferHeight)})
+        : fadeShader(gfx::Material::Fade)
+        , backBuffer({static_cast<unsigned int>(bufferWidth), static_cast<unsigned int>(bufferHeight)})
         , inputSprite(backBuffer.getTexture())
         , effects()
     {
-        const std::string shaderCode = FileSystem::readFileAsString("assets/shaders/fade.frag");
-        if(!fadeShader.loadFromMemory(shaderCode, sf::Shader::Type::Fragment)) {
-            HIKARI_LOG(error) << "Failed to load screen-effect shader; shader fades are unavailable.";
-        }
     }
 
     ScreenEffectsService::~ScreenEffectsService() = default;
-
-    void ScreenEffectsService::setInputTexture(const sf::RenderTexture & texture) {
-        inputSprite.setTexture(texture.getTexture());
-    }
 
     void ScreenEffectsService::update(float dt) {
         std::for_each(
@@ -33,31 +26,19 @@ namespace hikari {
         );
     }
 
-    void ScreenEffectsService::render(sf::RenderTarget & target) {
-        backBuffer.clear(sf::Color::Black);
+    gfx::RenderTexture & ScreenEffectsService::apply(gfx::RenderTexture & input) {
+        if(effects.empty()) return input;
+        inputSprite.setTexture(input.getTexture(), true);
+        backBuffer.clear(hikari::gfx::Color::Black);
 
-        // We have to check the size here otherwise if there are no effects the
-        // input sprite won't be drawn to the buffer at all! So if there aren't
-        // any effects to process we just pass through.
-        if(effects.size() > 0) {
-            std::for_each(
-                std::begin(effects),
-                std::end(effects),
-                [&](std::shared_ptr<ScreenEffect> & effect) {
-                    // Render the effect to the buffer, and then swap the buffer
-                    // pointers.
-                    effect->inputSprite = &inputSprite;
-                    effect->render(backBuffer);
-                }
-            );
-        } else {
-            backBuffer.draw(inputSprite);
+        for(auto & effect : effects) {
+            effect->inputSprite = &inputSprite;
+            effect->render(backBuffer);
         }
 
         backBuffer.display();
 
-        sf::Sprite renderSprite(backBuffer.getTexture());
-        target.draw(renderSprite);
+        return backBuffer;
     }
 
     void ScreenEffectsService::fadeOut(float fadeDuration) {

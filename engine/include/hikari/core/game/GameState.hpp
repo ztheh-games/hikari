@@ -1,13 +1,13 @@
 #ifndef HIKARI_CORE_GAME_GAMESTATE
 #define HIKARI_CORE_GAME_GAMESTATE
 
+#include "hikari/core/graphics/Graphics.hpp"
+#include "hikari/client/platform/Events.hpp"
+
 #include "hikari/core/Platform.hpp"
 #include <string>
 
-namespace sf {
-    class Event;
-    class RenderTarget;
-}
+
 
 namespace hikari {
 
@@ -15,8 +15,8 @@ namespace hikari {
     public:
         virtual ~GameState() {}
 
-        virtual void handleEvent(sf::Event &event) = 0;
-        virtual void render(sf::RenderTarget &target) = 0;
+        virtual void handleEvent(hikari::platform::Event &event) = 0;
+        virtual void render(hikari::gfx::RenderTarget &target) = 0;
 
         /**
             Updates this state's logic, given that dt milliseconds have elapsed

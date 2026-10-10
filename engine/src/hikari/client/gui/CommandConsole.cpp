@@ -1,3 +1,4 @@
+#include "hikari/core/graphics/Graphics.hpp"
 #include "hikari/client/gui/CommandConsole.hpp"
 #include "hikari/core/gui/ImageFont.hpp"
 
@@ -9,16 +10,16 @@ namespace gui {
         , state(StateClosed)
         , commandBuffer("")
         , font(font)
-        , background(sf::RectangleShape())
+        , background(hikari::gfx::RectangleShape())
     {
-        background.setSize(sf::Vector2f(256.0f, 100.0f));
-        background.setFillColor(sf::Color(102, 102, 102, 224));
+        background.setSize(hikari::gfx::Vector2f(256.0f, 100.0f));
+        background.setFillColor(hikari::gfx::Color(102, 102, 102, 224));
         background.setOutlineThickness(2.0f);
-        background.setOutlineColor(sf::Color(51, 51, 51));
+        background.setOutlineColor(hikari::gfx::Color(51, 51, 51));
     }
 
-    void CommandConsole::setPosition(const sf::Vector2i &newPosition) {
-        sf::Vector2f floatPosition(
+    void CommandConsole::setPosition(const hikari::gfx::Vector2i &newPosition) {
+        hikari::gfx::Vector2f floatPosition(
             static_cast<float>(newPosition.x), 
             static_cast<float>(newPosition.y)
         );
@@ -59,7 +60,7 @@ namespace gui {
         visible = visibility;
     }
 
-    void CommandConsole::render(sf::RenderTarget &target) {
+    void CommandConsole::render(hikari::gfx::RenderTarget &target) {
         if(isOpen()) {
             target.draw(background);
 

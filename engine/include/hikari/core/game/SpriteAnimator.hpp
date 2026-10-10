@@ -1,13 +1,10 @@
 #ifndef HIKARI_CORE_GAME_SPRITEANIMATOR
 #define HIKARI_CORE_GAME_SPRITEANIMATOR
 
+#include "hikari/core/graphics/Graphics.hpp"
+
 #include "hikari/core/Platform.hpp"
 #include "hikari/core/game/Animator.hpp"
-#include <SFML/Graphics/Rect.hpp>
-
-namespace sf {
-    class Sprite;
-}
 
 namespace hikari {
 
@@ -15,11 +12,11 @@ namespace hikari {
     private:
         bool invertXOffset;
         bool invertYOffset;
-        sf::Sprite &sprite;
-        sf::IntRect sourceRectangle;
+        hikari::gfx::Sprite &sprite;
+        hikari::gfx::IntRect sourceRectangle;
 
     public:
-        SpriteAnimator(sf::Sprite &sprite); 
+        SpriteAnimator(hikari::gfx::Sprite &sprite);
         virtual ~SpriteAnimator();
         void setInvertXOffset(const bool flip);
         void setInvertYOffset(const bool flip);

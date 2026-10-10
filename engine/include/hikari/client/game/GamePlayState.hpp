@@ -1,6 +1,9 @@
 #ifndef HIKARI_CLIENT_GAME_GAMEPLAYSTATE
 #define HIKARI_CLIENT_GAME_GAMEPLAYSTATE
 
+#include "hikari/core/graphics/Graphics.hpp"
+#include "hikari/client/platform/Events.hpp"
+
 #include "hikari/core/math/Vector2.hpp"
 #include "hikari/core/game/GameState.hpp"
 #include "hikari/core/game/map/Camera.hpp"
@@ -16,9 +19,6 @@
 #include "hikari/core/game/Direction.hpp"
 
 
-#include <SFML/Graphics/RenderTarget.hpp>
-#include <SFML/Graphics/View.hpp>
-#include <SFML/Graphics/RectangleShape.hpp>
 
 #include <memory>
 
@@ -145,10 +145,10 @@ namespace hikari {
         std::queue<std::shared_ptr<Task>> taskQueue;
         GameWorld world;
         Camera camera;
-        sf::View view;
-        sf::RectangleShape spawnerMarker;
-        sf::RectangleShape transitionMarker;
-        sf::RectangleShape leftBar;
+        hikari::gfx::View view;
+        hikari::gfx::RectangleShape spawnerMarker;
+        hikari::gfx::RectangleShape transitionMarker;
+        hikari::gfx::RectangleShape leftBar;
         bool canViewMenu;
         bool isTransitioningMenu;
         bool isRefillingEnergy;
@@ -312,11 +312,11 @@ namespace hikari {
         //
         // Rendering
         //
-        void renderMap(sf::RenderTarget &target) const;
-        void renderHero(sf::RenderTarget &target) const;
-        void renderEntities(sf::RenderTarget &target) const;
-        void renderWorld(sf::RenderTarget &target) const;
-        void renderHud(sf::RenderTarget &target) const;
+        void renderMap(hikari::gfx::RenderTarget &target) const;
+        void renderHero(hikari::gfx::RenderTarget &target) const;
+        void renderEntities(hikari::gfx::RenderTarget &target) const;
+        void renderWorld(hikari::gfx::RenderTarget &target) const;
+        void renderHud(hikari::gfx::RenderTarget &target) const;
 
         //
         // Event handlers
@@ -361,7 +361,7 @@ namespace hikari {
             virtual void enter() = 0;
             virtual void exit() = 0;
             virtual StateChangeAction update(float dt) = 0;
-            virtual void render(sf::RenderTarget &target) = 0;
+            virtual void render(hikari::gfx::RenderTarget &target) = 0;
         };
 
         /**
@@ -378,7 +378,7 @@ namespace hikari {
             virtual void enter();
             virtual void exit();
             virtual StateChangeAction update(float dt);
-            virtual void render(sf::RenderTarget &target);
+            virtual void render(hikari::gfx::RenderTarget &target);
         };
 
         /**
@@ -394,7 +394,7 @@ namespace hikari {
             virtual void enter();
             virtual void exit();
             virtual StateChangeAction update(float dt);
-            virtual void render(sf::RenderTarget &target);
+            virtual void render(hikari::gfx::RenderTarget &target);
         };
 
         /**
@@ -421,7 +421,7 @@ namespace hikari {
             virtual void enter();
             virtual void exit();
             virtual StateChangeAction update(float dt);
-            virtual void render(sf::RenderTarget &target);
+            virtual void render(hikari::gfx::RenderTarget &target);
         };
 
         /**
@@ -455,7 +455,7 @@ namespace hikari {
             virtual void enter();
             virtual void exit();
             virtual StateChangeAction update(float dt);
-            virtual void render(sf::RenderTarget &target);
+            virtual void render(hikari::gfx::RenderTarget &target);
         };
 
         /**
@@ -483,15 +483,15 @@ namespace hikari {
             virtual void enter();
             virtual void exit();
             virtual StateChangeAction update(float dt);
-            virtual void render(sf::RenderTarget &target);
+            virtual void render(hikari::gfx::RenderTarget &target);
         };
 
     public:
         GamePlayState(const std::string &name, GameController & controller, const Json::Value &params, const GamePlayDependencies & dependencies);
         virtual ~GamePlayState();
 
-        virtual void handleEvent(sf::Event &event);
-        virtual void render(sf::RenderTarget &target);
+        virtual void handleEvent(hikari::platform::Event &event);
+        virtual void render(hikari::gfx::RenderTarget &target);
         virtual bool update(float dt);
         virtual void onEnter();
         virtual void onExit();

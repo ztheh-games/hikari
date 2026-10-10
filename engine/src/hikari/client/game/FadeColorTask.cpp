@@ -1,9 +1,10 @@
+#include "hikari/core/graphics/Graphics.hpp"
 #include "hikari/client/game/FadeColorTask.hpp"
 #include "hikari/core/util/Log.hpp"
 
 namespace hikari {
 
-    FadeColorTask::FadeColorTask(FadeDirection direction, sf::RectangleShape & rectangle,
+    FadeColorTask::FadeColorTask(FadeDirection direction, hikari::gfx::RectangleShape & rectangle,
             float duration)
         : BaseTask(0, Task::TYPE_BLOCKING)
         , direction(direction)
@@ -21,7 +22,7 @@ namespace hikari {
     void FadeColorTask::update(float dt) {
         accumulator += dt;
 
-        sf::Color color = rectangle.getFillColor();
+        hikari::gfx::Color color = rectangle.getFillColor();
 
         if(direction == FADE_OUT) {
             HIKARI_LOG(debug4) << "Fade out!!";

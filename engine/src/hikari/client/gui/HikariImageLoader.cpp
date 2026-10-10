@@ -1,5 +1,5 @@
 #include "hikari/client/gui/HikariImageLoader.hpp"
-#include "guichan/sfml/sfmlimage.hpp"
+#include "hikari/client/gui/GpuImage.hpp"
 
 namespace hikari {
 namespace gui {
@@ -19,7 +19,7 @@ namespace gui {
         gcn::Image * image = nullptr;
 
         if(loadedImage) {
-            image = new gcn::SFMLImage(loadedImage.get(), false);
+            image = new gcn::GpuImage(loadedImage);
 
             if (convertToDisplayFormat) {
                 image->convertToDisplayFormat();

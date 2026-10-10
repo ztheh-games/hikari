@@ -1,6 +1,9 @@
 #ifndef HIKARI_CLIENT_GUI_GUISERVICE
 #define HIKARI_CLIENT_GUI_GUISERVICE
 
+#include "hikari/core/graphics/Graphics.hpp"
+#include "hikari/client/platform/Events.hpp"
+
 #include "hikari/core/util/NonCopyable.hpp"
 
 #include <unordered_map>
@@ -12,8 +15,8 @@ namespace gcn {
     class Container;
     class Image;
     class ImageLoader;
-    class SFMLInput;
-    class SFMLGraphics;
+    class PlatformInput;
+    class GpuGraphics;
     class FixedImageFont;
     class Font;
     class Gui;
@@ -24,10 +27,7 @@ namespace Json {
     class Value;
 }
 
-namespace sf {
-    class Event;
-    class RenderTarget;
-}
+
 
 namespace hikari {
 
@@ -39,10 +39,10 @@ namespace hikari {
         
     private:
         class GlobalRegistration;
-        sf::RenderTarget & renderTarget;
+        hikari::gfx::RenderTarget & renderTarget;
         std::unique_ptr<gcn::Gui> gui; 
-        std::unique_ptr<gcn::SFMLGraphics> graphics;
-        std::unique_ptr<gcn::SFMLInput> input;
+        std::unique_ptr<gcn::GpuGraphics> graphics;
+        std::unique_ptr<gcn::PlatformInput> input;
         std::unique_ptr<gcn::ImageLoader> imageLoader;
         std::unique_ptr<gcn::Container> rootWidget;
         std::unique_ptr<gcn::Container> rootContainer;
@@ -54,10 +54,10 @@ namespace hikari {
         void buildFontMap(const Json::Value & fontConfig);
 
     public:
-        explicit GuiService(const Json::Value & config, ImageCache & imageCache, sf::RenderTarget & renderTarget);
+        explicit GuiService(const Json::Value & config, ImageCache & imageCache, hikari::gfx::RenderTarget & renderTarget);
         virtual ~GuiService();
 
-        void processEvent(sf::Event & evt);
+        void processEvent(hikari::platform::Event & evt);
 
         gcn::Gui & getGui();
         gcn::Container & getHudContainer();
@@ -66,9 +66,10 @@ namespace hikari {
         std::shared_ptr<gcn::Font> getFontByName(const std::string & fontName) const;
 
         void renderRootContainer();
-        void renderRootContainer(sf::RenderTarget & target);
-        void renderAsTop(gcn::Widget * widget, sf::RenderTarget & target);
+        void renderRootContainer(hikari::gfx::RenderTarget & target);
+        void renderAsTop(gcn::Widget * widget, hikari::gfx::RenderTarget & target);
         void renderHudContainer();
+        void renderHudContainer(gfx::RenderTarget & target);
     };
 
 } // hikari

@@ -1,3 +1,5 @@
+#include "hikari/core/graphics/Graphics.hpp"
+#include "hikari/client/platform/Events.hpp"
 #include "hikari/client/game/WeaponGetState.hpp"
 #include "hikari/client/game/Input.hpp"
 #include "hikari/client/audio/AudioService.hpp"
@@ -20,8 +22,6 @@
 #include <guichan/widgets/label.hpp>
 #include <guichan/widgets/icon.hpp>
 #include <guichan/hakase/labelex.hpp>
-
-#include <SFML/Window/Event.hpp>
 
 namespace hikari {
 
@@ -72,9 +72,9 @@ namespace hikari {
         guiContainer->add(guiRockman.get(), 120, 188);
     }
 
-    void WeaponGetState::handleEvent(sf::Event &event) {
-        if(const auto* keyPressed = event.getIf<sf::Event::KeyPressed>()) {
-            if(keyPressed->code == sf::Keyboard::Key::Enter) {
+    void WeaponGetState::handleEvent(hikari::platform::Event &event) {
+        if(const auto* keyPressed = event.getIf<hikari::platform::Event::KeyPressed>()) {
+            if(keyPressed->code == hikari::platform::Keyboard::Key::Enter) {
                 if(!goToNextState) {
                     controller.requestStateChange("stageselect");
                     goToNextState = true;
@@ -83,7 +83,7 @@ namespace hikari {
         }
     }
 
-    void WeaponGetState::render(sf::RenderTarget &target) {
+    void WeaponGetState::render(hikari::gfx::RenderTarget &target) {
         guiService.renderAsTop(guiContainer.get(), target);
     }
 

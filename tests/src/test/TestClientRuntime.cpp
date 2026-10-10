@@ -1,3 +1,5 @@
+#include "hikari/core/graphics/Graphics.hpp"
+#include "hikari/client/platform/Events.hpp"
 #include <catch.hpp>
 #include "hikari/client/ClientRuntime.hpp"
 #include "hikari/client/ClientConfig.hpp"
@@ -36,7 +38,7 @@
 #include "hikari/core/util/ImageCache.hpp"
 #include "hikari/core/util/JsonUtils.hpp"
 #include "hikari/core/util/PhysFS.hpp"
-#include <SFML/Graphics/RenderTexture.hpp>
+
 #include <guichan/gui.hpp>
 #include <guichan/image.hpp>
 #include <guichan/widget.hpp>
@@ -63,8 +65,8 @@ namespace {
                 && !hikari::Movable::getCollisionResolver();
         }
 
-        void handleEvent(sf::Event &) override { }
-        void render(sf::RenderTarget &) override { }
+        void handleEvent(hikari::platform::Event &) override { }
+        void render(hikari::gfx::RenderTarget &) override { }
         bool update(float) override { return false; }
         void onEnter() override { }
         void onExit() override { }
@@ -91,7 +93,7 @@ TEST_CASE("Filesystem lifetime covers failed startup", "[runtime][lifetime]") {
 TEST_CASE("Runtime destroys states and script objects before their dependencies", "[runtime][lifetime]") {
     hikari::FileSystemSession filesystem("runtime-tests");
     const auto config = loadRuntimeConfig();
-    sf::RenderTexture screen({256, 240});
+    hikari::gfx::RenderTexture screen({256, 240});
     bool destroyedSafely = false;
     std::weak_ptr<hikari::SquirrelService> scripting;
     std::weak_ptr<hikari::GuiService> gui;
@@ -129,7 +131,7 @@ TEST_CASE("Runtime destroys states and script objects before their dependencies"
 TEST_CASE("Runtime can be constructed again after teardown", "[runtime][lifetime]") {
     hikari::FileSystemSession filesystem("runtime-tests");
     const auto config = loadRuntimeConfig();
-    sf::RenderTexture screen({256, 240});
+    hikari::gfx::RenderTexture screen({256, 240});
 
     for(int i = 0; i < 2; ++i) {
         hikari::ClientRuntime runtime(hikari::ClientConfig(), config, screen);
@@ -143,7 +145,7 @@ TEST_CASE("Partial runtime construction clears GUI and VM registrations", "[runt
     hikari::FileSystemSession filesystem("runtime-tests");
     auto config = loadRuntimeConfig();
     config["gui"]["fonts"]["default"]["glyphSize"] = Json::Value(Json::arrayValue);
-    sf::RenderTexture screen({256, 240});
+    hikari::gfx::RenderTexture screen({256, 240});
 
     // Force a failure after the VM exists and the GUI has installed its image loader.
     REQUIRE_THROWS(hikari::ClientRuntime(hikari::ClientConfig(), config, screen));
@@ -183,7 +185,7 @@ TEST_CASE("Factories and cut-scene input need no service dependencies", "[runtim
 TEST_CASE("Refill tasks use the injected progress instance", "[runtime][injection]") {
     hikari::FileSystemSession filesystem("runtime-tests");
     const auto config = loadRuntimeConfig();
-    sf::RenderTexture screen({256, 240});
+    hikari::gfx::RenderTexture screen({256, 240});
     hikari::ClientRuntime runtime(hikari::ClientConfig(), config, screen);
     runtime.progress->setPlayerEnergy(7);
     hikari::GameProgress progress;
@@ -240,7 +242,7 @@ TEST_CASE("Production states use injected content and survive queued-work teardo
     hikari::FileSystemSession filesystem("runtime-tests");
     const auto config = loadRuntimeConfig();
     const hikari::GameConfig gameConfig(config);
-    sf::RenderTexture screen({256, 240});
+    hikari::gfx::RenderTexture screen({256, 240});
     std::weak_ptr<hikari::GamePlayState> gameplayObserver;
 
     {

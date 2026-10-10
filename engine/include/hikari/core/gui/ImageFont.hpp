@@ -1,39 +1,35 @@
 #ifndef HIKARI_CORE_GUI_IMAGEFONT
 #define HIKARI_CORE_GUI_IMAGEFONT
 
+#include "hikari/core/graphics/Graphics.hpp"
+
 #include "hikari/core/Platform.hpp"
-#include "hikari/core/util/SfmlResources.hpp"
-#include <SFML/Graphics/Color.hpp>
-#include <SFML/Graphics/Sprite.hpp>
-#include <SFML/Graphics/Rect.hpp>
+
+
+
+
 #include <memory>
 #include <map>
 #include <string>
-
-namespace sf {
-    class Texture;
-    class RenderTarget;
-} 
-
 namespace hikari {
 
     class HIKARI_API ImageFont {
     private:
         int glyphWidth;
         int glyphHeight;
-        std::shared_ptr<sf::Texture> glyphTexture;
-        SfmlResources::DefaultSprite glyphSprite;
+        std::shared_ptr<hikari::gfx::Texture> glyphTexture;
+        gfx::Sprite glyphSprite;
         std::string glyphs;
-        std::map< char, sf::IntRect > glyphMap;
+        std::map< char, hikari::gfx::IntRect > glyphMap;
     public:
-        ImageFont(const std::shared_ptr<sf::Texture> &glyphTexture, const std::string &glyphs, const int &glyphWidth, const int &glyphHeight);
+        ImageFont(const std::shared_ptr<hikari::gfx::Texture> &glyphTexture, const std::string &glyphs, const int &glyphWidth, const int &glyphHeight);
         virtual ~ImageFont();
         
         const int& getGlyphWidth() const;
         const int& getGlyphHeight() const;
 
         /**
-            Renders a string to an sf::RenderTarget at a specified location
+            Renders a string to an hikari::gfx::RenderTarget at a specified location
             optionally with a color. The color is applied as a filter to the
             source image.
 
@@ -48,7 +44,7 @@ namespace hikari {
             @param y the y-coordinate where the text should be rendered
             @param color a color filter to apply to the text, transparent by default
         */
-        void renderText(sf::RenderTarget &target, const std::string &glyphs, const int &x, const int &y, const sf::Color &color = sf::Color::White);
+        void renderText(hikari::gfx::RenderTarget &target, const std::string &glyphs, const int &x, const int &y, const hikari::gfx::Color &color = hikari::gfx::Color::White);
     };
 
 } // hikari

@@ -1,13 +1,14 @@
+#include "hikari/core/graphics/Graphics.hpp"
 #include "hikari/client/gui/Widget.hpp"
 
 namespace hikari {
 namespace gui {
 
-    const sf::Vector2i& Widget::getPosition() const {
+    const hikari::gfx::Vector2i& Widget::getPosition() const {
         return position;
     }
 
-    void Widget::setPosition(const sf::Vector2i &newPosition) {
+    void Widget::setPosition(const hikari::gfx::Vector2i &newPosition) {
         position = newPosition;
     }
     
