@@ -6,6 +6,7 @@
 #include <memory>
 #include <algorithm>
 #include <list>
+#include <stdexcept>
 
 namespace hikari {
 
@@ -22,7 +23,8 @@ namespace hikari {
             const std::vector<BlockSequenceDescriptor> & blockSequences,
             const std::shared_ptr<Door> & entranceDoor,
             const std::shared_ptr<Door> & exitDoor,
-            const std::string & bossEntityName
+            const std::string & bossEntityName,
+            const std::vector<TileTransform> & transforms
     )
         : id(id)
         , x(x)
@@ -36,6 +38,7 @@ namespace hikari {
         , cameraBounds(cameraBounds)
         , tile(tile)
         , attr(attr)
+        , transforms(transforms.empty() ? std::vector<TileTransform>(tile.size(), TileTransform::None) : transforms)
         , transitions(transitions)
         , spawners(spawners)
         , forces(forces)
@@ -44,6 +47,8 @@ namespace hikari {
         , exitDoor(exitDoor)
         , bossEntityName(bossEntityName)
     {
+        if(this->transforms.size() != tile.size())
+            throw std::invalid_argument("Room tile transform count does not match tiles");
         traceLadders();
     }
 
@@ -173,6 +178,12 @@ namespace hikari {
         }
 
         return NO_TILE;
+    }
+
+    TileTransform Room::getTileTransformAt(int tileX, int tileY) const {
+        tileX -= getX();
+        tileY -= getY();
+        return isInBounds(tileX, tileY) ? transforms[tileX + tileY * getWidth()] : TileTransform::None;
     }
 
     const inline bool Room::isInBounds(const int &x, const int &y) const {

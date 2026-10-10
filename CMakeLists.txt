@@ -73,6 +73,15 @@ if(HIKARI_FETCH_DEPENDENCIES)
     )
     FetchContent_MakeAvailable(PhysFS)
     unset(CMAKE_POLICY_VERSION_MINIMUM)
+
+    set(tinyxml2_BUILD_TESTING OFF CACHE BOOL "" FORCE)
+    FetchContent_Declare(
+        tinyxml2
+        URL https://github.com/leethomason/tinyxml2/archive/refs/tags/11.0.0.tar.gz
+        URL_HASH SHA256=5556deb5081fb246ee92afae73efd943c889cef0cafea92b0b82422d6a18f289
+        DOWNLOAD_EXTRACT_TIMESTAMP TRUE
+    )
+    FetchContent_MakeAvailable(tinyxml2)
 endif()
 
 if(NOT TARGET SDL3::SDL3)
@@ -80,6 +89,9 @@ if(NOT TARGET SDL3::SDL3)
 endif()
 if(NOT TARGET SDL3_image::SDL3_image)
     find_package(SDL3_image 3.4.6 EXACT CONFIG REQUIRED)
+endif()
+if(NOT TARGET tinyxml2::tinyxml2)
+    find_package(tinyxml2 11.0.0 EXACT CONFIG REQUIRED)
 endif()
 
 include(cmake/HikariShaders.cmake)

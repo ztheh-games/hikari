@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.10" orientation="orthogonal" width="4" height="2" tilewidth="16" tileheight="16" infinite="0">
+ <properties><property name="starting" type="object" value="1"/></properties>
+ <tileset firstgid="1" source="visual.tsx"/>
+ <tileset firstgid="17" source="../../assets/tilesets/collision-palette.tsx"/>
+ <group id="1" name="Test room" offsetx="32" offsety="16">
+  <properties><property name="hikari.role" value="room"/><property name="roomId" type="int" value="0"/></properties>
+  <layer id="2" name="Tiles" width="4" height="2">
+   <properties><property name="hikari.role" value="tiles"/></properties>
+   <data encoding="csv">1,2147483649,1073741825,3221225473,536870913,2684354561,1610612737,3758096385</data>
+  </layer>
+  <layer id="3" name="Attributes" width="4" height="2" visible="0">
+   <properties><property name="hikari.role" value="attributes"/></properties>
+   <data encoding="csv">0,18,0,0,0,0,0,0</data>
+  </layer>
+  <objectgroup id="4" name="Gameplay" offsetx="0" offsety="0">
+   <object id="1" name="Bounds" x="0" y="0" width="64" height="32">
+    <properties><property name="hikari.role" value="roomBounds"/></properties>
+   </object>
+   <object id="2" x="8" y="9"><point/><properties><property name="hikari.role" value="heroSpawn"/></properties></object>
+   <object id="3" x="0" y="0" width="64" height="32"><properties><property name="hikari.role" value="cameraBounds"/></properties></object>
+   <object id="4" x="0" y="0" width="16" height="16">
+    <properties><property name="hikari.role" value="transition"/><property name="to" type="object" value="1"/><property name="direction" value="teleport"/><property name="ladderOnly" type="bool" value="true"/></properties>
+   </object>
+   <object id="5" x="0" y="0" width="64" height="32">
+    <properties><property name="hikari.role" value="blockSequence"/><property name="sequence">0;1;0,1</property></properties>
+   </object>
+   <object id="6" x="0" y="16"><point/><properties><property name="hikari.role" value="block"/><property name="sequenceObject" type="object" value="5"/><property name="blockIndex" type="int" value="0"/></properties></object>
+   <object id="7" x="16" y="16"><point/><properties><property name="hikari.role" value="block"/><property name="sequenceObject" type="object" value="5"/><property name="blockIndex" type="int" value="1"/></properties></object>
+   <object id="8" x="8" y="16"><point/>
+    <properties><property name="hikari.role" value="enemy"/><property name="entity" value="Telly"/><property name="direction" value="Left"/><property name="spawnLimit" type="int" value="2"/><property name="spawnRate" type="float" value="0.5"/><property name="continuous" type="bool" value="true"/><property name="config.velocityX" type="float" value="1.25"/></properties>
+   </object>
+   <object id="9" x="24" y="16"><point/><properties><property name="hikari.role" value="item"/><property name="entity" value="Large Health Energy"/></properties></object>
+   <object id="10" x="48" y="0" width="16" height="32"><properties><property name="hikari.role" value="exitDoor"/></properties></object>
+   <object id="11" x="3" y="4" width="8" height="12"><properties><property name="hikari.role" value="force"/><property name="velocityX" type="float" value="-0.875"/></properties></object>
+  </objectgroup>
+ </group>
+</map>

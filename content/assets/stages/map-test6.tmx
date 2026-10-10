@@ -1,0 +1,357 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<map version="1.10" orientation="orthogonal" renderorder="right-down" width="48" height="15" tilewidth="16" tileheight="16" infinite="0" nextlayerid="13" nextobjectid="28">
+ <properties>
+  <property name="musicName" type="string" value="Wily Stage 2 (MM2)" />
+  <property name="bossEntity" type="string" value="Hammer Joe Boss" />
+  <property name="musicId" type="int" value="10" />
+  <property name="starting" type="object" value="1" />
+  <property name="midpoint" type="object" value="1" />
+  <property name="bossCorridor" type="object" value="2" />
+  <property name="bossChamber" type="object" value="3" />
+ </properties>
+ <tileset firstgid="1" source="../tilesets/tiles-test1.tsx" />
+ <tileset firstgid="257" source="../tilesets/collision-palette.tsx" />
+ <group id="1" name="Room 0" offsetx="0" offsety="0">
+  <properties>
+   <property name="hikari.role" type="string" value="room" />
+   <property name="roomId" type="int" value="0" />
+   <property name="backgroundColor" type="color" value="#000000" />
+  </properties>
+  <layer id="2" name="Tiles" width="48" height="15">
+   <properties>
+    <property name="hikari.role" type="string" value="tiles" />
+   </properties>
+   <data encoding="csv">
+10,25,26,27,28,27,28,27,28,27,28,27,28,29,24,11,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+24,1,1,1,40,1,40,1,1,1,1,35,1,1,37,25,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+10,1,1,1,48,1,57,58,1,1,1,1,1,1,43,11,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+24,1,1,1,59,1,1,1,1,1,1,1,1,1,43,25,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+10,1,35,1,57,58,1,65,1,1,1,1,1,1,43,11,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+24,1,1,1,1,1,1,1,1,1,1,1,1,1,43,25,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+10,1,1,1,1,1,1,1,1,1,35,1,1,1,43,11,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+24,1,1,1,1,1,1,1,1,1,1,1,1,1,43,25,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+10,1,18,1,1,1,1,1,1,1,1,1,1,1,43,37,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+24,1,1,1,1,1,1,1,1,1,1,1,65,1,43,43,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+10,1,1,1,1,1,1,1,1,1,1,1,1,1,43,43,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+24,1,1,1,1,1,1,1,1,1,1,1,1,1,43,43,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+11,61,62,63,62,63,62,63,62,63,74,10,11,61,62,63,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+25,30,31,32,31,32,31,32,31,32,79,24,25,30,31,32,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+11,12,13,14,13,14,13,14,13,14,15,10,11,12,13,14,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+</data>
+  </layer>
+  <layer id="3" name="Attributes" width="48" height="15" visible="0">
+   <properties>
+    <property name="hikari.role" type="string" value="attributes" />
+   </properties>
+   <data encoding="csv">
+258,258,258,258,258,258,258,258,258,258,258,258,258,258,258,258,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+258,0,0,0,0,0,0,0,0,0,0,0,0,0,0,258,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+258,0,0,0,0,0,0,0,0,0,0,0,0,0,0,258,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+258,0,0,0,0,0,0,0,0,0,0,0,0,0,0,258,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+258,0,0,0,0,0,0,0,0,0,0,0,0,0,0,258,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+258,0,0,0,0,0,0,0,0,0,0,0,0,0,0,258,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+258,0,0,0,0,0,0,0,0,0,0,0,0,0,0,258,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+258,0,0,0,0,0,0,0,0,0,0,0,0,0,0,258,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+258,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+258,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+258,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+258,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+258,258,258,258,258,258,258,258,258,258,258,258,258,258,258,258,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+258,258,258,258,258,258,258,258,258,258,258,258,258,258,258,258,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+258,258,258,258,258,258,258,258,258,258,258,258,258,258,258,258,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+</data>
+  </layer>
+  <objectgroup id="4" name="Gameplay">
+   <object id="1" name="roomBounds" x="0" y="0" width="256" height="240">
+    <properties>
+     <property name="hikari.role" type="string" value="roomBounds" />
+    </properties>
+   </object>
+   <object id="4" name="heroSpawn" x="32" y="196">
+    <point />
+    <properties>
+     <property name="hikari.role" type="string" value="heroSpawn" />
+    </properties>
+   </object>
+   <object id="5" name="cameraBounds" x="0" y="0" width="256" height="240">
+    <properties>
+     <property name="hikari.role" type="string" value="cameraBounds" />
+    </properties>
+   </object>
+   <object id="6" name="enemy" x="96" y="179">
+    <point />
+    <properties>
+     <property name="hikari.role" type="string" value="enemy" />
+     <property name="entity" type="string" value="Hammer Joe" />
+     <property name="direction" type="string" value="Left" />
+    </properties>
+   </object>
+   <object id="7" name="enemy" x="230" y="184">
+    <point />
+    <properties>
+     <property name="hikari.role" type="string" value="enemy" />
+     <property name="entity" type="string" value="Mystery Tank" />
+    </properties>
+   </object>
+   <object id="8" name="enemy" x="16" y="184">
+    <point />
+    <properties>
+     <property name="hikari.role" type="string" value="enemy" />
+     <property name="entity" type="string" value="Super Magnet" />
+    </properties>
+   </object>
+   <object id="9" name="transition" x="240" y="128" width="16" height="64">
+    <properties>
+     <property name="hikari.role" type="string" value="transition" />
+     <property name="to" type="object" value="2" />
+     <property name="direction" type="string" value="forward" />
+     <property name="door" type="bool" value="true" />
+    </properties>
+   </object>
+   <object id="10" name="exitDoor" x="240" y="128" width="16" height="64">
+    <properties>
+     <property name="hikari.role" type="string" value="exitDoor" />
+    </properties>
+   </object>
+   <object id="11" name="force" x="32" y="168" width="64" height="32">
+    <properties>
+     <property name="hikari.role" type="string" value="force" />
+     <property name="velocityX" type="float" value="-0.875" />
+     <property name="velocityY" type="float" value="0" />
+    </properties>
+   </object>
+  </objectgroup>
+ </group>
+ <group id="5" name="Room 1" offsetx="256" offsety="0">
+  <properties>
+   <property name="hikari.role" type="string" value="room" />
+   <property name="roomId" type="int" value="1" />
+   <property name="backgroundColor" type="color" value="#000000" />
+  </properties>
+  <layer id="6" name="Tiles" width="48" height="15">
+   <properties>
+    <property name="hikari.role" type="string" value="tiles" />
+   </properties>
+   <data encoding="csv">
+10,25,26,27,28,27,28,27,28,27,28,27,28,27,24,11,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+24,37,38,38,38,38,39,39,8,8,8,8,8,8,8,25,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+10,43,44,44,53,44,54,54,23,23,23,23,23,23,23,11,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+24,43,44,44,44,44,54,54,23,23,23,23,23,23,23,25,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+10,43,44,44,53,44,54,54,23,23,23,23,23,23,23,11,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+24,43,44,44,44,44,45,45,23,23,23,23,23,23,23,25,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+10,11,61,62,63,62,74,10,23,23,23,23,23,23,23,11,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+24,25,26,27,28,27,29,24,77,67,67,67,67,67,78,25,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+38,38,38,38,38,38,39,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+44,44,44,44,44,44,54,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+44,53,44,44,53,44,54,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+44,44,44,44,44,44,54,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+62,63,62,63,62,74,10,11,10,11,61,62,63,62,63,74,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+31,32,31,32,31,79,24,25,24,25,26,27,28,27,28,29,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+13,14,13,14,13,15,10,11,10,11,61,62,63,62,63,74,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+</data>
+  </layer>
+  <layer id="7" name="Attributes" width="48" height="15" visible="0">
+   <properties>
+    <property name="hikari.role" type="string" value="attributes" />
+   </properties>
+   <data encoding="csv">
+258,258,258,258,258,258,258,258,258,258,258,258,258,258,258,258,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+258,258,258,258,258,258,258,258,258,258,258,258,258,258,258,258,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+258,258,258,258,258,258,258,258,258,258,258,258,258,258,258,258,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+258,258,258,258,258,258,258,258,258,258,258,258,258,258,258,258,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+258,258,258,258,258,258,258,258,258,258,258,258,258,258,258,258,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+258,258,258,258,258,258,258,258,258,258,258,258,258,258,258,258,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+258,258,258,258,258,258,258,258,258,258,258,258,258,258,258,258,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+258,258,258,258,258,258,258,258,258,258,258,258,258,258,258,258,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+258,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+258,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+258,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+258,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+258,258,258,258,258,258,258,258,258,258,258,258,258,258,258,258,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+258,258,258,258,258,258,258,258,258,258,258,258,258,258,258,258,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+258,258,258,258,258,258,258,258,258,258,258,258,258,258,258,258,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+</data>
+  </layer>
+  <objectgroup id="8" name="Gameplay">
+   <object id="2" name="roomBounds" x="0" y="0" width="256" height="240">
+    <properties>
+     <property name="hikari.role" type="string" value="roomBounds" />
+    </properties>
+   </object>
+   <object id="12" name="heroSpawn" x="32" y="224">
+    <point />
+    <properties>
+     <property name="hikari.role" type="string" value="heroSpawn" />
+    </properties>
+   </object>
+   <object id="13" name="cameraBounds" x="0" y="0" width="256" height="240">
+    <properties>
+     <property name="hikari.role" type="string" value="cameraBounds" />
+    </properties>
+   </object>
+   <object id="14" name="enemy" x="129" y="179">
+    <point />
+    <properties>
+     <property name="hikari.role" type="string" value="enemy" />
+     <property name="entity" type="string" value="Dada" />
+     <property name="direction" type="string" value="Left" />
+    </properties>
+   </object>
+   <object id="15" name="enemy" x="96" y="188">
+    <point />
+    <properties>
+     <property name="hikari.role" type="string" value="enemy" />
+     <property name="entity" type="string" value="Metool" />
+     <property name="direction" type="string" value="Left" />
+    </properties>
+   </object>
+   <object id="16" name="enemy" x="160" y="108">
+    <point />
+    <properties>
+     <property name="hikari.role" type="string" value="enemy" />
+     <property name="entity" type="string" value="Mole" />
+     <property name="direction" type="string" value="Down" />
+     <property name="spawnLimit" type="int" value="3" />
+     <property name="spawnRate" type="float" value="3" />
+     <property name="config.direction" type="string" value="Down" />
+    </properties>
+   </object>
+   <object id="17" name="enemy" x="180" y="208">
+    <point />
+    <properties>
+     <property name="hikari.role" type="string" value="enemy" />
+     <property name="entity" type="string" value="Mole" />
+     <property name="direction" type="string" value="Down" />
+     <property name="spawnLimit" type="int" value="3" />
+     <property name="spawnRate" type="float" value="3" />
+     <property name="config.direction" type="string" value="Up" />
+    </properties>
+   </object>
+   <object id="18" name="enemy" x="160" y="188">
+    <point />
+    <properties>
+     <property name="hikari.role" type="string" value="enemy" />
+     <property name="entity" type="string" value="Metool" />
+     <property name="direction" type="string" value="Left" />
+    </properties>
+   </object>
+   <object id="19" name="enemy" x="178" y="188">
+    <point />
+    <properties>
+     <property name="hikari.role" type="string" value="enemy" />
+     <property name="entity" type="string" value="Metool" />
+     <property name="direction" type="string" value="Left" />
+    </properties>
+   </object>
+   <object id="20" name="enemy" x="196" y="188">
+    <point />
+    <properties>
+     <property name="hikari.role" type="string" value="enemy" />
+     <property name="entity" type="string" value="Metool" />
+     <property name="direction" type="string" value="Left" />
+    </properties>
+   </object>
+   <object id="21" name="enemy" x="214" y="188">
+    <point />
+    <properties>
+     <property name="hikari.role" type="string" value="enemy" />
+     <property name="entity" type="string" value="Metool" />
+     <property name="direction" type="string" value="Left" />
+    </properties>
+   </object>
+   <object id="22" name="transition" x="-16" y="128" width="16" height="64">
+    <properties>
+     <property name="hikari.role" type="string" value="transition" />
+     <property name="to" type="object" value="3" />
+     <property name="direction" type="string" value="forward" />
+     <property name="door" type="bool" value="true" />
+    </properties>
+   </object>
+   <object id="23" name="entranceDoor" x="0" y="128" width="16" height="64">
+    <properties>
+     <property name="hikari.role" type="string" value="entranceDoor" />
+    </properties>
+   </object>
+   <object id="24" name="exitDoor" x="240" y="128" width="16" height="64">
+    <properties>
+     <property name="hikari.role" type="string" value="exitDoor" />
+    </properties>
+   </object>
+  </objectgroup>
+ </group>
+ <group id="9" name="Room 2" offsetx="512" offsety="0">
+  <properties>
+   <property name="hikari.role" type="string" value="room" />
+   <property name="roomId" type="int" value="2" />
+   <property name="backgroundColor" type="color" value="#000000" />
+   <property name="bossEntity" type="string" value="Super Dada" />
+  </properties>
+  <layer id="10" name="Tiles" width="48" height="15">
+   <properties>
+    <property name="hikari.role" type="string" value="tiles" />
+   </properties>
+   <data encoding="csv">
+10,25,26,27,28,27,28,27,28,27,28,27,28,29,24,11,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+24,1,1,40,1,1,1,1,1,1,1,1,1,1,1,25,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+10,1,1,59,1,1,35,1,1,1,1,1,1,1,1,11,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+24,1,1,57,58,1,1,1,1,1,1,18,1,1,1,25,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+10,1,1,1,1,1,1,1,1,1,1,1,1,1,1,11,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+24,1,1,1,1,1,65,1,1,1,1,1,1,1,1,25,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+10,1,1,1,1,1,1,1,1,1,1,1,1,1,65,11,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+24,1,1,1,1,1,1,1,1,1,1,1,1,35,1,25,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+1,65,1,1,1,1,1,1,1,1,1,1,1,1,1,11,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,25,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+1,1,1,1,1,1,1,18,1,1,1,1,1,1,1,11,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,25,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+10,11,10,11,61,62,63,62,63,62,63,62,63,74,10,11,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+24,25,24,25,30,31,32,31,32,31,32,31,32,79,24,25,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+10,11,10,11,12,13,14,13,14,13,14,13,14,15,10,11,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+</data>
+  </layer>
+  <layer id="11" name="Attributes" width="48" height="15" visible="0">
+   <properties>
+    <property name="hikari.role" type="string" value="attributes" />
+   </properties>
+   <data encoding="csv">
+258,258,258,258,258,258,258,258,258,258,258,258,258,258,258,258,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+258,0,0,0,0,0,0,0,0,0,0,0,0,0,0,258,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+258,0,0,0,0,0,0,0,0,0,0,0,0,0,0,258,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+258,0,0,0,0,0,0,0,0,0,0,0,0,0,0,258,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+258,0,0,0,0,0,0,0,0,0,0,0,0,0,0,258,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+258,0,0,0,0,0,0,0,0,0,0,0,0,0,0,258,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+258,0,0,0,0,0,0,0,0,0,0,0,0,0,0,258,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+258,0,0,0,0,0,0,0,0,0,0,0,0,0,0,258,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+258,0,0,0,0,0,0,0,0,0,0,0,0,0,0,258,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+258,0,0,0,0,0,0,0,0,0,0,0,0,0,0,258,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+258,0,0,0,0,0,0,0,0,0,0,0,0,0,0,258,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+258,0,0,0,0,0,0,0,0,0,0,0,0,0,0,258,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+258,258,258,258,258,258,258,258,258,258,258,258,258,258,258,258,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+258,258,258,258,258,258,258,258,258,258,258,258,258,258,258,258,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+258,258,258,258,258,258,258,258,258,258,258,258,258,258,258,258,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+</data>
+  </layer>
+  <objectgroup id="12" name="Gameplay">
+   <object id="3" name="roomBounds" x="0" y="0" width="256" height="240">
+    <properties>
+     <property name="hikari.role" type="string" value="roomBounds" />
+    </properties>
+   </object>
+   <object id="25" name="heroSpawn" x="32" y="224">
+    <point />
+    <properties>
+     <property name="hikari.role" type="string" value="heroSpawn" />
+    </properties>
+   </object>
+   <object id="26" name="cameraBounds" x="0" y="0" width="256" height="240">
+    <properties>
+     <property name="hikari.role" type="string" value="cameraBounds" />
+    </properties>
+   </object>
+   <object id="27" name="entranceDoor" x="0" y="128" width="16" height="64">
+    <properties>
+     <property name="hikari.role" type="string" value="entranceDoor" />
+    </properties>
+   </object>
+  </objectgroup>
+ </group>
+</map>

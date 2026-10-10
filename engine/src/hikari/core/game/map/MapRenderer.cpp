@@ -70,19 +70,22 @@ namespace hikari {
 
     void MapRenderer::renderForeground(hikari::gfx::RenderTarget &target) {
         int tileIndex = Room::NO_TILE;
-        int tileAttributes = TileAttribute::NO_ATTRIBUTES;
 
         for(int y = visibleTileArea.getY(); y < visibleTileArea.getHeight(); ++y) {
             for(int x = visibleTileArea.getX(); x < visibleTileArea.getWidth(); ++x) {
                 tileIndex = room->getTileAt(x, y);
-                tileAttributes = room->getAttributeAt(x, y);
 
                 if(tileIndex == Room::NO_TILE) {
                     continue;
                 }
 
                 applyTileToSprite(tileIndex, x, y);
-                applyTileAttributes(tileAttributes);
+                const auto transform = decomposeTileTransform(room->getTileTransformAt(x, y));
+                const float center = static_cast<float>(tileData->getTileSize()) * 0.5f;
+                tileSprite.setOrigin({center, center});
+                tileSprite.setScale({static_cast<float>(transform.scaleX), static_cast<float>(transform.scaleY)});
+                tileSprite.setRotation(hikari::gfx::degrees(static_cast<float>(transform.rotation)));
+                tileSprite.move({center, center});
 
                 // TODO: Not sure about this... it may make the jittering MORE obvious...?
                 const auto & unQuantizedPosition = tileSprite.getPosition();
@@ -226,28 +229,6 @@ namespace hikari {
             static_cast<float>(x * tileData->getTileSize()),
             static_cast<float>(y * tileData->getTileSize())
         });
-    }
-
-    inline void MapRenderer::applyTileAttributes(const int &attributes) {
-        //tileSprite.FlipX(false);
-        //tileSprite.FlipY(false);
-        tileSprite.setRotation(hikari::gfx::degrees(0.0f));
-        tileSprite.setOrigin({0.0f, 0.0f});
-
-        if((attributes & TileAttribute::FLIP_HORIZONTAL) == TileAttribute::FLIP_HORIZONTAL) {
-            //tileSprite.FlipX(true);
-        }
-
-        if((attributes & TileAttribute::FLIP_VERTICAL) == TileAttribute::FLIP_VERTICAL) {
-            //tileSprite.FlipY(true);
-        }
-
-        if((attributes & TileAttribute::ROTATE_BY_90) == TileAttribute::ROTATE_BY_90) {
-            float tileRotationOffset = static_cast<float>(tileData->getTileSize() * 0.5f);
-            tileSprite.setOrigin({tileRotationOffset, tileRotationOffset});
-            tileSprite.setRotation(hikari::gfx::degrees(90.0f));
-            tileSprite.move({tileRotationOffset, tileRotationOffset});
-        }
     }
 
 } // hikari

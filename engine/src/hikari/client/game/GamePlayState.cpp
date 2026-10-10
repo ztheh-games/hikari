@@ -59,6 +59,7 @@
 #include "hikari/core/game/TileMapCollisionResolver.hpp"
 #include "hikari/core/game/WorldCollisionResolver.hpp"
 #include "hikari/core/game/map/MapLoader.hpp"
+#include "hikari/core/game/map/Tileset.hpp"
 #include "hikari/core/game/map/MapRenderer.hpp"
 #include "hikari/core/game/map/Door.hpp"
 #include "hikari/core/game/map/Force.hpp"
@@ -572,13 +573,13 @@ namespace hikari {
         Movable::setGravity(0.25f);
 
         std::vector<std::string> mapList;
-        mapList.push_back("map-snake.json");
-        mapList.push_back("map-test6.json");
-        mapList.push_back("map-pearlman.json");
-        mapList.push_back("map-pearl.json");
-        mapList.push_back("map-test4.json");
-        mapList.push_back("map-test3.json");
-        mapList.push_back("map-test2.json");
+        mapList.push_back("map-snake.tmx");
+        mapList.push_back("map-test6.tmx");
+        mapList.push_back("map-pearlman.tmx");
+        mapList.push_back("map-pearl.tmx");
+        mapList.push_back("map-test4.tmx");
+        mapList.push_back("map-test3.tmx");
+        mapList.push_back("map-test2.tmx");
 
         // Determine which stage we're on and set that to the current level...
         if((currentMap = maps.at(mapList.at(gameProgress.getCurrentBoss() % mapList.size())))) {
@@ -836,7 +837,7 @@ namespace hikari {
             bool directoryIsDirectory = FileSystem::isDirectory(stagesDirectory);
 
             if(directoryExists && directoryIsDirectory) {
-                // Get file listing and load all .json files as maps
+                // Discover native Tiled stages through the virtual filesystem.
                 auto fileListing = FileSystem::getFileListing(stagesDirectory);
 
                 HIKARI_LOG(debug3) << "Found " << fileListing.size() << " file(s) in map directory.";
@@ -845,12 +846,11 @@ namespace hikari {
                     const std::string & fileName = (*index);
                     const std::string & filePath = stagesDirectory + "/" + fileName; // TODO: Handle file paths for real
 
-                    if(StringUtils::endsWith(filePath, ".json")) {
+                    if(StringUtils::endsWith(filePath, ".tmx")) {
                         try {
                             HIKARI_LOG(debug) << "Loading map from \"" << fileName << "\"...";
 
-                            auto mapJsonObject = JsonUtils::loadJson(filePath);
-                            auto map = mapLoader.loadFromJson(mapJsonObject);
+                            auto map = mapLoader.load(filePath);
 
                             if(map) {
                                 maps[fileName] = map;

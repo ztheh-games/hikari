@@ -35,7 +35,7 @@ namespace hikari {
         , images(std::make_shared<ImageCache>(ImageCache::NO_SMOOTHING, ImageCache::USE_MASKING))
         , animationLoader(std::make_shared<AnimationLoader>(*images))
         , animations(std::make_shared<AnimationSetCache>(*animationLoader))
-        , tilesetLoader(std::make_shared<TilesetLoader>(*images, *animationLoader))
+        , tilesetLoader(std::make_shared<TilesetLoader>(*images))
         , tilesets(std::make_shared<TilesetCache>(*tilesetLoader))
         , maps(std::make_shared<MapLoader>(*animations, *tilesets))
         , audio(std::make_shared<AudioService>(gameConfig["assets"]["audio"]))

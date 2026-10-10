@@ -7,7 +7,6 @@
             "samples" : "assets/sound/mega-man-3-nes-[NSF-ID2016].nsf",
             "library" : "assets/sound/library.json"
         },
-        "tilesets" : "assets/tilesets.json",
         "stages" : "assets/stages"
     },
     "gui" : {
@@ -180,8 +179,8 @@
             "stages" : [
                 {
                     "name" : "(DEV) Wily Stage 1",
-                    "map" : "assets/stages/map-wily1.json",
-                    "tileset" : "assets/tilesets/tiles-wily1.json"
+                    "map" : "assets/stages/map-wily1.tmx",
+                    "tileset" : "assets/tilesets/tiles-wily1.tsx"
                 }
             ]
 
@@ -189,10 +188,9 @@
         "weapon" : {},
         "end" : {},
         "maptest" : {
-            "mapname" : "assets/stages/map-test2.json",
-            "tileset" : "assets/tilesets/tiles-wily1.json"
+            "mapname" : "assets/stages/map-test2.tmx",
+            "tileset" : "assets/tilesets/tiles-wily1.tsx"
         }
     },
     "initialState" : "title"
 }
-

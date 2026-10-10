@@ -332,6 +332,7 @@ set( HIKARI_CORE_UTIL_SOURCE_FILES
     src/hikari/core/util/RedirectStream.cpp
     src/hikari/core/util/StringUtils.cpp
     src/hikari/core/util/TilesetCache.cpp
+    src/hikari/core/util/TiledAssets.cpp
     src/hikari/core/gui/ImageFont.cpp
 )
 
@@ -404,6 +405,7 @@ add_dependencies(hikari content)
 # We want to link statically on Windows
 #
 target_link_libraries(hikari-runtime PUBLIC SDL3::SDL3 SDL3_image::SDL3_image)
+target_link_libraries(hikari-runtime PRIVATE tinyxml2::tinyxml2)
 
 if(NOT TARGET PhysFS::PhysFS-static)
     find_package(PhysFS CONFIG QUIET)

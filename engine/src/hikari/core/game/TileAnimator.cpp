@@ -4,10 +4,10 @@
 
 namespace hikari {
 
-    TileAnimator::TileAnimator(std::vector<hikari::gfx::IntRect> &tiles, unsigned int tileIndex)
+    TileAnimator::TileAnimator(unsigned int tileIndex)
         : Animator()
         , tileIndex(tileIndex)
-        , tiles(tiles) {
+        {
 
     }
 
@@ -16,8 +16,6 @@ namespace hikari {
         Animator::operator = (other);
 
         tileIndex = other.tileIndex;
-        tiles = other.tiles;
-
         return *this;
     }
 
