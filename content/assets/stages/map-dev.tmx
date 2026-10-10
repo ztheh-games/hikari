@@ -1,0 +1,97 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<map version="1.10" orientation="orthogonal" renderorder="right-down" width="30" height="15" tilewidth="16" tileheight="16" infinite="0" nextlayerid="5" nextobjectid="6">
+ <properties>
+  <property name="musicId" type="int" value="3" />
+  <property name="starting" type="object" value="1" />
+  <property name="midpoint" type="object" value="1" />
+  <property name="bossCorridor" type="object" value="1" />
+  <property name="bossChamber" type="object" value="1" />
+ </properties>
+ <tileset firstgid="1" source="../tilesets/tiles-dev.tsx" />
+ <tileset firstgid="17" source="../tilesets/collision-palette.tsx" />
+ <group id="1" name="Room 0" offsetx="0" offsety="0">
+  <properties>
+   <property name="hikari.role" type="string" value="room" />
+   <property name="roomId" type="int" value="0" />
+   <property name="backgroundColor" type="color" value="#000000" />
+  </properties>
+  <layer id="2" name="Tiles" width="30" height="15">
+   <properties>
+    <property name="hikari.role" type="string" value="tiles" />
+   </properties>
+   <data encoding="csv">
+2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,
+2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2,
+2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2,
+2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2,
+2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2,
+2,1,1,1,1,1,1,1,1,1,2,6,2,1,1,2,2,2,2,1,1,1,1,1,1,1,1,1,1,2,
+2,1,1,1,1,1,1,1,1,1,2,6,2,1,1,2,2,2,2,1,1,1,1,1,1,1,1,1,1,2,
+2,1,1,1,1,1,1,1,1,1,2,6,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,2,
+2,1,1,1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,2,
+2,1,1,1,1,1,1,1,6,1,2,1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,2,
+2,1,1,1,1,1,1,1,6,1,2,1,2,2,2,1,1,1,2,1,1,1,1,1,1,1,1,1,1,2,
+2,1,1,1,6,1,6,1,6,1,1,1,1,1,1,1,1,2,2,1,1,1,1,1,1,1,1,1,1,2,
+2,1,1,1,6,1,6,1,6,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2,
+2,1,1,1,6,1,6,1,6,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2,
+2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2
+</data>
+  </layer>
+  <layer id="3" name="Attributes" width="30" height="15" visible="0">
+   <properties>
+    <property name="hikari.role" type="string" value="attributes" />
+   </properties>
+   <data encoding="csv">
+18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,
+18,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,18,
+18,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,18,
+18,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,18,
+18,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,18,
+18,0,0,0,0,0,0,0,0,0,18,20,18,0,0,18,18,18,18,0,0,0,0,0,0,0,0,0,0,18,
+18,0,0,0,0,0,0,0,0,0,18,19,18,0,0,18,18,18,18,0,0,0,0,0,0,0,0,0,0,18,
+18,0,0,0,0,0,0,0,0,0,18,19,0,0,0,0,0,0,18,0,0,0,0,0,0,0,0,0,0,18,
+18,0,0,0,0,0,0,0,0,0,18,0,0,0,0,0,0,0,18,0,0,0,0,0,0,0,0,0,0,18,
+18,0,0,0,0,0,0,0,20,0,18,0,0,0,0,0,0,0,18,0,0,0,0,0,0,0,0,0,0,18,
+18,0,0,0,0,0,0,0,19,0,18,0,18,18,18,0,0,0,18,0,0,0,0,0,0,0,0,0,0,18,
+18,0,0,0,20,0,20,0,19,0,0,0,0,0,0,0,0,18,18,0,0,0,0,0,0,0,0,0,0,18,
+18,0,0,0,19,0,19,0,19,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,18,
+18,0,0,0,19,0,19,0,19,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,18,
+18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18
+</data>
+  </layer>
+  <objectgroup id="4" name="Gameplay">
+   <object id="1" name="roomBounds" x="0" y="0" width="480" height="240">
+    <properties>
+     <property name="hikari.role" type="string" value="roomBounds" />
+    </properties>
+   </object>
+   <object id="2" name="heroSpawn" x="0" y="0">
+    <point />
+    <properties>
+     <property name="hikari.role" type="string" value="heroSpawn" />
+    </properties>
+   </object>
+   <object id="3" name="cameraBounds" x="0" y="0" width="480" height="240">
+    <properties>
+     <property name="hikari.role" type="string" value="cameraBounds" />
+    </properties>
+   </object>
+   <object id="4" name="enemy" x="32" y="36">
+    <point />
+    <properties>
+     <property name="hikari.role" type="string" value="enemy" />
+     <property name="entity" type="string" value="Telly" />
+     <property name="direction" type="string" value="Left" />
+    </properties>
+   </object>
+   <object id="5" name="enemy" x="100" y="64">
+    <point />
+    <properties>
+     <property name="hikari.role" type="string" value="enemy" />
+     <property name="entity" type="string" value="Telly" />
+     <property name="direction" type="string" value="Right" />
+    </properties>
+   </object>
+  </objectgroup>
+ </group>
+</map>

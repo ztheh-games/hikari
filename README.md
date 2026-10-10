@@ -21,7 +21,8 @@ The game is designed to be as data-driven as possible and as such it allows for 
 * Animations (sprites) are defined in `JSON` files
 * Items, Enemies, Projectiles, etc. are defined in `JSON` files
 * Item and Enemy behaviors are scriptable using [Squirrel][6]
-* Maps/stages are defined in `JSON` files
+* Maps/stages are authored in [Tiled](https://www.mapeditor.org/) as `TMX`
+  files with `TSX` tilesets; see [Tiled authoring](docs/tiled-maps.md)
 * Music and sound effects are played from `NSF` files, and multiple NSF files can be used to mix and match music from different files
 
 Most things are customizable. Not _everything_, but most things.
@@ -37,11 +38,12 @@ By default, CMake downloads pinned, compatible versions of these dependencies:
 * [SDL 3.4.16][4]
 * [SDL_image 3.4.6](https://github.com/libsdl-org/SDL_image)
 * [PhysicsFS 3.2.0][5]
+* [TinyXML-2 11.0.0](https://github.com/leethomason/tinyxml2)
 
 Configure with `-DHIKARI_FETCH_DEPENDENCIES=OFF` to use installed copies instead.
 Set `-DCMAKE_PREFIX_PATH="<SDK prefix>"` when those packages are outside CMake's
 default search locations. SDL and SDL_image must match the pinned versions;
-PhysicsFS's exported CMake targets are preferred, with the legacy finder retained
+TinyXML-2 must also match its pinned version. PhysicsFS's exported CMake targets are preferred, with the legacy finder retained
 for installations without package configuration files.
 
 Hikari requires a C++17-compliant compiler and a modern GPU supporting D3D12

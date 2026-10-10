@@ -42,11 +42,13 @@ add_executable(runtime-tests
     src/test/TestClientRuntime.cpp
     src/test/TestGraphics.cpp
     src/test/TestAudio.cpp
+    src/test/TestTiled.cpp
 )
 target_link_libraries(runtime-tests PRIVATE hikari-runtime)
 target_include_directories(runtime-tests PRIVATE ${TEST_BASE_DIR}/include)
 target_compile_definitions(runtime-tests PRIVATE
     HIKARI_TEST_CONTENT_DIR="${PROJECT_SOURCE_DIR}/content"
+    HIKARI_TEST_FIXTURE_DIR="${TEST_BASE_DIR}"
 )
 
 add_executable(gpu-tests src/test/Main.cpp src/test/TestGPU.cpp)

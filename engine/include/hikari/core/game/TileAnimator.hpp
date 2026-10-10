@@ -13,10 +13,9 @@ namespace hikari {
     class HIKARI_API TileAnimator : public Animator {
     private:
         int tileIndex;
-        std::vector<hikari::gfx::IntRect> &tiles;
 
     public:
-        TileAnimator(std::vector<hikari::gfx::IntRect> &tiles, unsigned int tileIndex);
+        explicit TileAnimator(unsigned int tileIndex);
         TileAnimator& operator=(const TileAnimator & other);
         const int& getUpdatedTileIndex() const;
         virtual ~TileAnimator() { }

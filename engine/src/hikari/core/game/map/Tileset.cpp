@@ -1,6 +1,7 @@
 #include "hikari/core/graphics/Graphics.hpp"
 #include "hikari/core/game/map/Tileset.hpp"
 #include <algorithm>
+#include <stdexcept>
 
 namespace hikari {
 
@@ -29,7 +30,7 @@ namespace hikari {
         if(index < tiles.size()) {
             return tiles.at(index);
         } else {
-            return tiles.at(0);
+            throw std::out_of_range("Tile index outside the tileset");
         }
     }
 

@@ -3,6 +3,7 @@
 
 #include "hikari/core/Platform.hpp"
 #include "hikari/core/game/map/RoomTransition.hpp"
+#include "hikari/core/game/map/TileTransform.hpp"
 #include "hikari/core/geom/BoundingBox.hpp"
 #include "hikari/core/geom/Point2D.hpp"
 #include "hikari/core/geom/Rectangle2D.hpp"
@@ -36,6 +37,7 @@ namespace hikari {
         Rectangle2D<int> cameraBounds;
         std::vector<int> tile;
         std::vector<int> attr;
+        std::vector<TileTransform> transforms;
         std::vector<RoomTransition> transitions;
         std::vector<std::shared_ptr<Spawner>> spawners;
         std::vector<std::shared_ptr<Force>> forces;
@@ -76,7 +78,8 @@ namespace hikari {
             const std::vector<BlockSequenceDescriptor> & blockSequences,
             const std::shared_ptr<Door> & entranceDoor,
             const std::shared_ptr<Door> & exitDoor,
-            const std::string & bossEntityName);
+            const std::string & bossEntityName,
+            const std::vector<TileTransform> & transforms = {});
 
         ~Room();
 
@@ -135,6 +138,7 @@ namespace hikari {
          * @return      attribute flags found at (tileX, tileY)
         */
         const int getAttributeAt(int tileX, int tileY) const;
+        TileTransform getTileTransformAt(int tileX, int tileY) const;
 
         /**
          * Gets a reference to the list of the room's transitions.

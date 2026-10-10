@@ -12,7 +12,7 @@ Hikari is a data-driven C++17 desktop game. CMake builds the engine, game, and
 most third-party source into an internal static library linked by the `hikari`
 executable and runtime tests. At runtime, a `Client`
 composition root creates platform resources and application services, loads
-JSON and Squirrel content through a virtual filesystem, registers the game's
+TMX/TSX, JSON, and Squirrel content through a virtual filesystem, registers the game's
 screens with a state controller, and runs a fixed-step game loop.
 
 ```mermaid
@@ -38,7 +38,7 @@ flowchart LR
         Services --> Core
     end
 
-    Content["JSON, images, shaders,<br/>Squirrel scripts, NSF audio"] --> VFS[PhysicsFS virtual filesystem]
+    Content["TMX/TSX, JSON, images, shaders,<br/>Squirrel scripts, NSF audio"] --> VFS[PhysicsFS virtual filesystem]
     VFS --> Client
     VFS --> Services
 
@@ -47,8 +47,8 @@ flowchart LR
     Squirrel[Squirrel + Sqrat] --> Services
     JSON[JsonCpp] --> Client
 
-    Tiled[Tiled maps] --> Converter[TMX-to-JSON tool]
-    Converter --> Content
+    XML[TinyXML-2] --> Services
+    Tiled[Tiled editor] --> Content
 ```
 
 The source tree has two named layers, but they are organizational rather than
@@ -60,7 +60,7 @@ strictly isolated modules:
 | [`engine/src/hikari/core`](../engine/src/hikari/core) | Reusable game-state, animation, map, collision, math, filesystem, cache, and utility types |
 | [`engine/include/hikari`](../engine/include/hikari) | Public declarations mirroring the `client` and `core` source trees |
 | [`content`](../content) | Runtime configuration and assets: maps, templates, animation definitions, scripts, images, shaders, and sound data |
-| [`tools/map-converter`](../tools/map-converter) | Authoring-time conversion from Tiled TMX maps to Hikari's JSON map format |
+| [`tools/map-converter`](../tools/map-converter) | One-time legacy JSON to native Tiled migration; not required by builds or gameplay |
 | [`tests`](../tests) | Catch-based core tests and runtime lifetime, injection, and production-state regression tests |
 | [`extlibs`](../extlibs) | Libraries compiled into the runtime static library, including Squirrel, Sqrat, JsonCpp, Guichan, and Game Music Emu |
 
@@ -267,9 +267,17 @@ Entities share a common hierarchy:
 ### Maps, rooms, and collision
 
 [`MapLoader`](../engine/src/hikari/core/game/map/MapLoader.cpp) turns each map
-JSON document into a `Map` containing a tileset, rooms, special-room indexes,
+TMX document into a `Map` containing a TSX tileset, rooms, special-room indexes,
 and boss metadata. Rooms contain tile and attribute arrays, camera bounds,
 spawners, forces, doors, room transitions, and block-sequence descriptors.
+
+The checked, CPU-only `TiledAssets` reader resolves native XML, CSV GIDs,
+typed properties, and relative PhysicsFS paths before loaders construct runtime
+objects. Each stage keeps independent room groups, including overlapping
+rooms, with stable room IDs and object references for transitions and special
+rooms. Native tile transforms are separate from collision masks. TSX atlas
+animations use the existing animation machinery. See
+[Tiled authoring](tiled-maps.md) for the supported content contract.
 
 Only one room is current for gameplay ownership and collision at a time.
 `GamePlayState` links that room's spawners and block sequences, while
@@ -318,8 +326,8 @@ the same virtual paths to loaders.
 ```mermaid
 flowchart LR
     GameJSON[game.json] --> Config[GameConfig and service setup]
-    Maps[Stage JSON] --> MapLoader --> RuntimeMaps[Maps, rooms, spawners]
-    Tilesets[Tileset JSON + images] --> TilesetLoader --> RuntimeMaps
+    Maps[Stage TMX] --> MapLoader --> RuntimeMaps[Maps, rooms, spawners]
+    Tilesets[TSX tilesets + images] --> TilesetLoader --> RuntimeMaps
     Animations[Animation JSON + images] --> AnimationLoader --> Prototypes
     Templates[Entity and weapon templates] --> Helpers[FactoryHelpers]
     Scripts[Squirrel startup and behavior scripts] --> VM[SquirrelService]
@@ -336,10 +344,13 @@ paths for fonts, audio, stages, object templates, and weapons. Other JSON
 documents define:
 
 - sprite animations and palettes;
-- tilesets, stages, rooms, transitions, and spawners;
 - item, enemy, projectile, and particle prototypes;
 - weapons and damage values;
 - font atlases and the sound library.
+
+TMX documents define stages, room geometry, per-cell collision, transitions,
+and spawners; TSX documents define visual atlases and the collision palette.
+Both load directly at runtime. Editing a map does not require recompilation.
 
 [`FactoryHelpers`](../engine/src/hikari/client/game/objects/FactoryHelpers.cpp)
 parses template documents once during startup and builds configured prototype
